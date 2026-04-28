@@ -1,0 +1,11 @@
+import { Metadata } from 'next';
+import { VerifyOTPForm } from '@/modules/auth/components/VerifyOTPForm';
+
+export const metadata: Metadata = {
+  title: 'Verify OTP | Core Media Admin',
+  description: 'Enter the verification code sent to your email.',
+};
+
+export default function VerifyOTPPage() {
+  return <VerifyOTPForm />;
+}
