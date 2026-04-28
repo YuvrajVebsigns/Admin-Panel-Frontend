@@ -42,4 +42,37 @@ export const authService = {
       method: 'GET',
     });
   },
+
+  /**
+   * Initiates the forgot password process
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      requireAuth: false,
+    });
+  },
+
+  /**
+   * Verifies the OTP sent to the user's email
+   */
+  async verifyOTP(email: string, otp: string): Promise<{ token: string }> {
+    return apiFetch<{ token: string }>(API_ENDPOINTS.AUTH.VERIFY_OTP, {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+      requireAuth: false,
+    });
+  },
+
+  /**
+   * Resets the user's password using the provided token
+   */
+  async resetPassword(token: string, password: string): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(API_ENDPOINTS.AUTH.RESET_PASSWORD, {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+      requireAuth: false,
+    });
+  },
 };

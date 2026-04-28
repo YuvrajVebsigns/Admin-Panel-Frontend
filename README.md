@@ -145,26 +145,28 @@ This project enforces strict code quality standards to maintain a production-rea
 
 ## 🛠️ Development Commands
 
-| Command             | Description                                           |
-| ------------------- | ----------------------------------------------------- |
-| `yarn dev`          | Starts the development server                         |
-| `yarn lint`         | Runs ESLint to check for code quality issues          |
-| `yarn format`       | Automatically formats all files using Prettier        |
-| `yarn format:check` | Verifies that all files are correctly formatted       |
-| `yarn type-check`   | Runs `tsc` to verify TypeScript type safety           |
+| Command             | Description                                            |
+| ------------------- | ------------------------------------------------------ |
+| `yarn dev`          | Starts the development server                          |
+| `yarn lint`         | Runs ESLint to check for code quality issues           |
+| `yarn format`       | Automatically formats all files using Prettier         |
+| `yarn format:check` | Verifies that all files are correctly formatted        |
+| `yarn type-check`   | Runs `tsc` to verify TypeScript type safety            |
 | `yarn build`        | Runs all quality checks and creates a production build |
-| `yarn start`        | Starts the production server                          |
+| `yarn start`        | Starts the production server                           |
 
 ---
 
 ## Setup & Running
 
 1. **Install Dependencies**
+
    ```bash
    yarn install
    ```
 
 2. **Start Development Server**
+
    ```bash
    yarn dev
    ```
