@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { ResetPasswordForm } from '@/modules/auth/components/ResetPasswordForm';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Reset Password | Core Media Admin',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordForm />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
+  );
 }

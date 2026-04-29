@@ -1,59 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ForgotPasswordFormProps {
   onSwitchToLogin?: () => void;
 }
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { forgotPassword, isSubmittingForgot } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   const [email, setEmail] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
 
     try {
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        setIsSubmitted(true);
-        // router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
-      }, 2000);
-    } catch (_error) {
-      setIsLoading(false);
+      await forgotPassword(email);
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset link. Please try again.');
     }
   };
-
-  if (isSubmitted) {
-    return (
-      <div className="text-center space-y-8 py-4">
-        <div className="flex justify-center">
-          <div className="h-20 w-20 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-            <CheckCircle2 size={40} />
-          </div>
-        </div>
-        <div className="space-y-3">
-          <h2 className="text-2xl font-bold text-white tracking-tight">Check your email</h2>
-          <p className="text-base text-slate-400 leading-relaxed">
-            We&apos;ve sent a password reset link to your email address.
-          </p>
-        </div>
-        <button
-          onClick={() => (onSwitchToLogin ? onSwitchToLogin() : router.push('/login'))}
-          className="w-full bg-slate-800/50 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.98] border border-white/5"
-        >
-          Back to Login
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -69,28 +42,42 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2.5">
-            <label className="text-sm font-semibold text-slate-200 ml-1">Email Address</label>
+            <label htmlFor="email" className="text-sm font-semibold text-slate-200 ml-1">
+              Email Address
+            </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-primary-400 transition-colors">
                 <Mail size={20} />
               </div>
               <input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder="admin@email.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border border-white/5 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner"
+                className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
+                  error ? 'border-red-500/50' : 'border-white/5'
+                } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
               />
             </div>
           </div>
 
+          {error && (
+            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-500 leading-tight">{error}</p>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isSubmittingForgot}
             className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg tracking-wide"
           >
-            {isLoading ? (
+            {isSubmittingForgot ? (
               <>
                 <Loader2 size={22} className="animate-spin" />
                 Sending link...

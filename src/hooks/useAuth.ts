@@ -1,39 +1,89 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
+import { LoginCredentials, SignupCredentials } from '@/types/user.types';
 
-/**
- * A useAuth hook that leverages TanStack Query for data fetching and caching,
- * and synchronizes the fetched user with the Zustand global store.
- */
 export function useAuth() {
-  const { setAuth, clearAuth, isAuthenticated, user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, isAuthenticated, access_token, setAuth, clearAuth } = useAuthStore();
 
-  const query = useQuery({
+  // Fetch profile query
+  const profileQuery = useQuery({
     queryKey: ['auth-profile'],
-    queryFn: async () => {
-      const profile = await authService.getProfile();
-      return profile;
-    },
-    // We only retry once if the auth token might just be expired
-    retry: 1,
+    queryFn: () => authService.getProfile(),
+    enabled: !!access_token, // Only run if we have a token
+    retry: false,
   });
 
-  useEffect(() => {
-    if (query.isSuccess && query.data) {
-      setAuth(query.data);
-    } else if (query.isError) {
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
+    onSuccess: (data) => {
+      setAuth(data.user, data.access_token, data.refresh_token);
+      queryClient.setQueryData(['auth-profile'], data.user);
+    },
+  });
+
+  // Signup mutation
+  const signupMutation = useMutation({
+    mutationFn: (credentials: SignupCredentials) => authService.signup(credentials),
+    onSuccess: () => {
+      // Typically signup might not login automatically,
+      // but if it does, we handle it here.
+      // For now, let's just return the user data.
+    },
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => authService.logout(),
+    onSuccess: () => {
       clearAuth();
-    }
-  }, [query.isSuccess, query.isError, query.data, setAuth, clearAuth]);
+      queryClient.clear();
+    },
+    onError: () => {
+      // Even if logout fails on server, we clear local state
+      clearAuth();
+      queryClient.clear();
+    },
+  });
+
+  // Forgot Password mutation
+  const forgotPasswordMutation = useMutation({
+    mutationFn: (email: string) => authService.forgotPassword(email),
+  });
+
+  // Verify OTP mutation
+  const verifyOTPMutation = useMutation({
+    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
+      authService.verifyOTP(email, otp),
+  });
+
+  // Reset Password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ token, password }: { token: string; password: string }) =>
+      authService.resetPassword(token, password),
+  });
 
   return {
-    user, // From Zustand (or query.data)
+    user,
     isAuthenticated,
-    isLoading: query.isLoading,
-    error: query.error,
+    isLoading: profileQuery.isLoading,
+    login: loginMutation.mutateAsync,
+    isLoggingIn: loginMutation.isPending,
+    loginError: loginMutation.error,
+    signup: signupMutation.mutateAsync,
+    isSigningUp: signupMutation.isPending,
+    signupError: signupMutation.error,
+    logout: logoutMutation.mutateAsync,
+    isLoggingOut: logoutMutation.isPending,
+    forgotPassword: forgotPasswordMutation.mutateAsync,
+    isSubmittingForgot: forgotPasswordMutation.isPending,
+    verifyOTP: verifyOTPMutation.mutateAsync,
+    isVerifyingOTP: verifyOTPMutation.isPending,
+    resetPassword: resetPasswordMutation.mutateAsync,
+    isResettingPassword: resetPasswordMutation.isPending,
   };
 }

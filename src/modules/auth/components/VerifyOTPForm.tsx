@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { authService } from '@/services/auth.service';
+import { useAuth } from '@/hooks/useAuth';
 
 interface VerifyOTPFormProps {
   onBackToLogin?: () => void;
@@ -13,9 +13,9 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
+  const { verifyOTP, forgotPassword, isVerifyingOTP, isSubmittingForgot } = useAuth();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timer, setTimer] = useState(60);
 
@@ -54,40 +54,26 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
     try {
-      // For demonstration, using a mock success if API fails or isn't ready
-      // In production, this would call authService.verifyOTP
-      // const { token } = await authService.verifyOTP(email, otpString);
-
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Mock success token
-      const mockToken = 'mock-reset-token';
-      router.push(`/reset-password?token=${mockToken}&email=${encodeURIComponent(email)}`);
+      const { data } = await verifyOTP({ email, otp: otpString });
+      router.push(`/reset-password?token=${data?.reset_token}&email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid OTP code. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleResend = async () => {
     if (timer > 0) return;
 
-    setIsLoading(true);
     try {
-      await authService.forgotPassword(email);
+      await forgotPassword(email);
       setTimer(60);
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to resend OTP');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -128,15 +114,20 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
             ))}
           </div>
 
-          {error && <p className="text-rose-500 text-sm text-center font-medium">{error}</p>}
+          {error && (
+            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-500 leading-tight">{error}</p>
+            </div>
+          )}
 
           <div className="space-y-4">
             <button
               type="submit"
-              disabled={isLoading || otp.some((d) => d === '')}
+              disabled={isVerifyingOTP || otp.some((d) => d === '')}
               className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-lg tracking-wide"
             >
-              {isLoading ? (
+              {isVerifyingOTP ? (
                 <>
                   <Loader2 size={22} className="animate-spin" />
                   Verifying...
@@ -153,10 +144,14 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
               <button
                 type="button"
                 onClick={handleResend}
-                disabled={timer > 0 || isLoading}
+                disabled={timer > 0 || isSubmittingForgot}
                 className="text-sm font-semibold text-primary-400 hover:text-primary-300 disabled:text-slate-500 transition-colors"
               >
-                {timer > 0 ? `Resend code in ${timer}s` : 'Resend OTP Code'}
+                {timer > 0
+                  ? `Resend code in ${timer}s`
+                  : isSubmittingForgot
+                    ? 'Sending...'
+                    : 'Resend OTP Code'}
               </button>
             </div>
           </div>

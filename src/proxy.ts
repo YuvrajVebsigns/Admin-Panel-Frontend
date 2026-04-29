@@ -9,6 +9,7 @@ const publicPaths = [
   '/auth',
   '/verify-otp',
   '/reset-password',
+  '/test-connection',
 ];
 
 export function proxy(request: NextRequest) {
@@ -32,7 +33,7 @@ export function proxy(request: NextRequest) {
 
   if (hasToken && isPublicPath) {
     // Redirect authenticated users away from auth pages to dashboard
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

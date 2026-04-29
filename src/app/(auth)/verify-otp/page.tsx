@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { VerifyOTPForm } from '@/modules/auth/components/VerifyOTPForm';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Verify OTP | Core Media Admin',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function VerifyOTPPage() {
-  return <VerifyOTPForm />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyOTPForm />
+    </Suspense>
+  );
 }
