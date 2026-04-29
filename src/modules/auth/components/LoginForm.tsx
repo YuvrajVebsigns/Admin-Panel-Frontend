@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -9,36 +11,90 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitchToForgot }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isLoggingIn } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState(searchParams.get('email') || '');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+
+  const validate = () => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 2000);
+    setErrors({});
+
+    if (!validate()) return;
+
+    try {
+      await login({ email, password });
+      router.push('/'); // Redirect to dashboard on success
+    } catch (error: unknown) {
+      setErrors({
+        general:
+          error instanceof Error ? error.message : 'Login failed. Please check your credentials.',
+      });
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {errors.general && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-sm">
+          <AlertCircle size={18} />
+          <p>{errors.general}</p>
+        </div>
+      )}
+
       <div className="space-y-2.5">
-        <label className="text-sm font-semibold text-slate-200 ml-1">Email Address</label>
+        <label htmlFor="email" className="text-sm font-semibold text-slate-200 ml-1">
+          Email Address
+        </label>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-primary-400 transition-colors">
             <Mail size={20} />
           </div>
           <input
+            id="email"
+            name="email"
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
             placeholder="admin@email.com"
             required
-            className="block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border border-white/5 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner"
+            className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
+              errors.email ? 'border-red-500/50' : 'border-white/5'
+            } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
           />
         </div>
+        {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
       </div>
 
       <div className="space-y-2.5">
         <div className="flex justify-between items-center px-1">
-          <label className="text-sm font-semibold text-slate-200">Password</label>
+          <label htmlFor="password" className="text-sm font-semibold text-slate-200">
+            Password
+          </label>
           <button
             type="button"
             onClick={onSwitchToForgot}
@@ -52,10 +108,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitch
             <Lock size={20} />
           </div>
           <input
+            id="password"
+            name="password"
             type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             placeholder="••••••••"
             required
-            className="block w-full pl-12 pr-12 py-3.5 bg-slate-800/40 border border-white/5 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner"
+            className={`block w-full pl-12 pr-12 py-3.5 bg-slate-800/40 border ${
+              errors.password ? 'border-red-500/50' : 'border-white/5'
+            } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
           />
           <button
             type="button"
@@ -65,14 +128,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitch
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
+        {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
       </div>
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoggingIn}
         className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg tracking-wide"
       >
-        {isLoading ? (
+        {isLoggingIn ? (
           <>
             <Loader2 size={22} className="animate-spin" />
             Signing in...

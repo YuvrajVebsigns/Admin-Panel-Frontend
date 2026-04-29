@@ -1,18 +1,18 @@
-export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
 }
 
 export interface User {
   id: string;
   email: string;
-  name: string;
-  role: UserRole;
-  avatar?: string;
+  fullName: string;
+  role: Role;
   isActive: boolean;
-  lastLoginAt?: string;
+  acceptTerms: boolean;
+  phoneNumber?: string;
+  profileImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,9 +20,9 @@ export interface User {
 export interface AuthUser {
   id: string;
   email: string;
-  name: string;
-  role: UserRole;
-  avatar?: string;
+  fullName: string;
+  role: Role;
+  profileImage?: string;
 }
 
 export interface LoginCredentials {
@@ -30,7 +30,18 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface SignupCredentials {
+  email: string;
+  password: string;
+  fullName: string;
+  acceptTerms: boolean;
+}
+
 export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface AuthResponse extends AuthTokens {
+  user: User;
 }

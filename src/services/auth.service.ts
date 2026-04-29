@@ -1,24 +1,24 @@
 import { apiFetch } from './apiFetch';
 import { API_ENDPOINTS } from '@/constants/api';
-import { User } from '@/types/user.types';
-
-interface LoginCredentials {
-  email: string;
-  password?: string;
-  // Adjust based on your actual auth mechanism
-}
-
-interface AuthResponse {
-  user: User;
-  accessToken?: string;
-}
+import { User, LoginCredentials, SignupCredentials, AuthResponse } from '@/types/user.types';
 
 export const authService = {
   /**
-   * Logs a user in and returns their session/token
+   * Logs a user in and returns their session/tokens
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     return apiFetch<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      requireAuth: false,
+    });
+  },
+
+  /**
+   * Registers a new user
+   */
+  async signup(credentials: SignupCredentials): Promise<User> {
+    return apiFetch<User>(API_ENDPOINTS.AUTH.SIGNUP, {
       method: 'POST',
       body: JSON.stringify(credentials),
       requireAuth: false,
@@ -44,6 +44,15 @@ export const authService = {
   },
 
   /**
+   * Refreshes the access token using the refresh token
+   */
+  async refreshToken(): Promise<{ access_token: string }> {
+    return apiFetch<{ access_token: string }>(API_ENDPOINTS.AUTH.REFRESH, {
+      method: 'POST',
+    });
+  },
+
+  /**
    * Initiates the forgot password process
    */
   async forgotPassword(email: string): Promise<{ message: string }> {
@@ -57,12 +66,18 @@ export const authService = {
   /**
    * Verifies the OTP sent to the user's email
    */
-  async verifyOTP(email: string, otp: string): Promise<{ token: string }> {
-    return apiFetch<{ token: string }>(API_ENDPOINTS.AUTH.VERIFY_OTP, {
-      method: 'POST',
-      body: JSON.stringify({ email, otp }),
-      requireAuth: false,
-    });
+  async verifyOTP(
+    email: string,
+    otp: string,
+  ): Promise<{ data: { reset_token: string; message?: string }; message?: string }> {
+    return apiFetch<{ data: { reset_token: string; message?: string }; message?: string }>(
+      API_ENDPOINTS.AUTH.VERIFY_OTP,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+        requireAuth: false,
+      },
+    );
   },
 
   /**
@@ -71,7 +86,7 @@ export const authService = {
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
     return apiFetch<{ message: string }>(API_ENDPOINTS.AUTH.RESET_PASSWORD, {
       method: 'POST',
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify({ resetToken: token, newPassword: password }),
       requireAuth: false,
     });
   },

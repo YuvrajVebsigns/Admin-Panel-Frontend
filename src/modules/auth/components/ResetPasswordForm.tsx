@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Lock, Loader2, CheckCircle2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ResetPasswordFormProps {
   onBackToLogin?: () => void;
@@ -13,8 +14,8 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onBackToLo
   const searchParams = useSearchParams();
   const _token = searchParams.get('token') || '';
   const _email = searchParams.get('email') || '';
+  const { resetPassword, isResettingPassword } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
@@ -34,44 +35,45 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onBackToLo
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
     try {
-      // In production, this would call authService.resetPassword
-      // await authService.resetPassword(_token, password);
-
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
+      await resetPassword({ token: _token, password });
       setIsSuccess(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to reset password. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   if (isSuccess) {
     return (
-      <div className="text-center space-y-8 py-4">
-        <div className="flex justify-center">
-          <div className="h-20 w-20 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-            <CheckCircle2 size={40} />
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+        <div className="text-center space-y-8 py-4">
+          <div className="flex justify-center">
+            <div className="h-20 w-20 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+              <CheckCircle2 size={40} />
+            </div>
           </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-white tracking-tight">Password Reset!</h2>
+            <p className="text-base text-slate-400 leading-relaxed">
+              Your password has been successfully updated. You can now sign in with your new
+              password.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (onBackToLogin) {
+                onBackToLogin();
+              } else {
+                router.push(`/login?email=${encodeURIComponent(_email)}`);
+              }
+            }}
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_24px_-8px_rgba(16,185,129,0.5)]"
+          >
+            Proceed to Login
+          </button>
         </div>
-        <div className="space-y-3">
-          <h2 className="text-2xl font-bold text-white tracking-tight">Password Reset!</h2>
-          <p className="text-base text-slate-400 leading-relaxed">
-            Your password has been successfully updated. You can now sign in with your new password.
-          </p>
-        </div>
-        <button
-          onClick={() => (onBackToLogin ? onBackToLogin() : router.push('/login'))}
-          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_24px_-8px_rgba(16,185,129,0.5)]"
-        >
-          Proceed to Login
-        </button>
       </div>
     );
   }
@@ -101,7 +103,9 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onBackToLo
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="block w-full pl-12 pr-12 py-3.5 bg-slate-800/40 border border-white/5 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner"
+                className={`block w-full pl-12 pr-12 py-3.5 bg-slate-800/40 border ${
+                  error ? 'border-red-500/50' : 'border-white/5'
+                } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
               />
               <button
                 type="button"
@@ -125,19 +129,26 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onBackToLo
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border border-white/5 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner"
+                className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
+                  error ? 'border-red-500/50' : 'border-white/5'
+                } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
               />
             </div>
           </div>
 
-          {error && <p className="text-rose-500 text-sm font-medium ml-1">{error}</p>}
+          {error && (
+            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-500 leading-tight">{error}</p>
+            </div>
+          )}
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isResettingPassword}
             className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg tracking-wide"
           >
-            {isLoading ? (
+            {isResettingPassword ? (
               <>
                 <Loader2 size={22} className="animate-spin" />
                 Updating password...

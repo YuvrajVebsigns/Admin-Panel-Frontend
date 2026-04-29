@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
+import { useAuthStore } from '@/store/auth.store';
 
 export class ApiError extends Error {
   public statusCode: number;
@@ -23,10 +24,14 @@ interface FetchOptions extends RequestInit {
 export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { requireAuth = true, headers, ...customConfig } = options;
 
+  // Get token from Zustand store
+  const { access_token } = useAuthStore.getState();
+
   const config: RequestInit = {
     ...customConfig,
     headers: {
       'Content-Type': 'application/json',
+      ...(requireAuth && access_token ? { Authorization: `Bearer ${access_token}` } : {}),
       ...headers,
     },
   };
@@ -51,6 +56,15 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
     }
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - Clear auth if token is invalid
+      if (response.status === 401 && requireAuth) {
+        useAuthStore.getState().clearAuth();
+        // Optional: redirect to login if not already there
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
+
       throw new ApiError(
         data?.message || response.statusText || 'An error occurred',
         response.status,

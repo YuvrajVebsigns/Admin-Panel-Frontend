@@ -5,13 +5,7 @@ export {
   type ApiError,
   type FetchOptions,
 } from './api.types';
-export {
-  type User,
-  type AuthUser,
-  type LoginCredentials,
-  type AuthTokens,
-  UserRole,
-} from './user.types';
+export { type User, type AuthUser, type LoginCredentials, type AuthTokens } from './user.types';
 export {
   type NavItem,
   type BreadcrumbItem,
