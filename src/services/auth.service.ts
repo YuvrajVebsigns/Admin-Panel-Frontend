@@ -66,18 +66,12 @@ export const authService = {
   /**
    * Verifies the OTP sent to the user's email
    */
-  async verifyOTP(
-    email: string,
-    otp: string,
-  ): Promise<{ data: { reset_token: string; message?: string }; message?: string }> {
-    return apiFetch<{ data: { reset_token: string; message?: string }; message?: string }>(
-      API_ENDPOINTS.AUTH.VERIFY_OTP,
-      {
-        method: 'POST',
-        body: JSON.stringify({ email, otp }),
-        requireAuth: false,
-      },
-    );
+  async verifyOTP(email: string, otp: string): Promise<{ reset_token: string; message?: string }> {
+    return apiFetch<{ reset_token: string; message?: string }>(API_ENDPOINTS.AUTH.VERIFY_OTP, {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+      requireAuth: false,
+    });
   },
 
   /**

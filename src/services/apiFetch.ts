@@ -72,6 +72,12 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
       );
     }
 
+    // Check if it's the standard NestJS backend global response wrapper:
+    // { success: boolean, message: string, data: any }
+    if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      return data.data as T;
+    }
+
     return data as T;
   } catch (error) {
     if (error instanceof ApiError) {
