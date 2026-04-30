@@ -2,14 +2,14 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    SIGNUP: '/auth/signup',
-    LOGOUT: '/auth/logout',
-    ME: '/auth/me',
-    REFRESH: '/auth/refresh',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    VERIFY_OTP: '/auth/verify-otp',
-    RESET_PASSWORD: '/auth/reset-password',
+    LOGIN: '/admin/auth/login',
+    SIGNUP: '/admin/auth/signup',
+    LOGOUT: '/admin/auth/logout',
+    ME: '/admin/auth/profile',
+    REFRESH: '/admin/auth/refresh',
+    FORGOT_PASSWORD: '/admin/auth/forgot-password',
+    VERIFY_OTP: '/admin/auth/verify-otp',
+    RESET_PASSWORD: '/admin/auth/reset-password',
   },
   USERS: {
     BASE: '/users',
@@ -18,5 +18,8 @@ export const API_ENDPOINTS = {
   MEDIA: {
     BASE: '/media',
     UPLOAD: '/media/upload',
+  },
+  ADMIN: {
+    MENUS: '/admin/menus',
   },
 } as const;

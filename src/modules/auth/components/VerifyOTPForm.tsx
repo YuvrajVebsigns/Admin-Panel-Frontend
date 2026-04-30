@@ -57,8 +57,10 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
     setError(null);
 
     try {
-      const { data } = await verifyOTP({ email, otp: otpString });
-      router.push(`/reset-password?token=${data?.reset_token}&email=${encodeURIComponent(email)}`);
+      const response = await verifyOTP({ email, otp: otpString });
+      router.push(
+        `/reset-password?token=${response?.reset_token}&email=${encodeURIComponent(email)}`,
+      );
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid OTP code. Please try again.');
     }

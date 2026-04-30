@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
@@ -7,7 +8,7 @@ import { LoginCredentials, SignupCredentials } from '@/types/user.types';
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, access_token, setAuth, clearAuth } = useAuthStore();
+  const { user, isAuthenticated, access_token, setAuth, clearAuth, updateUser } = useAuthStore();
 
   // Fetch profile query
   const profileQuery = useQuery({
@@ -17,12 +18,28 @@ export function useAuth() {
     retry: false,
   });
 
+  // Sync profile data to Zustand store automatically when fetched (e.g., on page reload)
+  useEffect(() => {
+    if (profileQuery.data) {
+      updateUser(profileQuery.data);
+    }
+  }, [profileQuery.data, updateUser]);
+
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Set initial auth state with tokens
       setAuth(data.user, data.access_token, data.refresh_token);
-      queryClient.setQueryData(['auth-profile'], data.user);
+
+      try {
+        // Fetch full profile to ensure we have role permissions populated
+        const fullProfile = await authService.getProfile();
+        updateUser(fullProfile);
+        queryClient.setQueryData(['auth-profile'], fullProfile);
+      } catch (err) {
+        // Silently fail or handle error appropriately without console.log
+      }
     },
   });
 

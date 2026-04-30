@@ -169,7 +169,9 @@ const AppHeader: React.FC = () => {
             {/* <!-- Notification Menu Area --> */}
           </div>
           {/* <!-- User Area --> */}
-          <UserDropdown />
+          <div className="hidden">
+            <UserDropdown />
+          </div>
         </div>
       </div>
     </header>
