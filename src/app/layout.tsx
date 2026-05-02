@@ -5,6 +5,9 @@ import 'flatpickr/dist/flatpickr.css';
 import QueryProvider from '@/providers/QueryProvider';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ToasterProvider } from '@/components/providers/ToasterProvider';
+import { ModalProvider } from '@/context/ModalContext';
+import { GlobalModal } from '@/components/ui/modal/GlobalModal';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -27,11 +30,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable}>
       <body className={`${outfit.className} dark:bg-gray-900`}>
-        <ThemeProvider>
-          <SidebarProvider>
-            <QueryProvider>{children}</QueryProvider>
-          </SidebarProvider>
-        </ThemeProvider>
+        <ToasterProvider />
+        <ModalProvider>
+          <ThemeProvider>
+            <SidebarProvider>
+              <QueryProvider>{children}</QueryProvider>
+            </SidebarProvider>
+          </ThemeProvider>
+          <GlobalModal />
+        </ModalProvider>
       </body>
     </html>
   );

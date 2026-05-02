@@ -20,6 +20,23 @@ export default function SignInForm() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
+  // Load saved credentials from localStorage on mount
+  React.useEffect(() => {
+    const savedData = localStorage.getItem('rememberMe');
+    if (savedData) {
+      const {
+        email: savedEmail,
+        password: savedPassword,
+        isChecked: savedIsChecked,
+      } = JSON.parse(savedData);
+      if (savedIsChecked) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setIsChecked(true);
+      }
+    }
+  }, []);
+
   const validate = () => {
     const newErrors: typeof errors = {};
 
@@ -47,6 +64,14 @@ export default function SignInForm() {
 
     try {
       await login({ email, password });
+
+      // Handle "Remember me" logic on successful login
+      if (isChecked) {
+        localStorage.setItem('rememberMe', JSON.stringify({ email, password, isChecked: true }));
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
+
       router.push('/'); // Redirect to dashboard on success
     } catch (error: unknown) {
       setErrors({
@@ -119,9 +144,17 @@ export default function SignInForm() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(checked) => {
+                        setIsChecked(checked);
+                        if (!checked) {
+                          localStorage.removeItem('rememberMe');
+                        }
+                      }}
+                    />
                     <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
+                      Remember me
                     </span>
                   </div>
                   <Link

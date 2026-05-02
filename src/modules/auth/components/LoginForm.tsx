@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ApiError } from '@/types/api.types';
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -48,10 +49,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitch
     try {
       await login({ email, password });
       router.push('/'); // Redirect to dashboard on success
-    } catch (error: unknown) {
+    } catch (error) {
+      const apiError = error as ApiError;
       setErrors({
-        general:
-          error instanceof Error ? error.message : 'Login failed. Please check your credentials.',
+        general: apiError?.message || 'Login failed. Please check your credentials.',
       });
     }
   };
