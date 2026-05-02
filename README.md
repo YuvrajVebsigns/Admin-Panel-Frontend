@@ -176,3 +176,80 @@ This project enforces strict code quality standards to maintain a production-rea
    yarn build
    yarn start
    ```
+
+---
+
+## 🧩 Global Modal System
+
+We have a dynamic global modal architecture that allows you to easily trigger popups and confirmations from anywhere in the app without having to manually render `<Modal />` components locally.
+
+### 1. The `useGlobalModal` Hook
+
+The tool you will use in any component to trigger the popup is `useGlobalModal`.
+
+> Note: We use `useGlobalModal` instead of `useModal` to avoid conflicts with the older local-state modal hooks.
+
+### 2. Standard Confirmations
+
+If you need a quick "Are you sure?" popup, use the `confirm` helper. It automatically renders standard buttons, handles loading states, and styles the modal according to the `type` (`danger`, `warning`, `info`, `success`).
+
+```tsx
+import { useGlobalModal } from '@/hooks/useGlobalModal';
+
+export const MyComponent = () => {
+  const { confirm } = useGlobalModal();
+
+  const handleDelete = () => {
+    confirm({
+      title: 'Delete User?',
+      message: 'This action cannot be undone.',
+      confirmText: 'Yes, Delete',
+      type: 'danger', // This makes the button red and adds a warning icon!
+      onConfirm: async () => {
+        // await deleteApiCall();
+        toast.success('Deleted!');
+      },
+    });
+  };
+
+  return <button onClick={handleDelete}>Delete</button>;
+};
+```
+
+### 3. Custom Components (e.g., PDF Viewers)
+
+You can inject _any_ React component into the modal by passing it to the `content` property using `openModal`. The UI is completely responsive, scaling from small sizes up to `full` width.
+
+```tsx
+import { useGlobalModal } from '@/hooks/useGlobalModal';
+import MyPDFViewer from './MyPDFViewer';
+
+export const DocumentPage = () => {
+  const { openModal, closeModal } = useGlobalModal();
+
+  const viewDocument = () => {
+    openModal({
+      title: 'Invoice #12345',
+      size: '4xl', // Use tailwind max-w sizes to control the responsiveness
+      content: <MyPDFViewer fileUrl="/invoice.pdf" />,
+      actions: (
+        <>
+          <button onClick={closeModal} className="btn-secondary">
+            Close
+          </button>
+          <button className="btn-primary">Download PDF</button>
+        </>
+      ),
+    });
+  };
+
+  return <button onClick={viewDocument}>View Invoice</button>;
+};
+```
+
+### Key Features
+
+- **Responsiveness**: Use the `size` property (`sm`, `md`, `lg`, `xl`, `full`, etc.) to perfectly fit your content.
+- **Backdrop Clicks**: Clicking outside the white box safely closes the modal.
+- **Loading States**: The `confirm` dialog automatically disables its buttons and changes text to "Processing..." while your asynchronous `onConfirm` function is running.
+- **Customization**: Use `hideHeader`, `hideFooter`, or `showCloseButton` to strip away standard UI elements if your custom React component needs to take over the entire popup real estate.

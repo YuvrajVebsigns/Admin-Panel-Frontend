@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminService, MenuItemResponse } from '@/services/admin.service';
-import * as Icons from '@/icons';
 
 export type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  icon?: string;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: NavItem[];
+  pro?: boolean;
+  new?: boolean;
 };
 
 export type NavGroup = {
@@ -23,33 +24,23 @@ export function useNavigation() {
     queryFn: () => adminService.getMenus(),
   });
 
-  const getIcon = (iconName: string) => {
-    const IconComponent = Icons[iconName as keyof typeof Icons] as React.ElementType | undefined;
-    return IconComponent ? <IconComponent /> : <Icons.GridIcon />;
-  };
-
   const navGroups = useMemo(() => {
     if (!menus.length) return [];
 
-    // Group the flat menu list by their group name
     const groups: Record<string, NavItem[]> = {};
+
+    const mapMenuItem = (menu: MenuItemResponse): NavItem => ({
+      name: menu.name,
+      icon: menu.icon,
+      path: menu.path,
+      subItems:
+        menu.children && menu.children.length > 0 ? menu.children.map(mapMenuItem) : undefined,
+    });
 
     menus.forEach((menu: MenuItemResponse) => {
       const groupName = menu.group || 'MENU';
       if (!groups[groupName]) groups[groupName] = [];
-
-      // Map API response to NavItem structure
-      const navItem: NavItem = {
-        name: menu.name,
-        icon: getIcon(menu.icon),
-        path: menu.path,
-        subItems: menu.children?.map((child) => ({
-          name: child.name,
-          path: child.path,
-        })),
-      };
-
-      groups[groupName].push(navItem);
+      groups[groupName].push(mapMenuItem(menu));
     });
 
     return Object.entries(groups).map(([groupName, items]) => ({

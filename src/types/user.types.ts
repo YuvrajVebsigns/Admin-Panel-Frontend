@@ -44,4 +44,5 @@ export interface AuthTokens {
 
 export interface AuthResponse extends AuthTokens {
   user: User;
+  message?: string;
 }
