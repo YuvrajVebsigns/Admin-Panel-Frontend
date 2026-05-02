@@ -36,7 +36,16 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? localStorage : dummyStorage,
+      ),
     },
   ),
 );
+
+// Dummy storage for server-side
+const dummyStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
