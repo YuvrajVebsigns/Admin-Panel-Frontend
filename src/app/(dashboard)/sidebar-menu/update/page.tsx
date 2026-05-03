@@ -1,15 +1,15 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
-import { MenuForm } from '@/modules/menu/components/MenuForm';
-import { useMenus } from '@/modules/menu/hooks/useMenus';
+import { SidebarMenuForm } from '@/modules/sidebar-menu/components/SidebarMenuForm';
+import { useSidebarMenus } from '@/modules/sidebar-menu/hooks/useSidebarMenus';
 import React, { Suspense } from 'react';
 
 function UpdateMenuContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
-  const { allMenus, isLoading } = useMenus();
+  const { allSidebarMenus, isLoading } = useSidebarMenus();
 
-  const menuData = allMenus.find((m) => m.id === id);
+  const menuData = allSidebarMenus.find((m) => m.id === id);
 
   if (isLoading)
     return (
@@ -46,7 +46,7 @@ function UpdateMenuContent() {
 
   return (
     <div className="py-8 px-4">
-      <MenuForm initialData={menuData} />
+      <SidebarMenuForm initialData={menuData} />
     </div>
   );
 }

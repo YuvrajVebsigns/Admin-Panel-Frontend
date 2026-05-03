@@ -11,8 +11,16 @@ interface DynamicIconProps {
 }
 
 export const DynamicIcon: React.FC<DynamicIconProps> = ({ name, className, size = 20 }) => {
+  // Convert kebab-case or snake_case to PascalCase for Lucide icons
+  const pascalName = name
+    .split(/[-_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('');
+
   // Get the icon component from the Lucide library
-  const IconComponent = (Icons as unknown as Record<string, LucideIcon>)[name];
+  const IconComponent =
+    (Icons as unknown as Record<string, LucideIcon>)[pascalName] ||
+    (Icons as unknown as Record<string, LucideIcon>)[name];
 
   if (!IconComponent) {
     return <HelpCircle className={`text-gray-300 ${className}`} size={size} />;

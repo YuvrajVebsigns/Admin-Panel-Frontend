@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { menuService } from '../services/menu.service';
-import { Menu, CreateMenuDto, UpdateMenuDto, MenuReorderDto } from '../types/menu.types';
+import { sidebarMenuService } from '../services/sidebar-menu.service';
+import {
+  SidebarMenu,
+  CreateSidebarMenuDto,
+  UpdateSidebarMenuDto,
+  SidebarMenuReorderDto,
+} from '@/modules/sidebar-menu/types/sidebar-menu.types';
 import toast from 'react-hot-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 
-export function useMenus() {
+export function useSidebarMenus() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -14,26 +19,26 @@ export function useMenus() {
 
   const menusQuery = useQuery({
     queryKey: ['menus'],
-    queryFn: menuService.getMenus,
+    queryFn: sidebarMenuService.getSidebarMenus,
   });
 
-  const allMenusQuery = useQuery({
+  const allSidebarMenusQuery = useQuery({
     queryKey: ['menus', 'all', page, limit, debouncedSearch],
-    queryFn: () => menuService.getAllMenus({ page, limit, search: debouncedSearch }),
+    queryFn: () => sidebarMenuService.getAllSidebarMenus({ page, limit, search: debouncedSearch }),
   });
 
   // Separate query for form dropdowns that needs a larger list without search/pagination interference
-  const dropdownMenusQuery = useQuery({
+  const dropdownSidebarMenusQuery = useQuery({
     queryKey: ['menus', 'dropdown'],
-    queryFn: () => menuService.getAllMenus({ page: 1, limit: 1000 }),
+    queryFn: () => sidebarMenuService.getAllSidebarMenus({ page: 1, limit: 1000 }),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: CreateMenuDto) => {
-      const promise = menuService.createMenu(data);
+    mutationFn: (data: CreateSidebarMenuDto) => {
+      const promise = sidebarMenuService.createSidebarMenu(data);
       toast.promise(promise, {
         loading: 'Creating menu item...',
-        success: (_res: Menu) => 'Menu created successfully!',
+        success: (_res: SidebarMenu) => 'SidebarMenu created successfully!',
         error: (err: Error) => err.message || 'Failed to create menu',
       });
       return promise;
@@ -45,11 +50,11 @@ export function useMenus() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateMenuDto }) => {
-      const promise = menuService.updateMenu(id, data);
+    mutationFn: ({ id, data }: { id: string; data: UpdateSidebarMenuDto }) => {
+      const promise = sidebarMenuService.updateSidebarMenu(id, data);
       toast.promise(promise, {
         loading: 'Updating menu item...',
-        success: (_res: Menu) => 'Menu updated successfully!',
+        success: (_res: SidebarMenu) => 'SidebarMenu updated successfully!',
         error: (err: Error) => err.message || 'Failed to update menu',
       });
       return promise;
@@ -62,10 +67,10 @@ export function useMenus() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => {
-      const promise = menuService.deleteMenu(id);
+      const promise = sidebarMenuService.deleteSidebarMenu(id);
       toast.promise(promise, {
         loading: 'Deleting menu...',
-        success: () => 'Menu deleted successfully!',
+        success: () => 'SidebarMenu deleted successfully!',
         error: (err: Error) => err.message || 'Failed to delete menu',
       });
       return promise;
@@ -77,11 +82,11 @@ export function useMenus() {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: (items: MenuReorderDto[]) => {
-      const promise = menuService.reorderMenus(items);
+    mutationFn: (items: SidebarMenuReorderDto[]) => {
+      const promise = sidebarMenuService.reorderSidebarMenus(items);
       toast.promise(promise, {
         loading: 'Updating order...',
-        success: 'Menu order updated!',
+        success: 'SidebarMenu order updated!',
         error: 'Failed to update order',
       });
       return promise;
@@ -93,11 +98,11 @@ export function useMenus() {
 
   return {
     menus: menusQuery.data ?? [],
-    allMenus: allMenusQuery.data?.data ?? [],
-    pagination: allMenusQuery.data?.meta,
-    dropdownMenus: dropdownMenusQuery.data?.data ?? [],
-    isLoading: menusQuery.isLoading || allMenusQuery.isLoading,
-    isError: menusQuery.isError || allMenusQuery.isError,
+    allSidebarMenus: allSidebarMenusQuery.data?.data ?? [],
+    pagination: allSidebarMenusQuery.data?.meta,
+    dropdownSidebarMenus: dropdownSidebarMenusQuery.data?.data ?? [],
+    isLoading: menusQuery.isLoading || allSidebarMenusQuery.isLoading,
+    isError: menusQuery.isError || allSidebarMenusQuery.isError,
     // Pagination & Search controls
     page,
     setPage,
@@ -106,10 +111,10 @@ export function useMenus() {
     search,
     setSearch,
 
-    createMenu: createMutation.mutateAsync,
-    updateMenu: updateMutation.mutateAsync,
-    deleteMenu: deleteMutation.mutateAsync,
-    reorderMenus: reorderMutation.mutateAsync,
+    createSidebarMenu: createMutation.mutateAsync,
+    updateSidebarMenu: updateMutation.mutateAsync,
+    deleteSidebarMenu: deleteMutation.mutateAsync,
+    reorderSidebarMenus: reorderMutation.mutateAsync,
     isProcessing:
       createMutation.isPending ||
       updateMutation.isPending ||

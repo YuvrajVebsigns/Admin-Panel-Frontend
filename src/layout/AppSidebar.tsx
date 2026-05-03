@@ -103,8 +103,8 @@ const AppSidebar: React.FC = () => {
           {hasChildren ? (
             <button
               onClick={() => toggleSubmenu(itemKey)}
-              className={`menu-item group cursor-pointer w-full
-                ${active ? 'menu-item-active' : 'menu-item-inactive'}
+              className={`sidebar-menu-item group cursor-pointer w-full
+                ${active ? 'sidebar-menu-item-active' : 'sidebar-menu-item-inactive'}
                 ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}
                 px-3 py-2.5
               `}
@@ -112,7 +112,7 @@ const AppSidebar: React.FC = () => {
               {renderIcon(nav.icon, active, depth)}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <>
-                  <span className="menu-item-text text-left">{nav.name}</span>
+                  <span className="sidebar-menu-item-text text-left">{nav.name}</span>
                   <ChevronDownIcon
                     className={`ml-auto w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-500' : ''}`}
                   />
@@ -123,11 +123,11 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${active ? 'menu-item-active' : 'menu-item-inactive'} ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'} px-3 py-2.5`}
+                className={`sidebar-menu-item group ${active ? 'sidebar-menu-item-active' : 'sidebar-menu-item-inactive'} ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'} px-3 py-2.5`}
               >
                 {renderIcon(nav.icon, active, depth)}
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="sidebar-menu-item-text">{nav.name}</span>
                 )}
               </Link>
             )
@@ -152,8 +152,8 @@ const AppSidebar: React.FC = () => {
           {hasChildren ? (
             <button
               onClick={() => toggleSubmenu(itemKey)}
-              className={`menu-dropdown-item w-full flex items-center justify-between group py-2
-                ${active ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'}
+              className={`sidebar-menu-dropdown-item w-full flex items-center justify-between group py-2
+                ${active ? 'sidebar-menu-dropdown-item-active' : 'sidebar-menu-dropdown-item-inactive'}
               `}
             >
               <div className="flex items-center gap-2.5 overflow-hidden">
@@ -171,8 +171,8 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-dropdown-item flex items-center justify-between group relative py-2
-                ${active ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'}
+                className={`sidebar-menu-dropdown-item flex items-center justify-between group relative py-2
+                ${active ? 'sidebar-menu-dropdown-item-active' : 'sidebar-menu-dropdown-item-inactive'}
               `}
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
@@ -185,14 +185,14 @@ const AppSidebar: React.FC = () => {
                 <span className="flex items-center gap-1 shrink-0 ml-2">
                   {nav.new && (
                     <span
-                      className={`menu-dropdown-badge ${active ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'}`}
+                      className={`sidebar-menu-dropdown-badge ${active ? 'sidebar-menu-dropdown-badge-active' : 'sidebar-menu-dropdown-badge-inactive'}`}
                     >
                       new
                     </span>
                   )}
                   {nav.pro && (
                     <span
-                      className={`menu-dropdown-badge ${active ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'}`}
+                      className={`sidebar-menu-dropdown-badge ${active ? 'sidebar-menu-dropdown-badge-active' : 'sidebar-menu-dropdown-badge-inactive'}`}
                     >
                       pro
                     </span>
@@ -249,6 +249,7 @@ const AppSidebar: React.FC = () => {
                 alt="Logo"
                 width={150}
                 height={40}
+                style={{ height: 'auto' }}
               />
               <Image
                 className="hidden dark:block"
@@ -256,10 +257,17 @@ const AppSidebar: React.FC = () => {
                 alt="Logo"
                 width={150}
                 height={40}
+                style={{ height: 'auto' }}
               />
             </>
           ) : (
-            <Image src="/images/logo/logo-icon.svg" alt="Logo" width={32} height={32} />
+            <Image
+              src="/images/logo/logo-icon.svg"
+              alt="Logo"
+              width={32}
+              height={32}
+              style={{ height: 'auto' }}
+            />
           )}
         </Link>
       </div>

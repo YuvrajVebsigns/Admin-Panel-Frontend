@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { adminService, MenuItemResponse } from '@/services/admin.service';
+import { adminService, SidebarMenuItemResponse } from '@/services/admin.service';
 
 export type NavItem = {
   name: string;
@@ -19,25 +19,34 @@ export type NavGroup = {
 };
 
 export function useNavigation() {
-  const { data: menus = [], isLoading } = useQuery({
-    queryKey: ['admin-menus'],
-    queryFn: () => adminService.getMenus(),
+  const { data: sidebarMenus = [], isLoading } = useQuery({
+    queryKey: ['admin-sidebarMenus'],
+    queryFn: () => adminService.getSidebarMenus(),
   });
 
   const navGroups = useMemo(() => {
-    if (!menus.length) return [];
+    if (!sidebarMenus.length) return [];
 
     const groups: Record<string, NavItem[]> = {};
 
-    const mapMenuItem = (menu: MenuItemResponse): NavItem => ({
-      name: menu.name,
-      icon: menu.icon,
-      path: menu.path,
-      subItems:
-        menu.children && menu.children.length > 0 ? menu.children.map(mapMenuItem) : undefined,
-    });
+    const mapMenuItem = (menu: SidebarMenuItemResponse, parentPath: string = ''): NavItem => {
+      // Clean paths: remove trailing slash from parent, ensure leading slash for menu
+      const pPath = parentPath.replace(/\/+$/, '');
+      const cPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
+      const fullPath = `${pPath}${cPath}`;
 
-    menus.forEach((menu: MenuItemResponse) => {
+      return {
+        name: menu.name,
+        icon: menu.icon,
+        path: fullPath,
+        subItems:
+          menu.children && menu.children.length > 0
+            ? menu.children.map((child) => mapMenuItem(child, fullPath))
+            : undefined,
+      };
+    };
+
+    sidebarMenus.forEach((menu: SidebarMenuItemResponse) => {
       const groupName = menu.group || 'MENU';
       if (!groups[groupName]) groups[groupName] = [];
       groups[groupName].push(mapMenuItem(menu));
@@ -47,7 +56,7 @@ export function useNavigation() {
       groupName,
       items,
     }));
-  }, [menus]);
+  }, [sidebarMenus]);
 
   return { navGroups, isLoading };
 }

@@ -21,6 +21,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     height={48}
                     src="/images/logo/auth-logo.svg"
                     alt="Core Media Logo"
+                    priority
+                    style={{ height: 'auto' }}
                   />
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">

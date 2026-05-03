@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { Menu, CreateMenuDto } from '../types/menu.types';
-import { useMenus } from '../hooks/useMenus';
+import { SidebarMenu, CreateSidebarMenuDto } from '@/modules/sidebar-menu/types/sidebar-menu.types';
+import { useSidebarMenus } from '../hooks/useSidebarMenus';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
@@ -12,8 +12,8 @@ import { IconPicker } from '@/components/ui/IconPicker';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface MenuFormProps {
-  initialData?: Menu | null;
+interface SidebarSidebarMenuFormProps {
+  initialData?: SidebarMenu | null;
 }
 
 const generatePermissionKey = (path: string): string => {
@@ -23,9 +23,10 @@ const generatePermissionKey = (path: string): string => {
   return cleanPath ? `${cleanPath}.view` : '';
 };
 
-export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
+export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initialData }) => {
   const router = useRouter();
-  const { createMenu, updateMenu, dropdownMenus, isProcessing } = useMenus();
+  const { createSidebarMenu, updateSidebarMenu, dropdownSidebarMenus, isProcessing } =
+    useSidebarMenus();
   const [isPermissionManuallyEdited, setIsPermissionManuallyEdited] = useState(false);
 
   const {
@@ -35,7 +36,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
     setValue,
     control,
     formState: { errors },
-  } = useForm<CreateMenuDto>({
+  } = useForm<CreateSidebarMenuDto>({
     defaultValues: {
       isVisible: true,
       isActive: true,
@@ -50,6 +51,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
 
   const isEditing = !!initialData;
   const watchedParentId = useWatch({ control, name: 'parentId' });
+  const watchedPath = useWatch({ control, name: 'path' });
   const watchedGroup = useWatch({ control, name: 'group' });
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
 
@@ -79,12 +81,12 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
 
   useEffect(() => {
     if (watchedParentId) {
-      const selectedParent = dropdownMenus.find((m) => m.id === watchedParentId);
+      const selectedParent = dropdownSidebarMenus.find((m) => m.id === watchedParentId);
       if (selectedParent?.group) {
         setValue('group', selectedParent.group, { shouldValidate: true });
       }
     }
-  }, [watchedParentId, dropdownMenus, setValue]);
+  }, [watchedParentId, dropdownSidebarMenus, setValue]);
 
   const handlePathBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     let pathValue = e.target.value.trim();
@@ -109,7 +111,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
     }
   };
 
-  const onSubmit = async (data: CreateMenuDto) => {
+  const onSubmit = async (data: CreateSidebarMenuDto) => {
     try {
       const payload = {
         ...data,
@@ -122,10 +124,10 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
       };
 
       if (isEditing && initialData) {
-        await updateMenu({ id: initialData.id, data: payload });
+        await updateSidebarMenu({ id: initialData.id, data: payload });
       } else {
         const { order: _order, ...createData } = payload;
-        await createMenu(createData);
+        await createSidebarMenu(createData);
       }
 
       router.push('/sidebar-menu');
@@ -136,12 +138,14 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
 
   const parentOptions = [
     { value: '', label: 'None (Root Level)' },
-    ...dropdownMenus
+    ...dropdownSidebarMenus
       .filter((m) => m.id !== initialData?.id)
       .map((m) => ({ value: m.id, label: m.name })),
   ];
 
-  const existingGroups = Array.from(new Set(dropdownMenus.map((m) => m.group).filter(Boolean)));
+  const existingGroups = Array.from(
+    new Set(dropdownSidebarMenus.map((m) => m.group).filter(Boolean)),
+  );
   const filteredGroups = existingGroups.filter((g) =>
     g?.toLowerCase().includes((watchedGroup || '').toLowerCase()),
   );
@@ -154,7 +158,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
         className="flex items-center gap-2 text-gray-500 hover:text-brand-500 mb-6 transition-colors font-medium group text-sm"
       >
         <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-        Back to Menu List
+        Back to SidebarMenu List
       </button>
 
       <form
@@ -163,7 +167,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
       >
         <div className="p-8 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {isEditing ? `Edit Menu: ${initialData.name}` : 'Create New Menu'}
+            {isEditing ? `Edit SidebarMenu: ${initialData.name}` : 'Create New SidebarMenu'}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             Configure your navigation item properties and permissions.
@@ -174,11 +178,11 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Menu Name <span className="text-error-500">*</span>
+                SidebarMenu Name <span className="text-error-500">*</span>
               </Label>
               <Input
                 id="name"
-                {...register('name', { required: 'Menu name is required' })}
+                {...register('name', { required: 'SidebarMenu name is required' })}
                 placeholder="e.g. Dashboard"
                 error={!!errors.name}
                 hint={errors.name?.message}
@@ -187,7 +191,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
 
             <div className="space-y-2">
               <Label htmlFor="path">
-                Path <span className="text-error-500">*</span>
+                Path Segment <span className="text-error-500">*</span>
               </Label>
               <Input
                 id="path"
@@ -200,6 +204,25 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
                 error={!!errors.path}
                 hint={errors.path?.message}
               />
+              {(watchedParentId || watchedPath) && (
+                <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Final URL Preview
+                  </p>
+                  <code className="text-xs text-brand-600 dark:text-brand-400 font-mono break-all">
+                    {(() => {
+                      const selectedParent = dropdownSidebarMenus.find(
+                        (m) => m.id === watchedParentId,
+                      );
+                      const pPath = (selectedParent?.path || '').replace(/\/+$/, '');
+                      const cPath = (watchedPath || '').startsWith('/')
+                        ? watchedPath || ''
+                        : `/${watchedPath || ''}`;
+                      return `${pPath}${cPath}` || '/';
+                    })()}
+                  </code>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -218,7 +241,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="parentId">Parent Menu</Label>
+              <Label htmlFor="parentId">Parent SidebarMenu</Label>
               <Select
                 options={parentOptions}
                 value={watchedParentId || ''}
@@ -351,7 +374,7 @@ export const MenuForm: React.FC<MenuFormProps> = ({ initialData }) => {
             disabled={isProcessing}
             className="px-8 shadow-lg shadow-brand-500/20"
           >
-            {isProcessing ? 'Saving...' : isEditing ? 'Update Menu' : 'Create Menu'}
+            {isProcessing ? 'Saving...' : isEditing ? 'Update SidebarMenu' : 'Create SidebarMenu'}
           </Button>
         </div>
       </form>
