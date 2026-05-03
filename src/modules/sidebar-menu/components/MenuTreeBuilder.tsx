@@ -18,15 +18,15 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useMenus } from '../hooks/useMenus';
-import { Menu } from '../types/menu.types';
+import { useSidebarMenus } from '../hooks/useSidebarMenus';
+import { SidebarMenu } from '@/modules/sidebar-menu/types/sidebar-menu.types';
 import { SortableMenuItem } from './SortableMenuItem';
 import Button from '@/components/ui/button/Button';
 import { Save, GripVertical } from 'lucide-react';
 
 export const MenuTreeBuilder: React.FC = () => {
-  const { menus, reorderMenus, isProcessing } = useMenus();
-  const [items, setItems] = useState<Menu[]>(menus);
+  const { menus, reorderSidebarMenus, isProcessing } = useSidebarMenus();
+  const [items, setItems] = useState<SidebarMenu[]>(menus);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -62,8 +62,9 @@ export const MenuTreeBuilder: React.FC = () => {
       id: item.id,
       parentId: (item.parentId as string | null) ?? null,
       order: index,
+      group: item.group ?? null,
     }));
-    await reorderMenus(reorderData);
+    await reorderSidebarMenus(reorderData);
   };
 
   const activeItem = items.find((i) => i.id === activeId);
@@ -72,7 +73,9 @@ export const MenuTreeBuilder: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-brand-50/50 dark:bg-brand-950/10 p-4 rounded-2xl border border-brand-100 dark:border-brand-900/30">
         <div className="flex-1">
-          <h3 className="text-sm font-bold text-brand-900 dark:text-brand-400">Reorder Menus</h3>
+          <h3 className="text-sm font-bold text-brand-900 dark:text-brand-400">
+            Reorder SidebarMenus
+          </h3>
           <p className="text-xs text-brand-600 dark:text-brand-500 mt-1">
             Drag items to change their display order. Changes won't take effect until you click
             Save.

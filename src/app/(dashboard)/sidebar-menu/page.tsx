@@ -1,8 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MenuTable } from '@/modules/menu/components/MenuTable';
-import { MenuTreeBuilder } from '@/modules/menu/components/MenuTreeBuilder';
+import { SidebarMenuTable } from '@/modules/sidebar-menu/components/SidebarMenuTable';
+import { MenuTreeBuilder } from '@/modules/sidebar-menu/components/MenuTreeBuilder';
 import Button from '@/components/ui/button/Button';
 import { Plus, List, ListTree } from 'lucide-react';
 
@@ -64,7 +64,7 @@ export default function MenuManagementPage() {
       {/* Main Content Area */}
       <div className="transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
         {viewMode === 'table' ? (
-          <MenuTable />
+          <SidebarMenuTable />
         ) : (
           <div className="bg-white dark:bg-gray-900 p-10 rounded-[2.5rem] border border-gray-200 dark:border-gray-800 shadow-2xl">
             <MenuTreeBuilder />

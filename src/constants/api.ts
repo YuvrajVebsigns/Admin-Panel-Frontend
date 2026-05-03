@@ -20,6 +20,6 @@ export const API_ENDPOINTS = {
     UPLOAD: '/media/upload',
   },
   ADMIN: {
-    MENUS: '/admin/menus',
+    MENUS: '/admin/sidebar-menu',
   },
 } as const;

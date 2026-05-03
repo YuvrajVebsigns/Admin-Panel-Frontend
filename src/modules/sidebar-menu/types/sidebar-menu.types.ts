@@ -1,4 +1,4 @@
-export interface Menu {
+export interface SidebarMenu {
   id: string;
   name: string;
   path: string;
@@ -9,12 +9,12 @@ export interface Menu {
   isVisible: boolean;
   isActive: boolean;
   group?: string;
-  children?: Menu[];
+  children?: SidebarMenu[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateMenuDto {
+export interface CreateSidebarMenuDto {
   name: string;
   path: string;
   icon?: string;
@@ -26,10 +26,11 @@ export interface CreateMenuDto {
   isActive?: boolean;
 }
 
-export interface UpdateMenuDto extends Partial<CreateMenuDto> {}
+export interface UpdateSidebarMenuDto extends Partial<CreateSidebarMenuDto> {}
 
-export interface MenuReorderDto {
+export interface SidebarMenuReorderDto {
   id: string;
   parentId: string | null;
   order: number;
+  group: string | null;
 }

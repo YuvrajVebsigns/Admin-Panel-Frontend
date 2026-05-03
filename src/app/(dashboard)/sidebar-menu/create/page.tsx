@@ -1,9 +1,9 @@
-import { MenuForm } from '@/modules/menu/components/MenuForm';
+import { SidebarMenuForm } from '@/modules/sidebar-menu/components/SidebarMenuForm';
 
 export default function CreateMenuPage() {
   return (
     <div className="py-8 px-4">
-      <MenuForm />
+      <SidebarMenuForm />
     </div>
   );
 }

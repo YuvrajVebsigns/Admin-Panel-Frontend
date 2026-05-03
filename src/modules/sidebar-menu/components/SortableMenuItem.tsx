@@ -3,9 +3,9 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
-import { Menu } from '../types/menu.types';
+import { SidebarMenu } from '@/modules/sidebar-menu/types/sidebar-menu.types';
 
-export const SortableMenuItem = ({ menu }: { menu: Menu }) => {
+export const SortableMenuItem = ({ menu }: { menu: SidebarMenu }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: menu.id,
   });

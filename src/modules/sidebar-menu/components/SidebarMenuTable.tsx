@@ -1,53 +1,53 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu } from '../types/menu.types';
-import { useMenus } from '../hooks/useMenus';
+import { SidebarMenu } from '@/modules/sidebar-menu/types/sidebar-menu.types';
+import { useSidebarMenus } from '../hooks/useSidebarMenus';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { Edit, Trash2 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 
-export const MenuTable: React.FC = () => {
+export const SidebarMenuTable: React.FC = () => {
   const router = useRouter();
   const {
-    allMenus,
+    allSidebarMenus,
     pagination,
     isLoading,
-    deleteMenu,
-    updateMenu,
+    deleteSidebarMenu,
+    updateSidebarMenu,
     page,
     setPage,
     limit,
     setLimit,
     search,
     setSearch,
-  } = useMenus();
+  } = useSidebarMenus();
   const { confirm } = useGlobalModal();
 
-  const handleToggleVisible = async (menu: Menu) => {
-    await updateMenu({ id: menu.id, data: { isVisible: !menu.isVisible } });
+  const handleToggleVisible = async (menu: SidebarMenu) => {
+    await updateSidebarMenu({ id: menu.id, data: { isVisible: !menu.isVisible } });
   };
 
-  const handleToggleActive = async (menu: Menu) => {
-    await updateMenu({ id: menu.id, data: { isActive: !menu.isActive } });
+  const handleToggleActive = async (menu: SidebarMenu) => {
+    await updateSidebarMenu({ id: menu.id, data: { isActive: !menu.isActive } });
   };
 
   const handleDelete = async (id: string, name: string) => {
     confirm({
-      title: 'Delete Menu Item',
+      title: 'Delete SidebarMenu Item',
       message: `Are you sure you want to delete "${name}"? This action cannot be undone.`,
       confirmText: 'Delete',
       type: 'danger',
       onConfirm: async () => {
-        await deleteMenu(id);
+        await deleteSidebarMenu(id);
       },
     });
   };
 
-  const columns: Column<Menu>[] = [
+  const columns: Column<SidebarMenu>[] = [
     {
-      header: 'Menu Item',
+      header: 'SidebarMenu Item',
       accessor: (menu) => (
         <div className="flex items-center gap-3.5">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400">
@@ -67,11 +67,29 @@ export const MenuTable: React.FC = () => {
     },
     {
       header: 'Path',
-      accessor: (menu) => (
-        <code className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded text-[12px] font-mono text-brand-600 dark:text-brand-400">
-          {menu.path}
-        </code>
-      ),
+      accessor: (menu) => {
+        const parentPath =
+          typeof menu.parentId === 'object' && menu.parentId !== null
+            ? (menu.parentId as { path?: string }).path || ''
+            : '';
+
+        const cleanParentPath = parentPath.replace(/\/+$/, '');
+        const cleanMenuPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
+        const finalPath = `${cleanParentPath}${cleanMenuPath}`;
+
+        return (
+          <div className="flex flex-col gap-1">
+            <code className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded text-[12px] font-mono text-brand-600 dark:text-brand-400">
+              {finalPath}
+            </code>
+            {parentPath && (
+              <span className="text-[10px] text-gray-400 pl-1 font-medium italic">
+                Segments: {parentPath} + {menu.path}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Parent',
@@ -157,8 +175,8 @@ export const MenuTable: React.FC = () => {
   ];
 
   return (
-    <DataTable<Menu>
-      data={allMenus}
+    <DataTable<SidebarMenu>
+      data={allSidebarMenus}
       columns={columns}
       isLoading={isLoading}
       searchPlaceholder="Search menus by name, group, or path..."
