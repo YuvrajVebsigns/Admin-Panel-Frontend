@@ -10,7 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isExpanded, isHovered } = useSidebar();
 
   return (
-    <div className="flex min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen overflow-hidden bg-gray-50 dark:bg-navy-950">
       <AppSidebar />
       <Backdrop />
       <div

@@ -80,12 +80,12 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-white">Account Created!</h2>
-          <p className="text-slate-400">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Account Created!</h2>
+          <p className="text-gray-500 dark:text-gray-400">
             Your account has been successfully created. Redirecting to login...
           </p>
         </div>
-        <button onClick={onSwitchToLogin} className="text-primary-400 font-bold hover:underline">
+        <button onClick={onSwitchToLogin} className="text-brand-500 font-bold hover:underline">
           Click here if you are not redirected
         </button>
       </div>
@@ -95,18 +95,21 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {errors.general && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-sm">
+        <div className="p-4 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center gap-3 text-brand-500 text-sm">
           <AlertCircle size={18} />
           <p>{errors.general}</p>
         </div>
       )}
 
       <div className="space-y-2.5">
-        <label htmlFor="full-name" className="text-sm font-semibold text-slate-200 ml-1">
+        <label
+          htmlFor="full-name"
+          className="text-sm font-semibold text-gray-700 dark:text-gray-200 ml-1"
+        >
           Full Name
         </label>
         <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-primary-400 transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-500 transition-colors">
             <User size={20} />
           </div>
           <input
@@ -118,20 +121,23 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
             autoComplete="name"
             placeholder="John Doe"
             required
-            className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
-              errors.fullName ? 'border-red-500/50' : 'border-white/5'
-            } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
+            className={`block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-navy-800 border ${
+              errors.fullName ? 'border-brand-500/50' : 'border-gray-200 dark:border-navy-700'
+            } rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-base shadow-sm`}
           />
         </div>
-        {errors.fullName && <p className="text-xs text-red-500 ml-1">{errors.fullName}</p>}
+        {errors.fullName && <p className="text-xs text-brand-500 ml-1">{errors.fullName}</p>}
       </div>
 
       <div className="space-y-2.5">
-        <label htmlFor="email" className="text-sm font-semibold text-slate-200 ml-1">
+        <label
+          htmlFor="email"
+          className="text-sm font-semibold text-gray-700 dark:text-gray-200 ml-1"
+        >
           Email Address
         </label>
         <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-primary-400 transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-500 transition-colors">
             <Mail size={20} />
           </div>
           <input
@@ -143,20 +149,23 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
             autoComplete="email"
             placeholder="name@company.com"
             required
-            className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
-              errors.email ? 'border-red-500/50' : 'border-white/5'
-            } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
+            className={`block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-navy-800 border ${
+              errors.email ? 'border-brand-500/50' : 'border-gray-200 dark:border-navy-700'
+            } rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-base shadow-sm`}
           />
         </div>
-        {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
+        {errors.email && <p className="text-xs text-brand-500 ml-1">{errors.email}</p>}
       </div>
 
       <div className="space-y-2.5">
-        <label htmlFor="password" className="text-sm font-semibold text-slate-200 ml-1">
+        <label
+          htmlFor="password"
+          className="text-sm font-semibold text-gray-700 dark:text-gray-200 ml-1"
+        >
           Password
         </label>
         <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-primary-400 transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-500 transition-colors">
             <Lock size={20} />
           </div>
           <input
@@ -168,12 +177,12 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
             autoComplete="new-password"
             placeholder="••••••••"
             required
-            className={`block w-full pl-12 pr-4 py-3.5 bg-slate-800/40 border ${
-              errors.password ? 'border-red-500/50' : 'border-white/5'
-            } rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-base shadow-inner`}
+            className={`block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-navy-800 border ${
+              errors.password ? 'border-brand-500/50' : 'border-gray-200 dark:border-navy-700'
+            } rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-base shadow-sm`}
           />
         </div>
-        {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
+        {errors.password && <p className="text-xs text-brand-500 ml-1">{errors.password}</p>}
       </div>
 
       <div className="flex items-start gap-3 px-1">
@@ -183,28 +192,30 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
             type="checkbox"
             checked={acceptTerms}
             onChange={(e) => setAcceptTerms(e.target.checked)}
-            className="w-4 h-4 rounded border-white/10 bg-slate-800/50 text-primary-500 focus:ring-primary-500/20 transition-all"
+            className="w-4 h-4 rounded border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-800 accent-brand-500 focus:ring-brand-500/20 transition-all cursor-pointer"
           />
         </div>
         <div className="text-sm">
-          <label htmlFor="terms" className="text-slate-400">
+          <label htmlFor="terms" className="text-gray-500 dark:text-gray-400">
             I agree to the{' '}
-            <button type="button" className="text-primary-400 hover:underline">
+            <button type="button" className="text-brand-500 hover:underline">
               Terms of Service
             </button>{' '}
             and{' '}
-            <button type="button" className="text-primary-400 hover:underline">
+            <button type="button" className="text-brand-500 hover:underline">
               Privacy Policy
             </button>
           </label>
-          {errors.acceptTerms && <p className="text-xs text-red-500 mt-1">{errors.acceptTerms}</p>}
+          {errors.acceptTerms && (
+            <p className="text-xs text-brand-500 mt-1">{errors.acceptTerms}</p>
+          )}
         </div>
       </div>
 
       <button
         type="submit"
         disabled={isSigningUp}
-        className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg tracking-wide"
+        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg tracking-wide"
       >
         {isSigningUp ? (
           <>
@@ -216,12 +227,12 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
         )}
       </button>
 
-      <p className="text-center text-sm text-slate-400 mt-10">
+      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-10">
         Already have an account?{' '}
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="font-bold text-primary-400 hover:text-primary-300 transition-colors decoration-primary-500/30 underline-offset-4 hover:underline"
+          className="font-bold text-brand-500 hover:text-brand-600 transition-colors decoration-brand-500/30 underline-offset-4 hover:underline"
         >
           Sign in
         </button>

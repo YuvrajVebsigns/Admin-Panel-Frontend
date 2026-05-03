@@ -163,9 +163,9 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm"
+        className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 overflow-hidden shadow-sm transition-colors duration-300"
       >
-        <div className="p-8 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30">
+        <div className="p-8 border-b border-gray-100 dark:border-navy-700 bg-gray-50/30 dark:bg-navy-900/30">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {isEditing ? `Edit SidebarMenu: ${initialData.name}` : 'Create New SidebarMenu'}
           </h2>
@@ -205,8 +205,8 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
                 hint={errors.path?.message}
               />
               {(watchedParentId || watchedPath) && (
-                <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                <div className="mt-2 p-2 bg-gray-50 dark:bg-navy-900/50 rounded-lg border border-gray-100 dark:border-navy-700">
+                  <p className="text-[11px] font-bold text-gray-400 dark:text-navy-400 uppercase tracking-wider mb-1">
                     Final URL Preview
                   </p>
                   <code className="text-xs text-brand-600 dark:text-brand-400 font-mono break-all">
@@ -271,7 +271,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
                 autoComplete="off"
               />
               {isGroupDropdownOpen && filteredGroups.length > 0 && !watchedParentId && (
-                <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-theme-md dark:border-gray-700 dark:bg-gray-800">
+                <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-theme-md dark:border-navy-700 dark:bg-navy-800">
                   {filteredGroups.map((g) => (
                     <li
                       key={g}
@@ -323,8 +323,8 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="pt-6 border-t border-gray-100 dark:border-navy-700">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Visibility & Status
             </h3>
             <div className="flex flex-wrap gap-6">
@@ -333,7 +333,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
                   type="checkbox"
                   id="isVisible"
                   {...register('isVisible')}
-                  className="w-5 h-5 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
+                  className="w-5 h-5 rounded border-gray-300 accent-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
                 />
                 <Label
                   htmlFor="isVisible"
@@ -347,7 +347,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
                   type="checkbox"
                   id="isActive"
                   {...register('isActive')}
-                  className="w-5 h-5 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
+                  className="w-5 h-5 rounded border-gray-300 accent-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
                 />
                 <Label
                   htmlFor="isActive"
@@ -360,7 +360,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50/50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
+        <div className="p-8 bg-gray-50/50 dark:bg-navy-900/50 border-t border-gray-100 dark:border-navy-700 flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"

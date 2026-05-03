@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google';
+import { Roboto, Open_Sans } from 'next/font/google';
 import './globals.css';
 import 'flatpickr/dist/flatpickr.css';
 import QueryProvider from '@/providers/QueryProvider';
@@ -9,9 +9,16 @@ import { ToasterProvider } from '@/components/providers/ToasterProvider';
 import { ModalProvider } from '@/context/ModalContext';
 import { GlobalModal } from '@/components/ui/modal/GlobalModal';
 
-const outfit = Outfit({
+const roboto = Roboto({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  weight: ['400', '500', '700'],
+  variable: '--font-roboto',
+  display: 'swap',
+});
+
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  variable: '--font-open-sans',
   display: 'swap',
 });
 
@@ -28,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={outfit.variable}>
-      <body className={`${outfit.className} dark:bg-gray-900`}>
+    <html lang="en" className={`${roboto.variable} ${openSans.variable}`}>
+      <body className={`${openSans.className} dark:bg-gray-900`}>
         <ToasterProvider />
         <ModalProvider>
           <ThemeProvider>

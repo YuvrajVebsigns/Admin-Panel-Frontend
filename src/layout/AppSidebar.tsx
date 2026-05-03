@@ -83,7 +83,7 @@ const AppSidebar: React.FC = () => {
         ${
           active
             ? 'bg-brand-500/10 text-brand-500 shadow-sm'
-            : 'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-gray-500 group-hover:bg-gray-100 dark:group-hover:bg-white/10 dark:group-hover:text-gray-300'
+            : 'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-navy-300 group-hover:bg-gray-100 dark:group-hover:bg-white/10 dark:group-hover:text-white'
         }`}
       >
         <DynamicIcon name={iconName || 'LayoutGrid'} size={iconSize} />
@@ -228,7 +228,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-navy-900 dark:border-navy-800 text-gray-900 dark:text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0`}
@@ -280,7 +280,7 @@ const AppSidebar: React.FC = () => {
               navGroups.map((group) => (
                 <div key={group.groupName}>
                   <h2
-                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-navy-300 ${
                       !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
                     }`}
                   >
