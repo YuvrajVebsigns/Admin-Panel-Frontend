@@ -21,5 +21,9 @@ export const API_ENDPOINTS = {
   },
   ADMIN: {
     MENUS: '/admin/sidebar-menu',
+    ROLES: {
+      BASE: '/admin/roles',
+      BY_ID: (id: string) => `/admin/roles/${id}`,
+    },
   },
 } as const;

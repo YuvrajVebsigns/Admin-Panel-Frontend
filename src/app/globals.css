@@ -13,28 +13,28 @@
   --font-open-sans: var(--font-open-sans), sans-serif;
 
   --breakpoint-*: initial;
-  --breakpoint-2xsm:375px;
-  --breakpoint-xsm:425px;
-  --breakpoint-3xl:2000px;
-  --breakpoint-sm:640px;
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+  --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
-  --breakpoint-lg:1024px;
-  --breakpoint-xl:1280px;
-  --breakpoint-2xl:1536px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 
-  --text-title-2xl:2.5rem;
+  --text-title-2xl: 2.5rem;
   --text-title-2xl--line-height: 1.2;
-  --text-title-xl:2rem;
+  --text-title-xl: 2rem;
   --text-title-xl--line-height: 1.2;
-  --text-title-lg:1.75rem;
+  --text-title-lg: 1.75rem;
   --text-title-lg--line-height: 1.2;
   --text-title-md: 1.5rem;
   --text-title-md--line-height: 1.3;
-  --text-title-sm:1.25rem;
+  --text-title-sm: 1.25rem;
   --text-title-sm--line-height: 1.4;
-  --text-theme-xl:1.125rem;
+  --text-theme-xl: 1.125rem;
   --text-theme-xl--line-height: 1.6;
-  --text-theme-sm:0.875rem;
+  --text-theme-sm: 0.875rem;
   --text-theme-sm--line-height: 1.6;
   --text-theme-xs: 0.75rem;
   --text-theme-xs--line-height: 1.5;
@@ -86,7 +86,7 @@
   --color-gray-900: #0a192f;
   /* Using Navy for deep text */
   --color-gray-950: #050a14;
-  --color-gray-dark:#0a192f;
+  --color-gray-dark: #0a192f;
 
   --color-orange-25: #fffaf5;
   --color-orange-50: #fff6ed;
@@ -148,7 +148,7 @@
     0px 4px 8px -2px rgba(10, 25, 47, 0.1), 0px 2px 4px -2px rgba(10, 25, 47, 0.06);
   --shadow-theme-lg:
     0px 12px 16px -4px rgba(10, 25, 47, 0.08), 0px 4px 6px -2px rgba(10, 25, 47, 0.03);
-  --shadow-theme-sm:0px 1px 3px 0px rgba(10, 25, 47, 0.1), 0px 1px 2px 0px rgba(10, 25, 47, 0.06);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(10, 25, 47, 0.1), 0px 1px 2px 0px rgba(10, 25, 47, 0.06);
   --shadow-theme-xs: 0px 1px 2px 0px rgba(10, 25, 47, 0.05);
   --shadow-theme-xl:
     0px 20px 24px -4px rgba(10, 25, 47, 0.08), 0px 8px 8px -4px rgba(10, 25, 47, 0.03);
@@ -159,7 +159,7 @@
   --shadow-tooltip:
     0px 4px 6px -2px rgba(10, 25, 47, 0.05), -8px 0px 20px 8px rgba(10, 25, 47, 0.05);
 
-  --drop-shadow-4xl:0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
+  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
 
   --z-index-1: 1;
   --z-index-9: 9;
@@ -179,7 +179,6 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-
   *,
   ::after,
   ::before,
@@ -292,7 +291,6 @@
 }
 
 @utility no-scrollbar {
-
   /* Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
@@ -323,7 +321,6 @@
 }
 
 @layer utilities {
-
   /* For Remove Date Icon */
   input[type='date']::-webkit-inner-spin-button,
   input[type='time']::-webkit-inner-spin-button,
@@ -436,7 +433,7 @@
   @apply !text-gray-400;
 }
 
-.flatpickr-months>.flatpickr-month {
+.flatpickr-months > .flatpickr-month {
   background: none !important;
 }
 
@@ -535,9 +532,9 @@ span.flatpickr-weekday,
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-50 hover:!bg-brand-500;
 }
 
-.flatpickr-day.selected.startRange+.endRange:not(:nth-child(7n + 1)),
-.flatpickr-day.startRange.startRange+.endRange:not(:nth-child(7n + 1)),
-.flatpickr-day.endRange.startRange+.endRange:not(:nth-child(7n + 1)) {
+.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
+.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
+.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
   box-shadow: -10px 0 0 #e31e24;
 }
 
@@ -565,7 +562,7 @@ span.flatpickr-weekday,
   @apply min-w-[718px];
 }
 
-.fc .fc-scrollgrid-section>* {
+.fc .fc-scrollgrid-section > * {
   border-right-width: 0;
   border-bottom-width: 0;
 }
@@ -837,19 +834,19 @@ span.flatpickr-weekday,
   @apply !hidden;
 }
 
-.form-check-input:checked~span {
+.form-check-input:checked ~ span {
   @apply border-[6px] border-brand-500 bg-brand-500 dark:border-brand-500;
 }
 
-.taskCheckbox:checked~.box span {
+.taskCheckbox:checked ~ .box span {
   @apply opacity-100 bg-brand-500;
 }
 
-.taskCheckbox:checked~p {
+.taskCheckbox:checked ~ p {
   @apply text-gray-400 line-through;
 }
 
-.taskCheckbox:checked~.box {
+.taskCheckbox:checked ~ .box {
   @apply border-brand-500 bg-brand-500 dark:border-brand-500;
 }
 

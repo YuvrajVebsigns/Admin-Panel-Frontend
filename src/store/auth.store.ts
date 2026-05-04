@@ -5,7 +5,7 @@ import { setCookie, deleteCookie } from '@/lib/utils';
 
 interface AuthState {
   user: User | null;
-  role: string | null;
+  roleKey: string | null;
   permissions: string[];
   access_token: string | null;
   refresh_token: string | null;
@@ -13,14 +13,14 @@ interface AuthState {
   setAuth: (user: User, access_token: string, refresh_token: string) => void;
   clearAuth: () => void;
   updateUser: (user: User) => void;
-  setPermissions: (permissions: string[], role: string | null) => void;
+  setPermissions: (permissions: string[], roleKey: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      role: null,
+      roleKey: null,
       permissions: [],
       access_token: null,
       refresh_token: null,
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>()(
           access_token,
           refresh_token,
           isAuthenticated: true,
-          role: user.role?.name || null,
+          roleKey: user.role?.roleKey || null,
           permissions: user.role?.permissions || [],
         });
       },
@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
         deleteCookie('auth_token');
         set({
           user: null,
-          role: null,
+          roleKey: null,
           permissions: [],
           access_token: null,
           refresh_token: null,
@@ -54,10 +54,10 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (user) =>
         set({
           user,
-          role: user.role?.name || null,
+          roleKey: user.role?.roleKey || null,
           permissions: user.role?.permissions || [],
         }),
-      setPermissions: (permissions, role) => set({ permissions, role }),
+      setPermissions: (permissions, roleKey) => set({ permissions, roleKey }),
     }),
     {
       name: 'auth-storage',
