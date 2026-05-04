@@ -14,7 +14,6 @@ export interface User {
   role: Role;
   isActive: boolean;
   acceptTerms: boolean;
-  phoneNumber?: string;
   profileImage?: string;
   createdAt: string;
   updatedAt: string;

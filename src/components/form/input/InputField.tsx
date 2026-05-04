@@ -4,6 +4,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   success?: boolean;
   error?: boolean;
   hint?: string; // Optional hint text
+  endIcon?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -15,6 +16,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       success = false,
       error = false,
       hint,
+      endIcon,
       ...props
     },
     ref,
@@ -33,9 +35,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/10 dark:border-navy-600 dark:bg-[#0b1a32] dark:text-white/90 dark:focus:border-brand-500`;
     }
 
+    if (endIcon) {
+      inputClasses += ` pr-10`; // Add padding to right so text doesn't overlap icon
+    }
+
     return (
-      <div className="relative">
-        <input ref={ref} type={type} disabled={disabled} className={inputClasses} {...props} />
+      <div className="relative w-full">
+        <div className="relative w-full">
+          <input ref={ref} type={type} disabled={disabled} className={inputClasses} {...props} />
+          {endIcon && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{endIcon}</div>
+          )}
+        </div>
 
         {/* Optional Hint Text */}
         {hint && (
