@@ -1,6 +1,9 @@
 export interface Role {
   id: string;
   name: string;
+  roleKey: string;
+  isActive: boolean;
+  isShow: boolean;
   permissions: string[];
 }
 

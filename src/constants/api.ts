@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
     LOGIN: '/admin/auth/login',
     SIGNUP: '/admin/auth/signup',
     LOGOUT: '/admin/auth/logout',
-    ME: '/admin/auth/profile',
+    ME: '/admin/auth/me',
     REFRESH: '/admin/auth/refresh',
     FORGOT_PASSWORD: '/admin/auth/forgot-password',
     VERIFY_OTP: '/admin/auth/verify-otp',
@@ -21,5 +21,9 @@ export const API_ENDPOINTS = {
   },
   ADMIN: {
     MENUS: '/admin/sidebar-menu',
+    ROLES: {
+      BASE: '/admin/roles',
+      BY_ID: (id: string) => `/admin/roles/${id}`,
+    },
   },
 } as const;

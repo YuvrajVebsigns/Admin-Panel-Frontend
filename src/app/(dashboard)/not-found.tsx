@@ -8,7 +8,9 @@ export default function DashboardNotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
       <div className="relative">
-        <h1 className="text-9xl font-black text-gray-200 dark:text-gray-800 animate-pulse">404</h1>
+        <h1 className="text-[12rem] md:text-[16rem] font-black text-brand-50 dark:text-brand-500/10 animate-pulse select-none">
+          404
+        </h1>
         <div className="absolute inset-0 flex items-center justify-center">
           <p className="text-2xl font-bold text-gray-800 dark:text-white">Lost in Space?</p>
         </div>
@@ -27,7 +29,7 @@ export default function DashboardNotFound() {
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-brand-500 rounded-2xl hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98]"
         >
           <Home size={18} />
           Return to Dashboard
@@ -35,7 +37,7 @@ export default function DashboardNotFound() {
 
         <button
           onClick={() => typeof window !== 'undefined' && window.history.back()}
-          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-navy-700 transition-all active:scale-[0.98]"
         >
           <ArrowLeft size={18} />
           Go Back

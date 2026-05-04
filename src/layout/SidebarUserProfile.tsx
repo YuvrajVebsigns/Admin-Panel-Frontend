@@ -35,7 +35,7 @@ export default function SidebarUserProfile() {
     <div className="relative border-t border-gray-200 dark:border-gray-800 p-4">
       <button
         onClick={toggleDropdown}
-        className="flex items-center w-full text-left text-gray-700 dark:text-gray-400 focus:outline-none"
+        className="flex items-center w-full text-left text-gray-700 dark:text-gray-300 focus:outline-none"
       >
         <div className="flex items-center gap-3 w-full">
           <span className="overflow-hidden rounded-full h-10 w-10 shrink-0">
@@ -53,7 +53,7 @@ export default function SidebarUserProfile() {
               <span className="block font-medium text-sm text-gray-900 dark:text-white truncate">
                 {user?.fullName || 'Guest User'}
               </span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">
+              <span className="block text-xs text-gray-500 dark:text-navy-300 truncate">
                 {user?.role?.name || 'Administrator'}
               </span>
             </div>
@@ -84,7 +84,7 @@ export default function SidebarUserProfile() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className={`absolute ${showText ? 'left-4 w-[240px]' : 'left-full ml-2 w-[240px]'} bottom-full mb-2 flex flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark z-50`}
+        className={`absolute ${showText ? 'left-4 w-[240px]' : 'left-full ml-2 w-[240px]'} bottom-full mb-2 flex flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-navy-700 dark:bg-navy-800 z-50`}
       >
         <div>
           <span className="block font-medium text-gray-700 text-sm dark:text-gray-400 truncate">

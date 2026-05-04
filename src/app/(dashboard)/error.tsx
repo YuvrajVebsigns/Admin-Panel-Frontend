@@ -10,24 +10,32 @@ export default function DashboardError({
   reset: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-      <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mb-6">
-        <AlertTriangle className="text-amber-500" size={40} />
+    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
+      <div className="relative">
+        <h1 className="text-[12rem] md:text-[16rem] font-black text-brand-50 dark:text-brand-500/10 animate-pulse uppercase select-none">
+          Err
+        </h1>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 bg-brand-500/10 rounded-full flex items-center justify-center">
+            <AlertTriangle className="text-brand-500" size={40} />
+          </div>
+        </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-        Something went wrong in the Dashboard
-      </h2>
+      <div className="mt-8 max-w-md">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          Something went wrong in the Dashboard
+        </h2>
+        <p className="mt-4 text-gray-500 dark:text-gray-400">
+          We encountered an unexpected error. This might be due to a temporary connection issue or a
+          data mapping error.
+        </p>
+      </div>
 
-      <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8">
-        We encountered an unexpected error while rendering this part of the dashboard. This might be
-        due to a temporary connection issue or a data mapping error.
-      </p>
-
-      <div className="flex gap-4">
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         <button
           onClick={() => reset()}
-          className="flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-primary-500/20 active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-brand-500 rounded-2xl hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98]"
         >
           <RefreshCw size={18} />
           Try Again
@@ -35,7 +43,7 @@ export default function DashboardError({
 
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-navy-700 transition-all active:scale-[0.98]"
         >
           Refresh Page
         </button>
