@@ -6,6 +6,7 @@ import InputField from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Button from '@/components/ui/button/Button';
 import { PERMISSION_GROUPS } from '../constants/permissions';
+import { useAuthStore } from '@/store/auth.store';
 
 interface RoleFormProps {
   initialData?: Role | null;
@@ -31,8 +32,18 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
     },
   });
 
+  const { roleKey: currentUserRole } = useAuthStore();
   const selectedPermissions = watch('permissions') || [];
   const roleName = watch('name');
+
+  // Filter permission groups based on user role
+  const filteredPermissionGroups = React.useMemo(() => {
+    if (currentUserRole === 'super_admin') return PERMISSION_GROUPS;
+
+    // Create a copy and remove System Settings
+    const { 'System Settings': _, ...others } = PERMISSION_GROUPS;
+    return others;
+  }, [currentUserRole]);
 
   // Auto-generate roleKey from name
   useEffect(() => {
@@ -125,8 +136,9 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Role Basic Info Card */}
       <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-2xl p-6 shadow-theme-sm">
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
           <div>
             <Label htmlFor="name">Role Name</Label>
             <InputField
@@ -140,50 +152,67 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
             <input type="hidden" {...register('roleKey')} />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pb-3">
             <input
               type="checkbox"
               id="isActive"
               {...register('isActive')}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500/20 dark:border-navy-600 dark:bg-navy-950 accent-brand-500"
+              className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500/20 dark:border-navy-600 dark:bg-navy-950 accent-brand-500 cursor-pointer"
             />
-            <Label htmlFor="isActive" className="mb-0 cursor-pointer">
-              Role is Active
+            <Label htmlFor="isActive" className="mb-0 cursor-pointer text-base font-semibold">
+              Active Status
             </Label>
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-4">
-            <Label>Permissions</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(PERMISSION_GROUPS).map(([group, permissions]) => {
-                const allSelected = permissions.every((p) => selectedPermissions.includes(p));
+      {/* Permissions Groups */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {Object.entries(filteredPermissionGroups).map(([group, permissions]) => {
+          const allSelected = permissions.every((p) => selectedPermissions.includes(p));
 
-                return (
-                  <div
-                    key={group}
-                    className="border border-gray-100 dark:border-navy-800 rounded-xl overflow-hidden"
-                  >
-                    <div className="bg-gray-50 dark:bg-navy-950/50 px-4 py-2 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center">
-                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                        {group}
+          return (
+            <div
+              key={group}
+              className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-2xl overflow-hidden shadow-theme-sm"
+            >
+              <div className="bg-gray-50/50 dark:bg-navy-950/50 px-5 py-4 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center">
+                <span className="text-base font-bold text-gray-900 dark:text-white">{group}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(permissions)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                    allSelected
+                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+                      : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-brand-500'
+                  }`}
+                >
+                  {allSelected ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              <div className="p-5 flex flex-col gap-6">
+                {Object.entries(
+                  permissions.reduce(
+                    (acc, perm) => {
+                      const prefix = perm.split('.')[0] || 'general';
+                      if (!acc[prefix]) acc[prefix] = [];
+                      acc[prefix].push(perm);
+                      return acc;
+                    },
+                    {} as Record<string, string[]>,
+                  ),
+                ).map(([prefix, subPermissions]) => (
+                  <div key={prefix} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-navy-400">
+                        {prefix.replace('-', ' ')}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(permissions)}
-                        className={`text-xs font-bold transition-colors ${
-                          allSelected
-                            ? 'text-brand-600 dark:text-brand-400'
-                            : 'text-gray-500 hover:text-brand-500'
-                        }`}
-                      >
-                        {allSelected ? 'Deselect All' : 'Select All'}
-                      </button>
+                      <div className="h-px grow bg-gray-100 dark:bg-navy-800/50" />
                     </div>
-                    <div className="p-4 grid grid-cols-1 gap-3">
-                      {permissions.map((perm) => {
+                    <div className="space-y-3">
+                      {subPermissions.map((perm) => {
                         const isView = perm.endsWith('.view');
-                        const prefix = perm.split('.')[0];
-                        const viewPerm = permissions.find((p) => p === `${prefix}.view`);
+                        const viewPerm = subPermissions.find((p) => p === `${prefix}.view`);
                         const isViewSelected = viewPerm
                           ? selectedPermissions.includes(viewPerm)
                           : true;
@@ -191,8 +220,8 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
                         return (
                           <label
                             key={perm}
-                            className={`flex items-center gap-3 cursor-pointer group ${
-                              !isView && !isViewSelected ? 'opacity-50 grayscale-[0.5]' : ''
+                            className={`flex items-center gap-3 cursor-pointer group transition-opacity ${
+                              !isView && !isViewSelected ? 'opacity-40' : 'opacity-100'
                             }`}
                           >
                             <div className="relative flex items-center">
@@ -201,10 +230,10 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
                                 checked={selectedPermissions.includes(perm)}
                                 onChange={() => togglePermission(perm)}
                                 disabled={!isView && !isViewSelected}
-                                className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500/20 dark:border-navy-600 dark:bg-navy-950 accent-brand-500 disabled:cursor-not-allowed"
+                                className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500/20 dark:border-navy-600 dark:bg-navy-950 accent-brand-500 disabled:cursor-not-allowed cursor-pointer"
                               />
                             </div>
-                            <span className="text-sm text-gray-600 dark:text-navy-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                            <span className="text-[14px] font-medium text-gray-700 dark:text-navy-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                               {perm.split('.').join(' ').replace('_', ' ')}
                             </span>
                           </label>
@@ -212,11 +241,11 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
                       })}
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       <div className="flex justify-end gap-4">
