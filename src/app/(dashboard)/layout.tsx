@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <AppHeader />
         <main>
-          <div className="p-4 mx-auto max-w-screen-2xl md:p-6 2xl:p-10">{children}</div>
+          <div className="p-6 mx-auto max-w-screen-2xl lg:p-8 2xl:p-10">{children}</div>
         </main>
       </div>
     </div>

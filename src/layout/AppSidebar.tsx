@@ -82,8 +82,8 @@ const AppSidebar: React.FC = () => {
         className={`flex items-center justify-center shrink-0 ${containerSize} rounded-lg transition-all duration-200 
         ${
           active
-            ? 'bg-brand-500/10 text-brand-500 shadow-sm'
-            : 'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-navy-300 group-hover:bg-gray-100 dark:group-hover:bg-white/10 dark:group-hover:text-white'
+            ? 'bg-white/20 text-white shadow-sm'
+            : 'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-navy-300 group-hover:bg-gray-100 dark:group-hover:bg-white/10 dark:group-hover:text-brand-400'
         }`}
       >
         <DynamicIcon name={iconName || 'LayoutGrid'} size={iconSize} />
@@ -114,7 +114,7 @@ const AppSidebar: React.FC = () => {
                 <>
                   <span className="sidebar-menu-item-text text-left">{nav.name}</span>
                   <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-500' : ''}`}
+                    className={`ml-auto w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${active ? 'text-white' : isOpen ? 'text-brand-500' : ''}`}
                   />
                 </>
               )}
@@ -164,7 +164,7 @@ const AppSidebar: React.FC = () => {
                 </div>
               </div>
               <ChevronDownIcon
-                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-500' : ''}`}
+                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${active ? 'text-white/70' : isOpen ? 'text-brand-500' : ''}`}
               />
             </button>
           ) : (
@@ -235,38 +235,37 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-8 flex  ${
-          !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
-        }`}
-      >
-        <Link href="/">
+      <div className={`py-2 flex items-center justify-center`}>
+        <Link href="/" className="flex items-center justify-center w-full">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
+                className="dark:hidden object-contain object-center scale-90"
+                src="/images/logo/logo.webp"
                 alt="Logo"
-                width={150}
-                height={40}
-                style={{ height: 'auto' }}
+                width={250}
+                height={100}
+                style={{ width: '180px', height: 'auto' }}
+                priority
               />
               <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                className="hidden dark:block object-contain object-center scale-90"
+                src="/images/logo/logo-dark.webp"
                 alt="Logo"
-                width={150}
-                height={40}
-                style={{ height: 'auto' }}
+                width={250}
+                height={100}
+                style={{ width: '180px', height: 'auto' }}
+                priority
               />
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              className="object-contain object-center"
+              src="/images/logo/logo-icon.png"
               alt="Logo"
-              width={32}
-              height={32}
-              style={{ height: 'auto' }}
+              width={40}
+              height={40}
+              style={{ width: 'auto', height: 'auto', maxHeight: '40px', maxWidth: '100%' }}
             />
           )}
         </Link>

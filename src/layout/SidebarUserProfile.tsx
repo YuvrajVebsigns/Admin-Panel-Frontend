@@ -32,7 +32,7 @@ export default function SidebarUserProfile() {
   };
 
   return (
-    <div className="relative border-t border-gray-200 dark:border-gray-800 p-4">
+    <div className="relative border-t border-gray-200 dark:border-navy-700 p-4">
       <button
         onClick={toggleDropdown}
         className="flex items-center w-full text-left text-gray-700 dark:text-gray-300 focus:outline-none"
@@ -95,7 +95,7 @@ export default function SidebarUserProfile() {
           </span>
         </div>
 
-        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-navy-700">
           <li>
             <DropdownItem
               onItemClick={closeDropdown}

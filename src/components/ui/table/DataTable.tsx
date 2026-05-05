@@ -87,7 +87,7 @@ export function DataTable<T extends object>({
   }, [filteredData, currentPage, pageSize, serverSide, data]);
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-sm shadow-default">
+    <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl shadow-theme-sm overflow-hidden">
       {/* Top Bar: Show Entries (Left) | Search (Right) */}
       <div className="flex flex-col sm:flex-row justify-between items-center px-7.5 py-6 gap-4">
         <div className="flex items-center gap-2.5">
@@ -104,7 +104,7 @@ export function DataTable<T extends object>({
                   setCurrentPageState(1);
                 }
               }}
-              className="appearance-none bg-transparent border border-gray-200 dark:border-gray-700 rounded-md pl-3 pr-8 py-1.5 text-sm font-medium outline-none focus:border-brand-500 transition-all min-w-[70px]"
+              className="appearance-none bg-transparent border border-gray-200 dark:border-navy-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium outline-none focus:border-brand-500 transition-all min-w-[70px] dark:bg-navy-900"
             >
               {[5, 10, 20, 50].map((size) => (
                 <option key={size} value={size} className="dark:bg-gray-900">
@@ -139,7 +139,7 @@ export function DataTable<T extends object>({
           </div>
           <input
             type="text"
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-800 rounded-md bg-transparent text-sm font-medium placeholder-gray-400 focus:outline-none focus:border-brand-500 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-navy-700 rounded-xl bg-gray-50 dark:bg-navy-900/50 text-sm font-medium placeholder-gray-400 focus:outline-none focus:border-brand-500 transition-all shadow-theme-xs"
             placeholder={searchPlaceholder}
             value={currentSearchTerm}
             onChange={(e) => {
@@ -158,8 +158,8 @@ export function DataTable<T extends object>({
 
       {/* Table Section - Crisp border-collapse layout */}
       <div className="overflow-x-auto">
-        <Table className="border-collapse border-y border-gray-100 dark:border-gray-800">
-          <TableHeader className="border-b border-gray-100 dark:border-gray-800">
+        <Table className="border-collapse border-y border-gray-100 dark:border-navy-700">
+          <TableHeader className="border-b border-gray-100 dark:border-navy-700 bg-gray-50 dark:bg-navy-900/50">
             <TableRow>
               {columns.map((col, idx) => (
                 <TableCell
@@ -180,7 +180,7 @@ export function DataTable<T extends object>({
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100 dark:divide-navy-700">
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="px-7.5 py-16 text-center">
@@ -234,7 +234,7 @@ export function DataTable<T extends object>({
               else setCurrentPageState((p) => Math.max(1, p - 1));
             }}
             disabled={currentPage === 1}
-            className="flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-all"
+            className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 dark:border-navy-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 disabled:opacity-30 transition-all"
           >
             <ChevronLeft size={18} />
           </button>
@@ -253,8 +253,8 @@ export function DataTable<T extends object>({
                   }}
                   className={`flex items-center justify-center w-9 h-9 rounded-md text-sm font-bold transition-all ${
                     currentPage === pageNum
-                      ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'bg-brand-500 text-white shadow-lg'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700'
                   }`}
                 >
                   {pageNum}
@@ -269,7 +269,7 @@ export function DataTable<T extends object>({
               else setCurrentPageState((p) => Math.min(totalPages, p + 1));
             }}
             disabled={currentPage === totalPages || totalPages === 0}
-            className="flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-all"
+            className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 dark:border-navy-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 disabled:opacity-30 transition-all"
           >
             <ChevronRight size={18} />
           </button>
