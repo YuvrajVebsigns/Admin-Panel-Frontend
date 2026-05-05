@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ciodialogues.com',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

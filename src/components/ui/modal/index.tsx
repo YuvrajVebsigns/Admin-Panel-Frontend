@@ -8,6 +8,8 @@ interface ModalProps {
   children: React.ReactNode;
   showCloseButton?: boolean; // New prop to control close button visibility
   isFullscreen?: boolean; // Default to false for backwards compatibility
+  title?: string; // Modal title
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'; // Modal size
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -17,6 +19,8 @@ export const Modal: React.FC<ModalProps> = ({
   className,
   showCloseButton = true, // Default to true for backwards compatibility
   isFullscreen = false,
+  title,
+  size = 'md',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -50,9 +54,17 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const sizeClasses = {
+    sm: 'max-w-md',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    '2xl': 'max-w-7xl',
+  };
+
   const contentClasses = isFullscreen
     ? 'w-full h-full'
-    : 'relative w-full rounded-3xl bg-white  dark:bg-gray-900';
+    : `relative w-full ${sizeClasses[size]} rounded-3xl bg-white dark:bg-gray-900 shadow-2xl`;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-999999">
@@ -88,7 +100,12 @@ export const Modal: React.FC<ModalProps> = ({
             </svg>
           </button>
         )}
-        <div>{children}</div>
+        {title && (
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-navy-800">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
+          </div>
+        )}
+        <div className={title ? 'p-0' : 'p-0'}>{children}</div>
       </div>
     </div>
   );
