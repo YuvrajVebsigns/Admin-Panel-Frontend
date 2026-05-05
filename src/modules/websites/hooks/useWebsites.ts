@@ -58,3 +58,17 @@ export const useWebsites = (params: WebsiteQueryParams = {}) => {
     isDeleting: deleteWebsiteMutation.isPending,
   };
 };
+
+export const useWebsite = (id: string) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['website', id],
+    queryFn: () => websitesService.getWebsite(id),
+    enabled: !!id,
+  });
+
+  return {
+    website: data,
+    isLoading,
+    error,
+  };
+};
