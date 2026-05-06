@@ -863,3 +863,78 @@ span.flatpickr-weekday,
   cursor: grabbing;
   /* Changes the cursor to indicate dragging */
 }
+
+/* EditorJS Custom UI Styles */
+
+/* Hide the native EditorJS + and settings buttons — we use our own Add Section button */
+.ce-toolbar__plus {
+  @apply !hidden;
+}
+
+/* Keep settings button but style it inline */
+.ce-toolbar__settings-btn {
+  @apply !bg-white dark:!bg-navy-800 !text-gray-500 dark:!text-gray-400 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center hover:!bg-brand-500 hover:!text-white !transition-all !shadow-sm !border !border-gray-200 dark:!border-navy-700;
+}
+
+/* Reduce the overall editor padding so blocks sit tight */
+.codex-editor__redactor {
+  @apply !pb-0;
+}
+
+/* Give every block a visible bordered card look */
+.ce-block__content {
+  @apply !border !border-gray-200 dark:!border-navy-700 !rounded-xl !p-4 !bg-white dark:!bg-navy-900 !transition-all !max-w-none !mb-2;
+}
+
+/* Focused block gets a brand highlight */
+.ce-block--focused .ce-block__content {
+  @apply !border-brand-500 !shadow-theme-sm;
+}
+
+/* Empty block gets a dashed subtle style */
+.ce-block--empty .ce-block__content {
+  @apply !bg-gray-50/50 dark:!bg-navy-900/50 !border-dashed !border-gray-300 dark:!border-navy-600 hover:!bg-brand-50/30 dark:hover:!bg-brand-500/5 hover:!border-brand-400 dark:hover:!border-brand-700;
+}
+
+/* Toolbar positioning — keep it inside the container */
+.ce-toolbar__actions {
+  @apply !right-2 !left-auto !top-2;
+}
+
+.ce-toolbar {
+  @apply !left-0 !right-0;
+}
+
+.ce-toolbar__content {
+  @apply !max-w-none;
+}
+
+/* Popover / toolbox styles */
+.ce-toolbox .cdx-search-field {
+  @apply !bg-gray-50 dark:!bg-navy-900 !border-gray-200 dark:!border-navy-700;
+}
+
+.ce-popover {
+  @apply !bg-white dark:!bg-navy-800 !border-gray-200 dark:!border-navy-700 !shadow-theme-lg !rounded-xl;
+}
+
+.ce-popover__item:hover {
+  @apply !bg-brand-50 dark:!bg-navy-700 !text-brand-500;
+}
+
+.ce-popover__item__icon {
+  @apply !bg-white dark:!bg-navy-900 !border-gray-200 dark:!border-navy-700 !shadow-sm;
+}
+
+/* Inline toolbar */
+.ce-inline-toolbar {
+  @apply !bg-white dark:!bg-navy-800 !border-gray-200 dark:!border-navy-700 !shadow-theme-lg !rounded-lg;
+}
+
+.ce-inline-tool:hover {
+  @apply !bg-gray-50 dark:!bg-navy-700 !text-brand-500;
+}
+
+.ce-inline-tool--active {
+  @apply !text-brand-500;
+}

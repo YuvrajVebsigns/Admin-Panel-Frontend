@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Website } from '../types/website.types';
 import { useWebsites } from '../hooks/useWebsites';
+import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 import { Edit, Trash2, ExternalLink, MoveRight, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,21 @@ export const WebsiteTable: React.FC = () => {
   });
 
   const { websites, meta, isLoading, updateWebsite, deleteWebsite } = useWebsites(params);
+
+  const { blogs: allBlogs } = useBlogs({ limit: 1000 });
+
+  const blogCountsByWebsite = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (allBlogs) {
+      allBlogs.forEach((blog) => {
+        blog.websites?.forEach((w) => {
+          const id = typeof w === 'string' ? w : ((w.id || w._id) as string);
+          if (id) counts[id] = (counts[id] || 0) + 1;
+        });
+      });
+    }
+    return counts;
+  }, [allBlogs]);
 
   const handleToggleActive = async (website: Website) => {
     await updateWebsite({ id: website.id, data: { isActive: !website.isActive } });
@@ -68,23 +84,21 @@ export const WebsiteTable: React.FC = () => {
     },
     {
       header: 'CONTENT METRICS',
-      accessor: (_website) => (
+      accessor: (website) => (
         <div className="flex gap-8">
           <div>
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1 uppercase">
               Blogs
             </p>
             <p className="text-base font-bold text-gray-900 dark:text-white leading-none">
-              {Math.floor(Math.random() * 10) + 1}
+              {blogCountsByWebsite[website.id] || 0}
             </p>
           </div>
           <div>
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1 uppercase">
               Events
             </p>
-            <p className="text-base font-bold text-gray-900 dark:text-white leading-none">
-              {Math.floor(Math.random() * 8) + 1}
-            </p>
+            <p className="text-base font-bold text-gray-900 dark:text-white leading-none">0</p>
           </div>
         </div>
       ),

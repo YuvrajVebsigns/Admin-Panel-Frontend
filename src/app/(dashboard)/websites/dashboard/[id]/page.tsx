@@ -14,25 +14,19 @@ import {
   Layout,
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
+import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import Button from '@/components/ui/button/Button';
 import { DataTable } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
 import Image from 'next/image';
+import { BlogTable } from '@/modules/blogs/components/BlogTable';
 
 const TABS = [
   { id: 'blogs', label: 'Blogs', icon: <FileText size={18} /> },
   { id: 'events', label: 'Events', icon: <Calendar size={18} /> },
   { id: 'pages', label: 'Pages', icon: <Layout size={18} /> },
 ];
-
-interface BlogItem {
-  id: string;
-  title: string;
-  author: string;
-  date: string;
-  status: string;
-}
 
 interface PageItem {
   id: string;
@@ -47,6 +41,7 @@ export default function WebsiteDashboardPage() {
   const router = useRouter();
   const websiteId = params.id as string;
   const { website, isLoading } = useWebsite(websiteId);
+  const { meta: blogsMeta } = useBlogs({ limit: 1000, websiteId });
   const [activeTab, setActiveTab] = useState('blogs');
 
   if (isLoading) {
@@ -77,7 +72,7 @@ export default function WebsiteDashboardPage() {
   const stats = [
     {
       title: 'TOTAL PAGES',
-      value: 5, // Mock for now
+      value: 0, // Pending backend
       icon: <Layout size={24} strokeWidth={1.5} />,
       bgIllustration: <Layout size={100} strokeWidth={1} />,
       iconBgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
@@ -85,7 +80,7 @@ export default function WebsiteDashboardPage() {
     },
     {
       title: 'TOTAL BLOGS',
-      value: 12, // Mock for now
+      value: blogsMeta?.total || 0,
       icon: <FileText size={24} strokeWidth={1.5} />,
       bgIllustration: <FileText size={100} strokeWidth={1} />,
       iconBgColor: 'bg-blue-50 dark:bg-blue-500/10',
@@ -93,7 +88,7 @@ export default function WebsiteDashboardPage() {
     },
     {
       title: 'TOTAL EVENTS',
-      value: 8, // Mock for now
+      value: 0, // Pending backend
       icon: <Calendar size={24} strokeWidth={1.5} />,
       bgIllustration: <Calendar size={100} strokeWidth={1} />,
       iconBgColor: 'bg-purple-50 dark:bg-purple-500/10',
@@ -205,7 +200,14 @@ export default function WebsiteDashboardPage() {
             <button className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 dark:bg-navy-900 dark:text-gray-400 dark:hover:bg-navy-700 transition-all border-none">
               <Filter size={18} />
             </button>
-            <Button variant="primary">
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (activeTab === 'blogs') {
+                  router.push(`/blogs/create?websiteId=${websiteId}`);
+                }
+              }}
+            >
               <Plus size={18} className="mr-2" />
               New {activeTab === 'pages' ? 'Page' : activeTab === 'blogs' ? 'Blog' : 'Event'}
             </Button>
@@ -309,85 +311,7 @@ export default function WebsiteDashboardPage() {
               ]}
             />
           ) : activeTab === 'blogs' ? (
-            <DataTable<BlogItem>
-              data={[
-                {
-                  id: '1',
-                  title: 'The Future of AI in Business',
-                  author: 'Arun Kumar',
-                  date: 'Jan 15, 2024',
-                  status: 'PUBLISHED',
-                },
-                {
-                  id: '2',
-                  title: 'Cloud Strategy Guide',
-                  author: 'Vikram Singh',
-                  date: 'Jan 13, 2024',
-                  status: 'PUBLISHED',
-                },
-                {
-                  id: '3',
-                  title: 'Security Trends 2024',
-                  author: 'Priya Sharma',
-                  date: 'Jan 12, 2024',
-                  status: 'DRAFT',
-                },
-                {
-                  id: '4',
-                  title: 'Data Privacy Essentials',
-                  author: 'Arun Kumar',
-                  date: 'Jan 10, 2024',
-                  status: 'PUBLISHED',
-                },
-                {
-                  id: '5',
-                  title: 'Digital Transformation',
-                  author: 'Vikram Singh',
-                  date: 'Jan 8, 2024',
-                  status: 'DRAFT',
-                },
-              ]}
-              columns={[
-                {
-                  header: 'TITLE & AUTHOR',
-                  accessor: (item: BlogItem) => (
-                    <div className="flex flex-col">
-                      <span className="font-bold text-gray-900 dark:text-white group-hover:text-brand-600 transition-colors cursor-pointer">
-                        {item.title}
-                      </span>
-                      <span className="text-xs text-gray-500">by {item.author}</span>
-                    </div>
-                  ),
-                },
-                {
-                  header: 'DATE',
-                  accessor: (item: BlogItem) => (
-                    <span className="text-sm text-gray-500 font-medium">{item.date}</span>
-                  ),
-                },
-                {
-                  header: 'STATUS',
-                  accessor: (item: BlogItem) => (
-                    <Badge color={item.status === 'PUBLISHED' ? 'success' : 'warning'}>
-                      {item.status}
-                    </Badge>
-                  ),
-                },
-                {
-                  header: 'ACTIONS',
-                  accessor: () => (
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 text-gray-400 hover:text-brand-600 transition-colors">
-                        <ExternalLink size={16} />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-brand-600 transition-colors">
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  ),
-                },
-              ]}
-            />
+            <BlogTable websiteId={websiteId} />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 bg-gray-50/50 rounded-2xl dark:bg-navy-900/50">
               <Calendar size={48} className="text-gray-200 mb-4" />
