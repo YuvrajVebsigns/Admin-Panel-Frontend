@@ -7,6 +7,8 @@ export interface SummaryCardProps {
   bgIllustration?: React.ReactNode;
   iconBgColor: string;
   iconTextColor: string;
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -16,9 +18,18 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   bgIllustration,
   iconBgColor,
   iconTextColor,
+  onClick,
+  isActive = false,
 }) => {
   return (
-    <div className="relative overflow-hidden flex items-center p-5 bg-white border border-gray-100 rounded-xl shadow-theme-xs hover:shadow-theme-md hover:-translate-y-1 transition-all duration-300 dark:bg-navy-800 dark:border-navy-700">
+    <div
+      onClick={onClick}
+      className={`relative overflow-hidden flex items-center p-5 bg-white border rounded-xl shadow-theme-xs transition-all duration-300 dark:bg-navy-800 ${
+        onClick ? 'cursor-pointer hover:shadow-theme-md hover:-translate-y-1' : ''
+      } ${
+        isActive ? 'border-brand-500 ring-1 ring-brand-500' : 'border-gray-100 dark:border-navy-700'
+      }`}
+    >
       {/* Background Illustration Watermark */}
       {bgIllustration && (
         <div

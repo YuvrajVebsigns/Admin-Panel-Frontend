@@ -13,9 +13,25 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
+import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 
 export default function DashboardPage() {
   const { websites, meta, isLoading } = useWebsites({ limit: 100 });
+
+  const { meta: blogsMeta, blogs: allBlogs } = useBlogs({ limit: 1000 });
+
+  const blogCountsByWebsite = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (allBlogs) {
+      allBlogs.forEach((blog) => {
+        blog.websites?.forEach((w) => {
+          const id = typeof w === 'string' ? w : ((w.id || w._id) as string);
+          if (id) counts[id] = (counts[id] || 0) + 1;
+        });
+      });
+    }
+    return counts;
+  }, [allBlogs]);
 
   const SUMMARY_DATA = [
     {
@@ -28,7 +44,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL BLOGS',
-      value: 38, // Mock for now
+      value: blogsMeta?.total || 0,
       icon: <Layers size={24} strokeWidth={1.5} />,
       bgIllustration: <Layers size={100} strokeWidth={1} />,
       iconBgColor: 'bg-yellow-50 dark:bg-yellow-500/10',
@@ -36,7 +52,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL EVENTS',
-      value: 18, // Mock for now
+      value: 0, // Pending backend
       icon: <Users size={24} strokeWidth={1.5} />,
       bgIllustration: <Users size={100} strokeWidth={1} />,
       iconBgColor: 'bg-green-50 dark:bg-green-500/10',
@@ -44,7 +60,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL SPONSORS',
-      value: 27, // Mock for now
+      value: 0, // Pending backend
       icon: <Briefcase size={24} strokeWidth={1.5} />,
       bgIllustration: <Briefcase size={100} strokeWidth={1} />,
       iconBgColor: 'bg-red-50 dark:bg-red-500/10',
@@ -52,7 +68,7 @@ export default function DashboardPage() {
     },
     {
       title: 'REGISTRATIONS',
-      value: '2,500', // Mock for now
+      value: '0', // Pending backend
       icon: <UserCheck size={24} strokeWidth={1.5} />,
       bgIllustration: <UserCheck size={100} strokeWidth={1} />,
       iconBgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
@@ -60,7 +76,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL NOMINATORS',
-      value: 5, // Mock for now
+      value: 0, // Pending backend
       icon: <Users size={24} strokeWidth={1.5} />,
       bgIllustration: <Users size={100} strokeWidth={1} />,
       iconBgColor: 'bg-cyan-50 dark:bg-cyan-500/10',
@@ -68,7 +84,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL NOMINEES',
-      value: 10, // Mock for now
+      value: 0, // Pending backend
       icon: <Award size={24} strokeWidth={1.5} />,
       bgIllustration: <Award size={100} strokeWidth={1} />,
       iconBgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
@@ -76,7 +92,7 @@ export default function DashboardPage() {
     },
     {
       title: 'ATTENDANCE',
-      value: '1,200', // Mock for now
+      value: '0', // Pending backend
       icon: <CalendarCheck size={24} strokeWidth={1.5} />,
       bgIllustration: <CalendarCheck size={100} strokeWidth={1} />,
       iconBgColor: 'bg-blue-50 dark:bg-blue-500/10',
@@ -136,8 +152,8 @@ export default function DashboardPage() {
               logo={site.logo}
               title={site.name}
               status={site.isActive ? 'ACTIVE' : 'INACTIVE'}
-              blogsCount={Math.floor(Math.random() * 10) + 1} // Mock for now
-              eventsCount={Math.floor(Math.random() * 8) + 1} // Mock for now
+              blogsCount={blogCountsByWebsite[site.id] || 0}
+              eventsCount={0} // Pending backend
             />
           ))}
         </div>
