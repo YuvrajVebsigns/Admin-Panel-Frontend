@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'ciodialogues.com' },
       { protocol: 'https', hostname: 'www.ciopowerlist.com' },
       { protocol: 'https', hostname: 'ciopowerlist.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
     ],
   },
 };

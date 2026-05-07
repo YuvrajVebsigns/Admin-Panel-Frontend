@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { Blog } from '../types/blog.types';
-import { WebsiteStatusIndicator } from './WebsiteStatusIndicator';
 import { FileText, Edit, Loader2 } from 'lucide-react';
 import { useBlogs } from '../hooks/useBlogs';
 import { useRouter } from 'next/navigation';
@@ -51,12 +50,55 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
     {
       header: 'WEBSITES',
       accessor: (blog) => {
-        // Extract IDs from populated objects if needed
         const blogWebsiteIds = (blog.websites || []).map((w) =>
-          typeof w === 'string' ? w : w.id || w._id,
+          typeof w === 'string' ? w : ((w.id || w._id) as string),
         );
-        const statusArray = allWebsites.slice(0, 11).map((w) => blogWebsiteIds.includes(w.id));
-        return <WebsiteStatusIndicator status={statusArray} />;
+
+        return (
+          <div className="flex items-center gap-1">
+            {allWebsites.slice(0, 11).map((website, index) => {
+              const isActive = blogWebsiteIds.includes(website.id);
+              return (
+                <div key={website.id} className="relative group/tip">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 cursor-default ${
+                      isActive
+                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
+                        : 'bg-gray-200 text-gray-500 dark:bg-navy-700 dark:text-gray-400'
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+
+                  {/* Tooltip */}
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 hidden group-hover/tip:block pointer-events-none">
+                    <div className="bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 rounded-lg shadow-xl px-3 py-2 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded overflow-hidden bg-white border border-gray-100 dark:border-navy-600 flex-shrink-0 flex items-center justify-center">
+                          {website.logo ? (
+                            <img
+                              src={website.logo}
+                              alt=""
+                              className="w-full h-full object-contain p-0.5"
+                            />
+                          ) : (
+                            <span className="text-[9px] font-bold text-brand-500">
+                              {website.name.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {website.name}
+                        </span>
+                      </div>
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-white dark:bg-navy-800 border-r border-b border-gray-100 dark:border-navy-700 rotate-45" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
       },
     },
     {

@@ -6,9 +6,16 @@ export interface BlogSEO {
   canonicalUrl?: string;
 }
 
+export interface BlogBlock {
+  id?: string;
+  type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+}
+
 export interface BlogContent {
   time: number;
-  blocks: Record<string, unknown>[];
+  blocks: BlogBlock[];
   version: string;
 }
 
@@ -21,6 +28,8 @@ export interface Blog {
   seo?: BlogSEO;
   websites: (Record<string, unknown> | string)[]; // Array of Website objects or IDs
   author: Record<string, unknown>;
+  featureImage?: string;
+  tags?: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -28,8 +37,11 @@ export interface Blog {
 
 export interface CreateBlogDto {
   title: string;
+  slug: string;
   excerpt?: string;
   content: BlogContent;
+  featureImage?: string;
+  tags?: string[];
   seo?: BlogSEO;
   websites: string[];
   isActive?: boolean;
