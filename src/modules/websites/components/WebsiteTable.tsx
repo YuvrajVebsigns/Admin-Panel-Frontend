@@ -39,7 +39,7 @@ export const WebsiteTable: React.FC = () => {
     return counts;
   }, [allBlogs]);
 
-  const handleToggleActive = async (website: Website) => {
+  const _handleToggleActive = async (website: Website) => {
     await updateWebsite({ id: website.id, data: { isActive: !website.isActive } });
   };
 
@@ -56,6 +56,15 @@ export const WebsiteTable: React.FC = () => {
   };
 
   const columns: Column<Website>[] = [
+    {
+      header: 'S.NO',
+      accessor: (_, rowIndex) => (
+        <div className="text-sm font-bold text-gray-500 dark:text-gray-400 pl-2">
+          {rowIndex < 10 ? `0${rowIndex}` : rowIndex}
+        </div>
+      ),
+      className: 'w-[60px]',
+    },
     {
       header: 'PLATFORM',
       accessor: (website) => (
@@ -103,29 +112,29 @@ export const WebsiteTable: React.FC = () => {
         </div>
       ),
     },
-    {
-      header: 'STATUS',
-      accessor: (website) => (
-        <button
-          onClick={() => handleToggleActive(website)}
-          className={`group relative overflow-hidden flex items-center justify-center px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider transition-colors duration-300 min-w-[100px] ${
-            website.isActive
-              ? 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/15 dark:hover:text-error-500'
-              : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500 hover:bg-success-50 hover:text-success-600 dark:hover:bg-success-500/15 dark:hover:text-success-500'
-          }`}
-        >
-          <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-full">
-            {website.isActive ? 'Active' : 'Inactive'}
-          </span>
-          <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 translate-y-full group-hover:translate-y-0 whitespace-nowrap">
-            {website.isActive ? 'Deactivate' : 'Activate'}
-          </span>
-          <span className="invisible whitespace-nowrap">
-            {website.isActive ? 'Deactivate' : 'Activate'}
-          </span>
-        </button>
-      ),
-    },
+    // {
+    //   header: 'STATUS',
+    //   accessor: (website) => (
+    //     <button
+    //       onClick={() => handleToggleActive(website)}
+    //       className={`group relative overflow-hidden flex items-center justify-center px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider transition-colors duration-300 min-w-[100px] ${
+    //         website.isActive
+    //           ? 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/15 dark:hover:text-error-500'
+    //           : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500 hover:bg-success-50 hover:text-success-600 dark:hover:bg-success-500/15 dark:hover:text-success-500'
+    //       }`}
+    //     >
+    //       <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-full">
+    //         {website.isActive ? 'Active' : 'Inactive'}
+    //       </span>
+    //       <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 translate-y-full group-hover:translate-y-0 whitespace-nowrap">
+    //         {website.isActive ? 'Deactivate' : 'Activate'}
+    //       </span>
+    //       <span className="invisible whitespace-nowrap">
+    //         {website.isActive ? 'Deactivate' : 'Activate'}
+    //       </span>
+    //     </button>
+    //   ),
+    // },
     {
       header: 'ACTIONS',
       accessor: (website) => (
