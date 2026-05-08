@@ -3,7 +3,6 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
-import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 
@@ -96,7 +95,7 @@ export default function SidebarUserProfile() {
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-navy-700">
-          <li>
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -119,7 +118,7 @@ export default function SidebarUserProfile() {
               </svg>
               Account settings
             </DropdownItem>
-          </li>
+          </li> */}
         </ul>
         <button
           onClick={handleLogout}

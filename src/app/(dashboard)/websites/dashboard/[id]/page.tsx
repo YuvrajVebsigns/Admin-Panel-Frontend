@@ -7,7 +7,6 @@ import {
   Calendar,
   Plus,
   Search,
-  Filter,
   Loader2,
   ExternalLink,
   ChevronRight,
@@ -197,20 +196,22 @@ export default function WebsiteDashboardPage() {
                 className="pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 transition-all dark:bg-navy-900 dark:text-white w-full sm:w-64"
               />
             </div>
-            <button className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 dark:bg-navy-900 dark:text-gray-400 dark:hover:bg-navy-700 transition-all border-none">
+            {/* <button className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 dark:bg-navy-900 dark:text-gray-400 dark:hover:bg-navy-700 transition-all border-none">
               <Filter size={18} />
-            </button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (activeTab === 'blogs') {
-                  router.push(`/blogs/create?websiteId=${websiteId}`);
-                }
-              }}
-            >
-              <Plus size={18} className="mr-2" />
-              New {activeTab === 'pages' ? 'Page' : activeTab === 'blogs' ? 'Blog' : 'Event'}
-            </Button>
+            </button> */}
+            {activeTab !== 'pages' && (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  if (activeTab === 'blogs') {
+                    router.push(`/blogs/create?websiteId=${websiteId}`);
+                  }
+                }}
+              >
+                <Plus size={18} className="mr-2" />
+                New {activeTab === 'blogs' ? 'Blog' : 'Event'}
+              </Button>
+            )}
           </div>
         </div>
 

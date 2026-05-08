@@ -9,6 +9,8 @@ interface VerifyOTPFormProps {
   onBackToLogin?: () => void;
 }
 
+import { AuthLayout } from '@/modules/auth/components/AuthLayout';
+
 export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,94 +82,83 @@ export const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({ onBackToLogin }) =
   };
 
   return (
-    <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-      <div>
-        <div className="mb-5 sm:mb-8">
-          <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-            Verify Identity
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Security verification required.
+    <AuthLayout title="Verify Identity" subtitle="Security verification required.">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-3 text-center mb-4">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            We&apos;ve sent a 6-digit code to{' '}
+            <span className="text-gray-900 dark:text-white font-semibold">{email}</span>
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="space-y-3 text-center mb-4">
-            <p className="text-slate-400 text-sm">
-              We&apos;ve sent a 6-digit code to{' '}
-              <span className="text-white font-semibold">{email}</span>
-            </p>
+        <div className="flex justify-between gap-2 sm:gap-3">
+          {otp.map((digit, index) => (
+            <input
+              key={index}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
+              type="text"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              className="w-full h-14 sm:h-16 text-center text-2xl font-bold bg-gray-50 dark:bg-navy-900/50 border border-gray-100 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm"
+            />
+          ))}
+        </div>
+
+        {error && (
+          <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl">
+            <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-500 leading-tight">{error}</p>
           </div>
+        )}
 
-          <div className="flex justify-between gap-2 sm:gap-3">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => {
-                  inputRefs.current[index] = el;
-                }}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-full h-14 sm:h-16 text-center text-2xl font-bold bg-slate-800/40 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-inner"
-              />
-            ))}
-          </div>
-
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-500 leading-tight">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <button
-              type="submit"
-              disabled={isVerifyingOTP || otp.some((d) => d === '')}
-              className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-4 rounded-2xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-lg tracking-wide"
-            >
-              {isVerifyingOTP ? (
-                <>
-                  <Loader2 size={22} className="animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={22} />
-                  Verify Code
-                </>
-              )}
-            </button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={timer > 0 || isSubmittingForgot}
-                className="text-sm font-semibold text-primary-400 hover:text-primary-300 disabled:text-slate-500 transition-colors"
-              >
-                {timer > 0
-                  ? `Resend code in ${timer}s`
-                  : isSubmittingForgot
-                    ? 'Sending...'
-                    : 'Resend OTP Code'}
-              </button>
-            </div>
-          </div>
-
+        <div className="space-y-4">
           <button
-            type="button"
-            onClick={() => (onBackToLogin ? onBackToLogin() : router.push('/login'))}
-            className="w-full flex items-center justify-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-300 transition-colors py-2"
+            type="submit"
+            disabled={isVerifyingOTP || otp.some((d) => d === '')}
+            className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl shadow-[0_8px_24px_-8px_rgba(79,70,229,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-base tracking-wide"
           >
-            <ArrowLeft size={18} />
-            Back to Sign In
+            {isVerifyingOTP ? (
+              <>
+                <Loader2 size={22} className="animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={22} />
+                Verify Code
+              </>
+            )}
           </button>
-        </form>
-      </div>
-    </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={timer > 0 || isSubmittingForgot}
+              className="text-sm font-semibold text-brand-500 hover:text-brand-600 disabled:text-gray-400 dark:disabled:text-gray-500 transition-colors"
+            >
+              {timer > 0
+                ? `Resend code in ${timer}s`
+                : isSubmittingForgot
+                  ? 'Sending...'
+                  : 'Resend OTP Code'}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => (onBackToLogin ? onBackToLogin() : router.push('/login'))}
+          className="w-full flex items-center justify-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors py-2 mt-4"
+        >
+          <ArrowLeft size={18} />
+          Back to Sign In
+        </button>
+      </form>
+    </AuthLayout>
   );
 };

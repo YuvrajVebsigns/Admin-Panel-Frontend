@@ -11,7 +11,10 @@ interface LoginFormProps {
   onSwitchToForgot: () => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitchToForgot }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({
+  onSwitchToSignup,
+  onSwitchToForgot: _onSwitchToForgot,
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoggingIn } = useAuth();
@@ -102,13 +105,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onSwitch
           >
             Password
           </label>
-          <button
+          {/* <button
             type="button"
             onClick={onSwitchToForgot}
             className="text-sm font-medium text-brand-500 hover:text-brand-600 transition-colors"
           >
             Forgot?
-          </button>
+          </button> */}
         </div>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-500 transition-colors">

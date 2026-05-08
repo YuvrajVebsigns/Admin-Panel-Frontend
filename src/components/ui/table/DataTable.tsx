@@ -5,7 +5,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from './index';
 
 export interface Column<T> {
   header: string;
-  accessor: keyof T | ((item: T) => React.ReactNode);
+  accessor: keyof T | ((item: T, rowIndex: number) => React.ReactNode);
   className?: string;
   sortable?: boolean;
 }
@@ -202,17 +202,23 @@ export function DataTable<T extends object>({
                   key={rowIdx}
                   className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors"
                 >
-                  {columns.map((col, colIdx) => (
-                    <TableCell key={colIdx} className={`px-7.5 py-4 align-middle ${col.className}`}>
-                      {typeof col.accessor === 'function' ? (
-                        col.accessor(item)
-                      ) : (
-                        <span className="text-[14px] font-medium text-gray-700 dark:text-gray-300">
-                          {item[col.accessor as keyof T] as unknown as React.ReactNode}
-                        </span>
-                      )}
-                    </TableCell>
-                  ))}
+                  {columns.map((col, colIdx) => {
+                    const globalRowIdx = (currentPage - 1) * pageSize + rowIdx + 1;
+                    return (
+                      <TableCell
+                        key={colIdx}
+                        className={`px-7.5 py-4 align-middle ${col.className}`}
+                      >
+                        {typeof col.accessor === 'function' ? (
+                          col.accessor(item, globalRowIdx)
+                        ) : (
+                          <span className="text-[14px] font-medium text-gray-700 dark:text-gray-300">
+                            {item[col.accessor as keyof T] as unknown as React.ReactNode}
+                          </span>
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             )}

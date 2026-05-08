@@ -203,7 +203,7 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
               />
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
+            {/* <div className="flex items-center gap-2 pt-2">
               <input
                 type="checkbox"
                 id="isActive"
@@ -213,7 +213,7 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
               <Label htmlFor="isActive" className="mb-0 cursor-pointer">
                 Active Website
               </Label>
-            </div>
+            </div> */}
           </div>
         </div>
 

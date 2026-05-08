@@ -4,42 +4,65 @@ import React from 'react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
   subtitle?: string;
 }
 
+import Image from 'next/image';
+import Link from 'next/link';
+
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle }) => {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#020617] relative overflow-hidden p-4 sm:p-8">
-      {/* Dynamic Background Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-600/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent-violet/10 rounded-full blur-[120px] animate-pulse delay-700" />
+    <div className="flex flex-col items-center justify-center w-full max-w-[480px] mx-auto animate-fade-in">
+      <div className="w-full bg-white dark:bg-navy-800 rounded-[2.5rem] border border-gray-100 dark:border-navy-700 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.25)] overflow-hidden">
+        {/* Card Header with Logo */}
+        <div
+          className={`pt-14 px-8 flex flex-col items-center relative overflow-hidden ${title ? 'pb-10 border-b border-gray-50 dark:border-navy-700/50' : 'pb-4'}`}
+        >
+          {/* Subtle Background Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -translate-y-1/2" />
 
-      <div className="w-full max-w-[440px] relative z-10 animate-fade-in">
-        <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden p-8 sm:p-10">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-primary-600 to-primary-400 rounded-2xl shadow-glow mb-6">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
-              {title}
-            </h1>
-            {subtitle && <p className="mt-3 text-slate-400 text-base font-medium">{subtitle}</p>}
+          <div className={`${title ? 'mb-10' : 'mb-4'} relative z-10`}>
+            <Link
+              href="/"
+              className="block transform hover:scale-105 transition-transform duration-300"
+            >
+              {/* Light Mode Logo */}
+              <Image
+                src="/images/logo/logo.svg"
+                alt="Core Media Logo"
+                width={280}
+                height={84}
+                className="h-20 w-auto dark:hidden"
+                priority
+              />
+              {/* Dark Mode Logo */}
+              <Image
+                src="/images/logo/logo-dark.svg"
+                alt="Core Media Logo"
+                width={280}
+                height={84}
+                className="h-20 w-auto hidden dark:block"
+                priority
+              />
+            </Link>
           </div>
-          {children}
+          {title && (
+            <div className="text-center relative z-10">
+              <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="text-base font-medium text-gray-500 dark:text-gray-400 max-w-[280px] mx-auto leading-relaxed">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Form Body */}
+        <div className="p-8 sm:p-12 bg-white dark:bg-navy-800">{children}</div>
       </div>
     </div>
   );

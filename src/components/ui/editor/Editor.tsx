@@ -2,15 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type EditorJS from '@editorjs/editorjs';
 import type { OutputData } from '@editorjs/editorjs';
-import {
-  Plus,
-  Type,
-  Heading,
-  List as ListIcon,
-  Quote as QuoteIcon,
-  Image as ImageIcon,
-  Minus,
-} from 'lucide-react';
+import { Plus, Type, Heading, Image as ImageIcon, Minus } from 'lucide-react';
 
 interface EditorProps {
   data?: OutputData;
@@ -250,7 +242,7 @@ export default function Editor({
               <ImageIcon size={24} />
               <span className="text-xs font-semibold">Image</span>
             </button>
-            <button
+            {/* <button
               onClick={() => handleAddSection('list')}
               className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400"
             >
@@ -263,7 +255,7 @@ export default function Editor({
             >
               <QuoteIcon size={24} />
               <span className="text-xs font-semibold">Quote</span>
-            </button>
+            </button> */}
             <button
               onClick={() => handleAddSection('delimiter')}
               className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400"
