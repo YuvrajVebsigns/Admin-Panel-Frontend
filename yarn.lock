@@ -892,6 +892,11 @@
   resolved "https://registry.yarnpkg.com/@codexteam/icons/-/icons-0.0.5.tgz#d17f39b6a0497c6439f57dd42711817a3dd3679c"
   integrity sha512-s6H2KXhLz2rgbMZSkRm8dsMJvyUNZsEjxobBEg9ztdrb1B2H3pEzY6iTwI4XUPJWJ3c3qRKwV4TrO3J5jUdoQA==
 
+"@codexteam/icons@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@codexteam/icons/-/icons-0.0.6.tgz#5553ada48dddf5940851ccc142cfe17835c36ad3"
+  integrity sha512-L7Q5PET8PjKcBT5wp7VR+FCjwCi5PUp7rd/XjsgQ0CI5FJz0DphyHGRILMuDUdCW2MQT9NHbVr4QP31vwAkS/A==
+
 "@codexteam/icons@^0.3.0", "@codexteam/icons@^0.3.2":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@codexteam/icons/-/icons-0.3.3.tgz#89d53af1d2bfc106e4e44be5fd824a059e94c098"
@@ -943,6 +948,20 @@
   dependencies:
     "@editorjs/dom" "^1.1.0"
 
+"@editorjs/checklist@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@editorjs/checklist/-/checklist-1.6.0.tgz#f3e501b0422917ca78fd08cb51578098a26a1823"
+  integrity sha512-hRNP36DInr73mSK3noHBQeoQb7DA12ANfqTXufEkTgQzx+k4mRJ0HdeGukTIR4JbwjHJ9ecUBnnQqIEGnxCFEg==
+  dependencies:
+    "@codexteam/icons" "^0.3.0"
+
+"@editorjs/code@^2.9.4":
+  version "2.9.4"
+  resolved "https://registry.yarnpkg.com/@editorjs/code/-/code-2.9.4.tgz#b5301586406ab2ed7096525f731b10e2df3582f6"
+  integrity sha512-c0zyWodNqjL/0WI67sZvACIOFU9IAHG0UeeIpjss8pZGGNBum+UWkh7nKULK0SYvaOrdPdlWWqjuFU1TFA5jUA==
+  dependencies:
+    "@codexteam/icons" "^0.3.2"
+
 "@editorjs/delimiter@^1.4.2":
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/@editorjs/delimiter/-/delimiter-1.4.2.tgz#3034ff16470bda5de88087fd5f92f5a2889528db"
@@ -964,7 +983,7 @@
   dependencies:
     "@editorjs/helpers" "^1.2.0"
 
-"@editorjs/editorjs@^2.29.1", "@editorjs/editorjs@^2.31.0", "@editorjs/editorjs@^2.31.6":
+"@editorjs/editorjs@^2.29.1", "@editorjs/editorjs@^2.30.7", "@editorjs/editorjs@^2.31.0", "@editorjs/editorjs@^2.31.6":
   version "2.31.6"
   resolved "https://registry.yarnpkg.com/@editorjs/editorjs/-/editorjs-2.31.6.tgz#1468aeda08d2cfa2eab9412927cd118e6a472d2a"
   integrity sha512-j2nxuFCD3DnoJDUD0hPO5tirpuQ6sWmmuHATl3EI7fG1it3Ml7jk0WJtu3E+TRLBd7zfNeJhDThbP3LnBEn2GA==
@@ -1007,6 +1026,13 @@
   dependencies:
     "@codexteam/icons" "^0.3.0"
 
+"@editorjs/inline-code@^1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@editorjs/inline-code/-/inline-code-1.5.2.tgz#325bbb06a6e79864ddf86019822cf1eba629b0a7"
+  integrity sha512-IpEvwMTP3q89T/6vTi3ACoSMOcTdywtMsci1w19+Z/lxQn/NVuVah++ro93wQ/1ZVTyCr+TPUCchxwzY1/xaMg==
+  dependencies:
+    "@codexteam/icons" "^0.3.2"
+
 "@editorjs/link@^2.6.2":
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/@editorjs/link/-/link-2.6.2.tgz#d9c17e01ecc3518ae4be61e0a024f7f225e09e5a"
@@ -1029,6 +1055,35 @@
   dependencies:
     "@codexteam/icons" "^0.3.2"
     "@editorjs/dom" "^0.0.5"
+
+"@editorjs/raw@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@editorjs/raw/-/raw-2.5.1.tgz#c6c0854d172c731022eaf9f0df4ef546a3b9ebcb"
+  integrity sha512-h7CjXtfSTe4Bj1CL84ch5NW0q0CdrlWsLzQ/kbaFTgx914CzKz4Ug+xgdvytVO1dd1QzB5/HCW0ic1VxtgkhMQ==
+  dependencies:
+    "@codexteam/icons" "^0.0.4"
+
+"@editorjs/table@^2.4.5":
+  version "2.4.5"
+  resolved "https://registry.yarnpkg.com/@editorjs/table/-/table-2.4.5.tgz#bb2ce9962935088e3d24a20e799acb9526b90e7b"
+  integrity sha512-pF48R2wc5m0c+N+RjtCLXBGZd23Rl7EjfSFpmcSViwNsu5RwMgYGrEiQ8mzVh98mbvYQwXm/NYBi9DEUUs970A==
+  dependencies:
+    "@codexteam/icons" "^0.0.6"
+
+"@editorjs/underline@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@editorjs/underline/-/underline-1.2.1.tgz#72ad63e9821b2ebca17f25536682b53b7a2c90df"
+  integrity sha512-LjJ01ia6Pj0Z/elifycp9+T1bQs0eXNnIcEYKOlk0sGHLy88DPcBOh9oz1i+uWarZ4AjGsvSMaptpWe+yQNsjQ==
+  dependencies:
+    "@codexteam/icons" "^0.3.2"
+
+"@editorjs/warning@^1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@editorjs/warning/-/warning-1.4.1.tgz#5e05cc4cf26656b836114335f8d9af6e8e1cefae"
+  integrity sha512-7A+irJ6gIh6li4DC7qw/NiWCThlBgtoPUeeIVdldVjoATAu+a1GjS+w/5L24ReacgQJNPVQPPCoMaS1nB83agw==
+  dependencies:
+    "@codexteam/icons" "^0.3.2"
+    "@editorjs/editorjs" "^2.30.7"
 
 "@emnapi/core@^1.4.3", "@emnapi/core@^1.8.1":
   version "1.10.0"
@@ -2926,6 +2981,16 @@ dunder-proto@^1.0.0, dunder-proto@^1.0.1:
     call-bind-apply-helpers "^1.0.1"
     es-errors "^1.3.0"
     gopd "^1.2.0"
+
+editorjs-text-alignment-blocktune@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/editorjs-text-alignment-blocktune/-/editorjs-text-alignment-blocktune-1.0.3.tgz#7942fe2d3fbdbd7fcfd10fbb9b341c97ec3eb84f"
+  integrity sha512-DAJ2LJP+WjETvU4lVOJCqZ1kZkKHp0GkujkqZgza9DRv7bO46m1M/s2d5Ba5hPFdmqk1vA/ci++MQXgWD7mWYw==
+
+editorjs-text-color-plugin@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/editorjs-text-color-plugin/-/editorjs-text-color-plugin-2.0.4.tgz#6e143c9507abe59da54ca0f8d6f9ffb14447c29d"
+  integrity sha512-QpibTkOxs3ndlKNOLT8ZlC4ktc3/eKIajiLO0Jm/hh9AJug/CrM1/rAvHy+ldfUKavbWeI+YZvgjad0YTyoyGw==
 
 electron-to-chromium@^1.5.328:
   version "1.5.344"

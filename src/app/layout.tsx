@@ -38,14 +38,14 @@ export default function RootLayout({
     <html lang="en" className={`${roboto.variable} ${openSans.variable}`}>
       <body className={`${openSans.className} dark:bg-gray-900`}>
         <ToasterProvider />
-        <ModalProvider>
+        <QueryProvider>
           <ThemeProvider>
-            <SidebarProvider>
-              <QueryProvider>{children}</QueryProvider>
-            </SidebarProvider>
+            <ModalProvider>
+              <SidebarProvider>{children}</SidebarProvider>
+              <GlobalModal />
+            </ModalProvider>
           </ThemeProvider>
-          <GlobalModal />
-        </ModalProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ export interface BlogSEO {
   metaDescription?: string;
   keywords?: string[];
   ogImage?: string;
+  ogImageId?: string;
   canonicalUrl?: string;
 }
 
@@ -19,6 +20,26 @@ export interface BlogContent {
   version: string;
 }
 
+export enum BlogStatus {
+  DRAFT = 'Draft',
+  PUBLISHED = 'Publish',
+  SCHEDULED = 'Schedule',
+  ARCHIVED = 'Archive',
+}
+
+export enum AutoArchiveDuration {
+  THREE_MONTHS = '3_months',
+  SIX_MONTHS = '6_months',
+  ONE_YEAR = '1_year',
+  THREE_YEARS = '3_year',
+}
+
+export enum CommentStrategy {
+  PUBLIC = 'Public',
+  INVITE_ONLY = 'InviteOnly',
+  DISABLED = 'Disabled',
+}
+
 export interface Blog {
   id: string;
   title: string;
@@ -26,11 +47,21 @@ export interface Blog {
   excerpt?: string;
   content: BlogContent;
   seo?: BlogSEO;
-  websites: (Record<string, unknown> | string)[]; // Array of Website objects or IDs
+  websites: (Record<string, unknown> | string)[];
   author: Record<string, unknown>;
   featureImage?: string;
+  featureImageId?: string;
   tags?: string[];
   isActive: boolean;
+  status: BlogStatus;
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
+  autoArchiveAt?: string | null;
+  autoArchiveDuration?: AutoArchiveDuration | null;
+  commentStrategy: CommentStrategy;
+  invitedEmails?: string[];
+  isHyperlinked: boolean;
+  hyperlinkWebsites: (Record<string, unknown> | string)[];
   createdAt: string;
   updatedAt: string;
 }
@@ -41,10 +72,18 @@ export interface CreateBlogDto {
   excerpt?: string;
   content: BlogContent;
   featureImage?: string;
+  featureImageId?: string;
   tags?: string[];
   seo?: BlogSEO;
   websites: string[];
   isActive?: boolean;
+  status?: BlogStatus;
+  scheduledAt?: string | null;
+  autoArchiveDuration?: AutoArchiveDuration | null;
+  commentStrategy?: CommentStrategy;
+  invitedEmails?: string[];
+  isHyperlinked?: boolean;
+  hyperlinkWebsites?: string[];
 }
 
 export interface UpdateBlogDto extends Partial<CreateBlogDto> {}
@@ -54,5 +93,6 @@ export interface BlogQueryParams {
   limit?: number;
   search?: string;
   isActive?: boolean;
+  status?: BlogStatus;
   websiteId?: string;
 }
