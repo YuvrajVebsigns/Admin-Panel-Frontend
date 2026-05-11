@@ -5,16 +5,6 @@ import { useGlobalModal } from '@/hooks/useGlobalModal';
 import Button from '@/components/ui/button/Button';
 import { AlertTriangle, Info, AlertCircle, CheckCircle } from 'lucide-react';
 
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-  full: 'max-w-full m-4',
-  auto: 'max-w-fit w-auto',
-};
-
 export const GlobalModal: React.FC = () => {
   const { modalState, closeModal, setConfirmLoading } = useGlobalModal();
   const {
@@ -97,7 +87,10 @@ export const GlobalModal: React.FC = () => {
       isOpen={isOpen}
       onClose={closeModal}
       showCloseButton={showCloseButton !== undefined ? showCloseButton : !isConfirm}
-      className={`p-0 overflow-hidden w-full transition-all duration-300 ${sizeClasses[cSize]} ${className || ''}`}
+      size={
+        cSize as 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | 'auto'
+      }
+      className={`p-0 overflow-hidden w-full transition-all duration-300 ${className || ''}`}
     >
       {isConfirm ? (
         <div className="p-8 sm:p-10 text-center">

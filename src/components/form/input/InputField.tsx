@@ -5,6 +5,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
   hint?: string; // Optional hint text
   endIcon?: React.ReactNode;
+  label?: string; // Optional label text
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -17,6 +18,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       error = false,
       hint,
       endIcon,
+      label,
+      id,
       ...props
     },
     ref,
@@ -40,9 +43,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     }
 
     return (
-      <div className="relative w-full">
+      <div className="relative w-full space-y-2">
+        {label && (
+          <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {label}
+          </label>
+        )}
         <div className="relative w-full">
-          <input ref={ref} type={type} disabled={disabled} className={inputClasses} {...props} />
+          <input
+            id={id}
+            ref={ref}
+            type={type}
+            disabled={disabled}
+            className={inputClasses}
+            {...props}
+          />
           {endIcon && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{endIcon}</div>
           )}

@@ -9,7 +9,7 @@ interface ModalProps {
   showCloseButton?: boolean; // New prop to control close button visibility
   isFullscreen?: boolean; // Default to false for backwards compatibility
   title?: string; // Modal title
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'; // Modal size
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | 'auto'; // Modal size
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -54,12 +54,18 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  const sizeClasses = {
+  const sizeClasses: Record<string, string> = {
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
-    '2xl': 'max-w-7xl',
+    '2xl': 'max-w-5xl',
+    '3xl': 'max-w-6xl',
+    '4xl': 'max-w-7xl',
+    '5xl': 'max-w-[90vw]',
+    '6xl': 'max-w-[95vw]',
+    full: 'max-w-full mx-4',
+    auto: 'max-w-fit',
   };
 
   const contentClasses = isFullscreen

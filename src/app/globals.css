@@ -376,7 +376,7 @@
 }
 
 .flatpickr-calendar {
-  @apply mt-2 !bg-white !rounded-xl !p-5 !border !border-gray-200 dark:!border-gray-800 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
+  @apply mt-2 !bg-white !rounded-xl !p-5 !border !border-gray-200 dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto !h-auto !overflow-visible;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
@@ -405,10 +405,6 @@
 
 .flatpickr-weekdays {
   @apply h-auto mt-6 mb-4 !bg-transparent;
-}
-
-.flatpickr-calendar {
-  @apply mt-2 !bg-white !rounded-xl !p-5 !shadow-none !border !border-gray-200 dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
 }
 
 @media (max-width: 525px) {
@@ -551,6 +547,67 @@ span.flatpickr-weekday,
 
 .flatpickr-calendar.static {
   @apply right-0;
+}
+
+/* Rich Time Picker Styling */
+.flatpickr-time {
+  @apply !border-t !border-gray-100 dark:!border-navy-700 !mt-4 !pt-4 !h-auto !flex !items-center !justify-center !gap-1;
+}
+
+.flatpickr-time .numInputWrapper {
+  @apply !w-14 !h-10 !flex !items-center !justify-center;
+}
+
+.flatpickr-time input {
+  @apply !bg-gray-50 dark:!bg-navy-900 !rounded-lg !border !border-gray-200 dark:!border-navy-700 !text-lg !font-bold !text-brand-500 !p-0 !m-0 !h-10 !w-full !text-center !leading-[40px] transition-all focus:!ring-4 focus:!ring-brand-500/10 focus:!border-brand-500;
+}
+
+.flatpickr-time .flatpickr-time-separator {
+  @apply !text-gray-400 !font-bold !text-xl !flex !items-center !justify-center !h-10 !leading-[40px];
+}
+
+.flatpickr-time .flatpickr-am-pm {
+  @apply !bg-brand-50 dark:!bg-brand-500/10 !text-brand-600 !font-bold !rounded-lg !border !border-brand-200 dark:!border-brand-500/20 !h-10 !w-16 hover:!bg-brand-500 hover:!text-white transition-all !flex !items-center !justify-center !text-sm !leading-none;
+}
+
+.flatpickr-time .numInputWrapper:hover {
+  @apply !bg-transparent;
+}
+
+.flatpickr-time .numInputWrapper span {
+  @apply !border-0 !bg-white dark:!bg-navy-800 !rounded-md !shadow-sm !w-4 !h-3 !flex !items-center !justify-center hover:!bg-brand-500 hover:!text-white transition-all opacity-0;
+}
+
+.flatpickr-time .numInputWrapper:hover span {
+  @apply opacity-100;
+}
+
+.flatpickr-time .numInputWrapper span:after {
+  @apply !border-t-gray-400;
+}
+
+.flatpickr-time .numInputWrapper:hover span:after {
+  @apply !border-t-white;
+}
+
+.flatpickr-time .numInputWrapper span.arrowUp:after {
+  @apply !border-b-gray-400;
+}
+
+.flatpickr-time .numInputWrapper:hover span.arrowUp:after {
+  @apply !border-b-white;
+}
+
+/* Position arrows more precisely */
+.flatpickr-time .numInputWrapper span.arrowUp {
+  @apply !top-0.5 !right-0.5;
+}
+.flatpickr-time .numInputWrapper span.arrowDown {
+  @apply !bottom-0.5 !right-0.5;
+}
+
+.flatpickr-now-button {
+  @apply !h-10 !flex !items-center !justify-center !py-0 !leading-none;
 }
 
 .fc .fc-view-harness {

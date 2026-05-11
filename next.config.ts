@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'www.ciopowerlist.com' },
       { protocol: 'https', hostname: 'ciopowerlist.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: 'beracore-media-bucket.idr01.zata.ai' },
+      { protocol: 'https', hostname: 'backend.uatcoremedia.vebsigns.com' },
+      { protocol: 'https', hostname: 'admin.uatcoremedia.vebsigns.com' },
     ],
   },
 };

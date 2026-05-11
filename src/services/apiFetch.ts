@@ -27,10 +27,12 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
   // Get token from Zustand store
   const { access_token } = useAuthStore.getState();
 
+  const isFormData = customConfig.body instanceof FormData;
+
   const config: RequestInit = {
     ...customConfig,
     headers: {
-      'Content-Type': 'application/json',
+      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(requireAuth && access_token ? { Authorization: `Bearer ${access_token}` } : {}),
       ...headers,
     },

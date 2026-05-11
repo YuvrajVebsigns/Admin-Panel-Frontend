@@ -6,6 +6,8 @@ interface Option {
 }
 
 interface SelectProps {
+  id?: string;
+  label?: string;
   options: Option[];
   placeholder?: string;
   onChange: (value: string) => void;
@@ -16,6 +18,8 @@ interface SelectProps {
 }
 
 const Select: React.FC<SelectProps> = ({
+  id,
+  label,
   options,
   placeholder = 'Select an option',
   onChange,
@@ -38,31 +42,39 @@ const Select: React.FC<SelectProps> = ({
   };
 
   return (
-    <select
-      className={`h-11 w-full appearance-none rounded-lg border border-gray-300  px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-navy-400 dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-500 ${
-        disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-navy-900 opacity-60' : ''
-      } ${
-        currentValue ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
-      } ${className}`}
-      value={currentValue}
-      onChange={handleChange}
-      disabled={disabled}
-    >
-      {/* Placeholder option */}
-      <option value="" disabled className="text-gray-700 dark:bg-navy-900 dark:text-gray-400">
-        {placeholder}
-      </option>
-      {/* Map over options */}
-      {options.map((option) => (
-        <option
-          key={option.value}
-          value={option.value}
-          className="text-gray-700 dark:bg-navy-900 dark:text-gray-400"
-        >
-          {option.label}
+    <div className="w-full space-y-2">
+      {label && (
+        <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {label}
+        </label>
+      )}
+      <select
+        id={id}
+        className={`h-11 w-full appearance-none rounded-lg border border-gray-300  px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-navy-400 dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-500 ${
+          disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-navy-900 opacity-60' : ''
+        } ${
+          currentValue ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
+        } ${className}`}
+        value={currentValue}
+        onChange={handleChange}
+        disabled={disabled}
+      >
+        {/* Placeholder option */}
+        <option value="" disabled className="text-gray-700 dark:bg-navy-900 dark:text-gray-400">
+          {placeholder}
         </option>
-      ))}
-    </select>
+        {/* Map over options */}
+        {options.map((option) => (
+          <option
+            key={option.value}
+            value={option.value}
+            className="text-gray-700 dark:bg-navy-900 dark:text-gray-400"
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 };
 

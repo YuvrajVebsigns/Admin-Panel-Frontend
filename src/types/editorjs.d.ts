@@ -1,0 +1,14 @@
+declare module '@editorjs/header';
+declare module '@editorjs/list';
+declare module '@editorjs/quote';
+declare module '@editorjs/embed';
+declare module '@editorjs/table';
+declare module '@editorjs/code';
+declare module '@editorjs/raw';
+declare module '@editorjs/underline';
+declare module '@editorjs/inline-code';
+declare module '@editorjs/checklist';
+declare module '@editorjs/delimiter';
+declare module '@editorjs/image';
+declare module 'editorjs-text-color-plugin';
+declare module 'editorjs-text-alignment-blocktune';

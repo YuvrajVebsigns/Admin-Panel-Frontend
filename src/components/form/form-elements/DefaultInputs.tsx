@@ -4,8 +4,8 @@ import ComponentCard from '../../common/ComponentCard';
 import Label from '../Label';
 import Input from '../input/InputField';
 import Select from '../Select';
-import { ChevronDownIcon, EyeCloseIcon, EyeIcon, TimeIcon } from '../../../icons';
-import DatePicker from '@/components/form/date-picker';
+import { ChevronDownIcon, EyeCloseIcon, EyeIcon } from '../../../icons';
+import DateTimePicker from '@/components/form/date-picker';
 
 export default function DefaultInputs() {
   const [showPassword, setShowPassword] = useState(false);
@@ -60,25 +60,27 @@ export default function DefaultInputs() {
         </div>
 
         <div>
-          <DatePicker
+          <DateTimePicker
             id="date-picker"
             label="Date Picker Input"
             placeholder="Select a date"
-            onChange={(_dates, _currentDateString) => {
+            onChange={(_date) => {
               // Handle your logic
-              // console.log({ dates, currentDateString });
             }}
           />
         </div>
 
         <div>
-          <Label htmlFor="tm">Time Picker Input</Label>
-          <div className="relative">
-            <Input type="time" id="tm" name="tm" onChange={(e) => alert(e.target.value)} />
-            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-              <TimeIcon />
-            </span>
-          </div>
+          <DateTimePicker
+            id="time-picker"
+            label="Time Picker Input"
+            mode="time"
+            showTime
+            placeholder="Select time"
+            onChange={(_time) => {
+              // Handle your logic
+            }}
+          />
         </div>
         <div>
           <Label htmlFor="tm">Input with Payment</Label>
