@@ -49,6 +49,7 @@
     "apexcharts": "^4.7.0",
     "autoprefixer": "^10.4.22",
     "clsx": "^2.1.1",
+    "data-fns": "^1.1.0",
     "dnd-kit": "^0.0.2",
     "editorjs-text-alignment-blocktune": "^1.0.3",
     "editorjs-text-color-plugin": "^2.0.4",

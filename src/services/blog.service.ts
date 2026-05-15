@@ -2,6 +2,7 @@ import { apiFetch } from '@/services/apiFetch';
 import { PaginatedResponse } from '@/types/api.types';
 import {
   Blog,
+  BlogComment,
   BlogQueryParams,
   CreateBlogDto,
   UpdateBlogDto,
@@ -20,7 +21,7 @@ export const blogService = {
   },
 
   getBlog: async (id: string) => {
-    return apiFetch<Blog>(`/admin/blogs/${id}`);
+    return apiFetch<Blog>(`/admin/blogs/${id}?showMetadata=true`);
   },
 
   createBlog: async (data: CreateBlogDto) => {
@@ -40,6 +41,41 @@ export const blogService = {
   deleteBlog: async (id: string) => {
     return apiFetch<void>(`/admin/blogs/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  getBlogComments: async (blogId: string, admin = false): Promise<BlogComment[]> => {
+    return apiFetch<BlogComment[]>(
+      `/admin/blogs/${blogId}/comments?admin=${admin}&showMetadata=true`,
+    );
+  },
+
+  updateCommentStatus: async (commentId: string, status: 'Approved' | 'Rejected') => {
+    return apiFetch<BlogComment>(`/admin/blogs/comments/${commentId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  createComment: async (
+    blogId: string,
+    data: { authorName: string; authorEmail: string; content: string },
+  ) => {
+    return apiFetch<BlogComment>(`/admin/blogs/${blogId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  likeBlog: async (blogId: string) => {
+    return apiFetch<Blog>(`/admin/blogs/${blogId}/like`, {
+      method: 'PATCH',
+    });
+  },
+
+  incrementViews: async (blogId: string) => {
+    return apiFetch<Blog>(`/admin/blogs/${blogId}/view`, {
+      method: 'POST',
     });
   },
 };

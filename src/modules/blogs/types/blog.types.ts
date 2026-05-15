@@ -42,6 +42,22 @@ export enum CommentStrategy {
   DISABLED = 'Disabled',
 }
 
+export interface BlogComment {
+  id: string;
+  blogId: string | { id: string; title: string; createdAt: string };
+  authorName: string;
+  authorEmail: string;
+  content: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+}
+
+export interface BlogEngagement {
+  likes: number;
+  views: number;
+  commentsCount: number;
+}
+
 export interface Blog {
   id: string;
   title: string;
@@ -64,6 +80,7 @@ export interface Blog {
   invitedEmails?: string[];
   isHyperlinked: boolean;
   hyperlinkWebsites: (Record<string, unknown> | string)[];
+  engagement?: BlogEngagement;
   createdAt: string;
   updatedAt: string;
 }
