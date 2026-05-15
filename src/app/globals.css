@@ -933,19 +933,43 @@ span.flatpickr-weekday,
   @apply !bg-white dark:!bg-navy-800 !text-gray-500 dark:!text-gray-400 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center hover:!bg-brand-500 hover:!text-white !transition-all !shadow-sm !border !border-gray-200 dark:!border-navy-700;
 }
 
-/* Reduce the overall editor padding so blocks sit tight */
+/* Reduce the overall editor padding so blocks sit tight, but add top room for toolbar */
 .codex-editor__redactor {
-  @apply !pb-0;
+  @apply !pb-0 !pt-16;
 }
 
 /* Give every block a visible bordered card look */
 .ce-block__content {
-  @apply !border !border-gray-200 dark:!border-navy-700 !rounded-xl !p-4 !bg-white dark:!bg-navy-900 !transition-all !max-w-none !mb-2;
+  @apply !border !border-gray-200 dark:!border-navy-700 !rounded-xl !p-4 !pr-12 !bg-white dark:!bg-navy-900 !transition-all !max-w-none !mb-2;
 }
 
-/* Focused block gets a brand highlight */
-.ce-block--focused .ce-block__content {
-  @apply !border-brand-500 !shadow-theme-sm;
+/* Active Block Highlight */
+.ce-block:focus-within .ce-block__content,
+.ce-block--focused .ce-block__content,
+.ce-block--active .ce-block__content,
+.ce-block--selected .ce-block__content {
+  background-color: rgba(239, 68, 68, 0.04) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px #ef4444 !important;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.dark .ce-block:focus-within .ce-block__content,
+.dark .ce-block--focused .ce-block__content,
+.dark .ce-block--active .ce-block__content,
+.dark .ce-block--selected .ce-block__content {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px #ef4444 !important;
+}
+
+.dark .ce-block--focused .ce-block__content,
+.dark .ce-block--active .ce-block__content,
+.dark .ce-block--selected .ce-block__content {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  box-shadow: 0 0 0 2px #ef4444 !important;
+  border-color: #ef4444 !important;
 }
 
 /* Empty block gets a dashed subtle style */
@@ -955,7 +979,7 @@ span.flatpickr-weekday,
 
 /* Toolbar positioning — keep it inside the container */
 .ce-toolbar__actions {
-  @apply !right-2 !left-auto !top-2;
+  @apply !right-2 !left-auto !top-2 !flex !flex-col !gap-4 !h-auto !w-auto !justify-center !items-center !z-20;
 }
 
 .ce-toolbar {
@@ -983,15 +1007,100 @@ span.flatpickr-weekday,
   @apply !bg-white dark:!bg-navy-900 !border-gray-200 dark:!border-navy-700 !shadow-sm;
 }
 
-/* Inline toolbar */
+/* Hide native inline toolbar as we use our custom Fixed Toolbar */
 .ce-inline-toolbar {
-  @apply !bg-white dark:!bg-navy-800 !border-gray-200 dark:!border-navy-700 !shadow-theme-lg !rounded-lg;
+  @apply !hidden;
 }
 
-.ce-inline-tool:hover {
-  @apply !bg-gray-50 dark:!bg-navy-700 !text-brand-500;
+/* Fix for "white rectangle" issue (Nested Popovers) */
+.ce-popover--opened {
+  @apply !h-auto !min-h-[20px] !flex !flex-col;
 }
 
-.ce-inline-tool--active {
-  @apply !text-brand-500;
+.ce-popover__container {
+  @apply !h-auto;
 }
+
+/* Ensure custom content (like color picker) is visible and has height */
+.ce-popover__custom-content:not(:empty) {
+  @apply !min-h-[40px] !p-2 !bg-white dark:!bg-navy-800;
+}
+/* EditorJS Alignment Tune Styles */
+.ce-tune-alignment--center {
+  text-align: center;
+}
+
+.ce-tune-alignment--right {
+  text-align: right;
+}
+
+.ce-tune-alignment--justify {
+  text-align: justify;
+}
+
+/* Ensure inner elements inherit alignment */
+.ce-tune-alignment--center .ce-block__content,
+.ce-tune-alignment--center .ce-paragraph,
+.ce-tune-alignment--center .ce-header,
+.ce-tune-alignment--center .cdx-list {
+  text-align: center;
+}
+
+.ce-tune-alignment--right .ce-block__content,
+.ce-tune-alignment--right .ce-paragraph,
+.ce-tune-alignment--right .ce-header,
+.ce-tune-alignment--right .cdx-list {
+  text-align: right;
+}
+
+.ce-tune-alignment--justify .ce-block__content,
+.ce-tune-alignment--justify .ce-paragraph,
+.ce-tune-alignment--justify .ce-header,
+.ce-tune-alignment--justify .cdx-list {
+  text-align: justify;
+}
+
+.ce-tune-alignment--justify .cdx-list {
+  text-align: justify;
+}
+
+.ce-tune-alignment--center .cdx-list {
+  list-style-position: inside;
+}
+
+/* Blog Preview Formatting Overrides */
+.prose font[face='Inter'] {
+  font-family: 'Inter', sans-serif !important;
+}
+.prose font[face='Playfair Display'] {
+  font-family: 'Playfair Display', serif !important;
+}
+.prose font[face='Roboto'] {
+  font-family: 'Roboto', sans-serif !important;
+}
+.prose font[face='JetBrains Mono'] {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Font size mapping for document.execCommand sizes (1-7) */
+.prose font[size='1'] {
+  font-size: 0.75rem !important;
+} /* 12px */
+.prose font[size='2'] {
+  font-size: 0.875rem !important;
+} /* 14px */
+.prose font[size='3'] {
+  font-size: 1rem !important;
+} /* 16px */
+.prose font[size='4'] {
+  font-size: 1.25rem !important;
+} /* 20px */
+.prose font[size='5'] {
+  font-size: 1.5rem !important;
+} /* 24px */
+.prose font[size='6'] {
+  font-size: 1.875rem !important;
+} /* 30px */
+.prose font[size='7'] {
+  font-size: 3rem !important;
+} /* 48px */

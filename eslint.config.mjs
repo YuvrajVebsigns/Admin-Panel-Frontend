@@ -4,7 +4,14 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
-    ignores: ['**/node_modules/**', '**/.next/**', '**/public/**', '**/dist/**', '**/build/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/public/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/scratch/**',
+    ],
   },
   {
     files: ['**/*.{js,jsx,mjs,cjs}'],

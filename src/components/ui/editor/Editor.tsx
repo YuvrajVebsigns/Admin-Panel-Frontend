@@ -21,6 +21,7 @@ import { AssetMetadataForm } from '@/modules/files/components/AssetMetadataForm'
 import { useFiles } from '@/modules/files/hooks/useFiles';
 import { FileData } from '@/modules/files/types/file.types';
 import { toast } from 'react-hot-toast';
+import EditorToolbar from './EditorToolbar';
 
 interface EditorProps {
   data?: OutputData;
@@ -144,7 +145,7 @@ export default function Editor({
           UnderlineMod,
           InlineCodeMod,
           ChecklistMod,
-          ColorMod,
+          ColorToolMod,
           AlignmentMod,
         ] = await Promise.all([
           import('@editorjs/editorjs'),
@@ -160,7 +161,7 @@ export default function Editor({
           import('@editorjs/underline'),
           import('@editorjs/inline-code'),
           import('@editorjs/checklist'),
-          import('editorjs-text-color-plugin'),
+          import('./ColorInlineTool'),
           import('editorjs-text-alignment-blocktune'),
         ]);
 
@@ -187,7 +188,7 @@ export default function Editor({
         const Underline = unwrap(UnderlineMod);
         const InlineCode = unwrap(InlineCodeMod);
         const Checklist = unwrap(ChecklistMod);
-        const Color = unwrap(ColorMod);
+        const { ColorInlineTool, MarkerInlineTool } = ColorToolMod;
         const Alignment = unwrap(AlignmentMod);
 
         if (cancelled) return;
@@ -293,7 +294,7 @@ export default function Editor({
               underline: Underline,
               inlineCode: InlineCode,
               color: {
-                class: Color,
+                class: ColorInlineTool,
                 config: {
                   colorCollections: [
                     '#1e1b4b',
@@ -313,7 +314,7 @@ export default function Editor({
                 },
               },
               marker: {
-                class: Color,
+                class: MarkerInlineTool,
                 config: {
                   colorCollections: [
                     '#1e1b4b',
@@ -329,12 +330,41 @@ export default function Editor({
                   ],
                   defaultColor: '#FFBF00',
                   type: 'marker',
-                  icon: `<svg width="16" height="15" viewBox="0 0 16 15" xmlns="http://www.w3.org/2000/svg"><path d="M10.358 5.874L8.4 3.915c-.244-.244-.64-.244-.884 0l-5.65 5.65c-.244.244-.244.64 0 .884l1.958 1.958c.244.244.64.244.884 0l5.65-5.65c.244-.244.244-.64 0-.884zM14 14.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1 0-1h11a.5.5 0 0 1 .5.5z" fill="currentColor" fill-rule="nonzero"/></svg>`,
                   customPicker: true,
                 },
               },
               delimiter: {
                 class: Delimiter,
+              },
+              spacer: {
+                class: class SpacerTool {
+                  constructor({
+                    data,
+                    config,
+                    api,
+                  }: {
+                    data: unknown;
+                    config: unknown;
+                    api: unknown;
+                  }) {
+                    void data;
+                    void config;
+                    void api;
+                  }
+                  static get isReadOnlySupported() {
+                    return true;
+                  }
+                  render() {
+                    const el = document.createElement('div');
+                    el.className =
+                      'py-6 border-y border-dashed border-gray-100 dark:border-navy-800 text-center text-[10px] text-gray-400 uppercase tracking-widest pointer-events-none select-none';
+                    el.innerHTML = 'Empty Space';
+                    return el;
+                  }
+                  save() {
+                    return { height: '48px' };
+                  }
+                },
               },
             },
             // Enable tunes for built-in paragraph tool without redefining it explicitly
@@ -543,7 +573,9 @@ export default function Editor({
   };
 
   return (
-    <div className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-2xl p-6 flex flex-col">
+    <div className="relative bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-2xl p-6 flex flex-col">
+      <EditorToolbar editor={ejInstance.current} onImageClick={openImagePicker} />
+
       <div
         id={holder}
         className="prose prose-sm sm:prose lg:prose-lg max-w-none dark:prose-invert flex-grow mb-4"
@@ -640,6 +672,13 @@ export default function Editor({
             >
               <Minus size={20} />
               <span className="text-[10px] font-bold uppercase tracking-tighter">Divider</span>
+            </button>
+            <button
+              onClick={() => handleAddSection('spacer')}
+              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
+            >
+              <Plus size={20} className="rotate-45" />
+              <span className="text-[10px] font-bold uppercase tracking-tighter">Space</span>
             </button>
           </div>
         </div>

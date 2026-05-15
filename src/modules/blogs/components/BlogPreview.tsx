@@ -72,6 +72,17 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
           {(content.blocks || []).map((block, index) => {
             if (!block || !block.data) return null;
 
+            // Extract alignment from tunes
+            const alignment = block.tunes?.alignment?.alignment || '';
+            const alignClass =
+              alignment === 'center'
+                ? 'text-center'
+                : alignment === 'right'
+                  ? 'text-right'
+                  : alignment === 'justify'
+                    ? 'text-justify'
+                    : '';
+
             switch (block.type) {
               case 'header':
                 const Level = `h${block.data.level || 2}` as
@@ -82,55 +93,158 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
                   | 'h5'
                   | 'h6';
                 return (
-                  <Level key={index} dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />
+                  <Level
+                    key={index}
+                    className={alignClass}
+                    dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+                  />
                 );
 
               case 'paragraph':
                 return (
-                  <p key={index} dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />
+                  <p
+                    key={index}
+                    className={alignClass}
+                    dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+                  />
                 );
 
               case 'list':
                 const ListTag = block.data.style === 'ordered' ? 'ol' : 'ul';
                 return (
-                  <ListTag key={index}>
+                  <ListTag key={index} className={alignClass}>
                     {(block.data.items || []).map((item: string, i: number) => (
                       <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
                     ))}
                   </ListTag>
                 );
 
+              case 'checklist':
+                return (
+                  <div key={index} className="space-y-2 my-4">
+                    {(block.data.items || []).map(
+                      (item: { checked: boolean; text: string }, i: number) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div
+                            className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${item.checked ? 'bg-brand-500 border-brand-500 text-white' : 'border-gray-300 dark:border-navy-600'}`}
+                          >
+                            {item.checked && (
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                          </div>
+                          <span
+                            className={`text-gray-700 dark:text-gray-300 ${item.checked ? 'line-through opacity-50' : ''}`}
+                            dangerouslySetInnerHTML={{ __html: item.text }}
+                          />
+                        </div>
+                      ),
+                    )}
+                  </div>
+                );
+
+              case 'table':
+                return (
+                  <div key={index} className="overflow-x-auto my-8">
+                    <table className="w-full border-collapse border border-gray-100 dark:border-navy-700 rounded-xl overflow-hidden">
+                      <tbody>
+                        {(block.data.content || []).map((row: string[], i: number) => (
+                          <tr
+                            key={i}
+                            className={i % 2 === 0 ? 'bg-gray-50/50 dark:bg-navy-800/30' : ''}
+                          >
+                            {row.map((cell: string, j: number) => (
+                              <td
+                                key={j}
+                                className="border border-gray-100 dark:border-navy-700 p-4 text-sm"
+                                dangerouslySetInnerHTML={{ __html: cell }}
+                              />
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+
+              case 'code':
+                return (
+                  <div key={index} className="relative group my-8">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-gray-200 dark:bg-navy-800 text-[10px] font-bold text-gray-500 rounded-bl-lg rounded-tr-2xl uppercase tracking-widest">
+                      Code
+                    </div>
+                    <pre className="bg-gray-50 dark:bg-navy-950 p-6 pt-10 rounded-2xl overflow-x-auto border border-gray-100 dark:border-navy-800">
+                      <code className="text-sm font-mono text-gray-800 dark:text-gray-200 leading-relaxed">
+                        {block.data.code}
+                      </code>
+                    </pre>
+                  </div>
+                );
+
+              case 'raw':
+                return (
+                  <div
+                    key={index}
+                    className="my-8 rounded-2xl overflow-hidden border border-gray-100 dark:border-navy-800 p-4"
+                    dangerouslySetInnerHTML={{ __html: block.data.html }}
+                  />
+                );
+
               case 'quote':
+                const quoteAlign = block.data.alignment === 'center' ? 'text-center' : alignClass;
                 return (
                   <blockquote
                     key={index}
-                    className={block.data.alignment === 'center' ? 'text-center' : ''}
+                    className={`border-l-4 border-brand-500 pl-6 my-8 italic ${quoteAlign}`}
                   >
-                    <p dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />
+                    <p
+                      className="text-xl text-gray-800 dark:text-gray-200 mb-2"
+                      dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+                    />
                     {block.data.caption && (
-                      <cite className="text-sm opacity-60">— {block.data.caption}</cite>
+                      <cite className="text-sm font-medium text-gray-500 not-italic">
+                        — {block.data.caption}
+                      </cite>
                     )}
                   </blockquote>
                 );
 
               case 'delimiter':
-                return <hr key={index} className="my-10 border-gray-100 dark:border-navy-700" />;
+                return (
+                  <div key={index} className="flex justify-center my-12">
+                    <div className="flex gap-2">
+                      <span className="w-2 h-2 rounded-full bg-gray-200 dark:bg-navy-700"></span>
+                      <span className="w-2 h-2 rounded-full bg-brand-500"></span>
+                      <span className="w-2 h-2 rounded-full bg-gray-200 dark:bg-navy-700"></span>
+                    </div>
+                  </div>
+                );
 
               case 'image':
                 if (!block.data.file?.url) return null;
                 return (
-                  <figure key={index} className="my-8">
+                  <figure key={index} className="my-10">
                     <div
-                      className={`relative overflow-hidden rounded-2xl ${block.data.withBackground ? 'bg-gray-50 p-8' : ''} ${block.data.withBorder ? 'border border-gray-100' : ''}`}
+                      className={`relative overflow-hidden rounded-3xl shadow-theme-lg ${block.data.withBackground ? 'bg-gray-50 dark:bg-navy-900 p-8' : ''} ${block.data.withBorder ? 'border-4 border-gray-100 dark:border-navy-700' : ''}`}
                     >
                       <img
                         src={block.data.file.url}
                         alt={block.data.caption || ''}
-                        className={`mx-auto ${block.data.stretched ? 'w-full' : 'max-w-full'}`}
+                        className={`mx-auto transition-transform duration-500 hover:scale-[1.02] ${block.data.stretched ? 'w-full' : 'max-w-full rounded-2xl'}`}
                       />
                     </div>
                     {block.data.caption && (
-                      <figcaption className="text-center text-sm mt-3 text-gray-500 italic">
+                      <figcaption className="text-center text-sm mt-4 text-gray-500 dark:text-gray-400 italic font-medium">
                         {block.data.caption}
                       </figcaption>
                     )}
@@ -142,7 +256,7 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
                 return (
                   <div
                     key={index}
-                    className="my-8 rounded-2xl overflow-hidden aspect-video shadow-lg"
+                    className="my-10 rounded-3xl overflow-hidden aspect-video shadow-theme-xl border-4 border-white dark:border-navy-800"
                   >
                     <iframe
                       width="100%"
@@ -155,6 +269,9 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
                     />
                   </div>
                 );
+
+              case 'spacer':
+                return <div key={index} className="h-12" />;
 
               default:
                 return null;
