@@ -26,4 +26,8 @@ export const API_ENDPOINTS = {
       BY_ID: (id: string) => `/admin/roles/${id}`,
     },
   },
+  SYSTEM: {
+    TEST_CONNECTION: '/test-connection',
+    HEALTH: '/health',
+  },
 } as const;

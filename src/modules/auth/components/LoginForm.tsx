@@ -5,6 +5,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiError } from '@/types/api.types';
+import { ConnectionStatus } from '@/components/common/ConnectionStatus';
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -213,6 +214,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           Sign up for free
         </button>
       </p>
+      <div className="mt-8 flex justify-center">
+        <ConnectionStatus />
+      </div>
     </form>
   );
 };
