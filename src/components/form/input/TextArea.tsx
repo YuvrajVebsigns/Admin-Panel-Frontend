@@ -1,12 +1,13 @@
 import React, { forwardRef } from 'react';
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  error?: boolean; // Error state
+  error?: boolean | string; // Error state
   hint?: string; // Hint text to display
 }
 
 const TextArea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className = '', disabled = false, error = false, hint = '', ...props }, ref) => {
+    const errorMessage = typeof error === 'string' ? error : hint;
     let textareaClasses = `w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden ${className}`;
 
     if (disabled) {
@@ -20,13 +21,13 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="relative">
         <textarea ref={ref} disabled={disabled} className={textareaClasses} {...props} />
-        {hint && (
+        {errorMessage && (
           <p
             className={`mt-2 text-sm ${
               error ? 'text-error-500' : 'text-gray-500 dark:text-gray-400'
             }`}
           >
-            {hint}
+            {errorMessage}
           </p>
         )}
       </div>
