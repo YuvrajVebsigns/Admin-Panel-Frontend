@@ -16,10 +16,10 @@ import {
   Quote as QuoteIcon,
 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
-import { FileBrowser } from '@/modules/files/components/FileBrowser';
-import { AssetMetadataForm } from '@/modules/files/components/AssetMetadataForm';
-import { useFiles } from '@/modules/files/hooks/useFiles';
-import { FileData } from '@/modules/files/types/file.types';
+import { FileBrowser } from '@/modules/media/components/FileBrowser';
+import { AssetMetadataForm } from '@/modules/media/components/AssetMetadataForm';
+import { useFiles } from '@/modules/media/hooks/useFiles';
+import { FileData } from '@/modules/media/types/file.types';
 import { toast } from 'react-hot-toast';
 import EditorToolbar from './EditorToolbar';
 

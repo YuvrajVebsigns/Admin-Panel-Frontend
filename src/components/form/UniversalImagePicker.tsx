@@ -3,12 +3,12 @@
 import React from 'react';
 import { Image as ImageIcon, Upload, Globe, Search, X, Loader2 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
-import { useFiles } from '@/modules/files/hooks/useFiles';
-import { FileBrowser } from '@/modules/files/components/FileBrowser';
-import { FileData } from '@/modules/files/types/file.types';
+import { useFiles } from '@/modules/media/hooks/useFiles';
+import { FileBrowser } from '@/modules/media/components/FileBrowser';
+import { FileData } from '@/modules/media/types/file.types';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
-import { AssetMetadataForm } from '@/modules/files/components/AssetMetadataForm';
+import { AssetMetadataForm } from '@/modules/media/components/AssetMetadataForm';
 
 interface UniversalImagePickerProps {
   value?: string;

@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { FileBox, Plus, Search, Filter, RefreshCcw, LayoutGrid, List } from 'lucide-react';
 import Button from '@/components/ui/button/Button';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
-import { FileTable } from '@/modules/files/components/FileTable';
-import { FileGrid } from '@/modules/files/components/FileGrid';
-import { FileUploadModal } from '@/modules/files/components/FileUploadModal';
+import { FileTable } from '@/modules/media/components/FileTable';
+import { FileGrid } from '@/modules/media/components/FileGrid';
+import { FileUploadModal } from '@/modules/media/components/FileUploadModal';
 
 export default function FilesPage() {
   const { openModal } = useGlobalModal();
