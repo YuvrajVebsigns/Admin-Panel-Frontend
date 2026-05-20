@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { Blog } from '../types/blog.types';
-import { FileText, Edit, Loader2 } from 'lucide-react';
+import { FileText, Edit, Loader2, Eye, Link2 } from 'lucide-react';
 import { useBlogs } from '../hooks/useBlogs';
 import { useRouter } from 'next/navigation';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
@@ -53,18 +53,25 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
         const blogWebsiteIds = (blog.websites || []).map((w) =>
           typeof w === 'string' ? w : ((w.id || w._id) as string),
         );
+        const hyperlinkWebsiteIds = (blog.hyperlinkWebsites || []).map((w) =>
+          typeof w === 'string' ? w : ((w.id || w._id) as string),
+        );
 
         return (
           <div className="flex items-center gap-1">
             {allWebsites.slice(0, 11).map((website, index) => {
               const isActive = blogWebsiteIds.includes(website.id);
+              const isHyperlinked = hyperlinkWebsiteIds.includes(website.id);
+
               return (
                 <div key={website.id} className="relative group/tip">
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 cursor-default ${
-                      isActive
-                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
-                        : 'bg-gray-200 text-gray-500 dark:bg-navy-700 dark:text-gray-400'
+                      isHyperlinked
+                        ? 'bg-blue-500 text-white shadow-sm shadow-blue-500/20'
+                        : isActive
+                          ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
+                          : 'bg-gray-200 text-gray-500 dark:bg-navy-700 dark:text-gray-400'
                     }`}
                   >
                     {index + 1}
@@ -87,9 +94,16 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
                             </span>
                           )}
                         </div>
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                          {website.name}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            {website.name}
+                          </span>
+                          {isHyperlinked && (
+                            <span className="text-[9px] text-blue-500 font-bold flex items-center gap-0.5">
+                              <Link2 size={8} /> HYPERLINKED
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-white dark:bg-navy-800 border-r border-b border-gray-100 dark:border-navy-700 rotate-45" />
                     </div>
@@ -120,8 +134,16 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
       accessor: (blog) => (
         <div className="flex items-center gap-3">
           <button
+            onClick={() => router.push(`/blogs/view/${blog.id}`)}
+            className="p-2 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+            title="View Blog"
+          >
+            <Eye size={18} />
+          </button>
+          <button
             onClick={() => router.push(`/blogs/update/${blog.id}`)}
             className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+            title="Edit Blog"
           >
             <Edit size={18} />
           </button>

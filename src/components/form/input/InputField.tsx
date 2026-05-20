@@ -2,9 +2,10 @@ import React, { forwardRef, InputHTMLAttributes } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   success?: boolean;
-  error?: boolean;
+  error?: boolean | string;
   hint?: string; // Optional hint text
   endIcon?: React.ReactNode;
+  startIcon?: React.ReactNode;
   label?: string; // Optional label text
 }
 
@@ -18,6 +19,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       error = false,
       hint,
       endIcon,
+      startIcon,
       label,
       id,
       ...props
@@ -41,6 +43,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     if (endIcon) {
       inputClasses += ` pr-10`; // Add padding to right so text doesn't overlap icon
     }
+    if (startIcon) {
+      inputClasses += ` pl-10`; // Add padding to left so text doesn't overlap icon
+    }
+
+    const errorMessage = typeof error === 'string' ? error : hint;
 
     return (
       <div className="relative w-full space-y-2">
@@ -50,6 +57,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         <div className="relative w-full">
+          {startIcon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              {startIcon}
+            </div>
+          )}
           <input
             id={id}
             ref={ref}
@@ -63,14 +75,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {/* Optional Hint Text */}
-        {hint && (
+        {/* Optional Hint/Error Text */}
+        {errorMessage && (
           <p
             className={`mt-1.5 text-xs font-medium ${
               error ? 'text-error-500' : success ? 'text-success-500' : 'text-gray-500'
             }`}
           >
-            {hint}
+            {errorMessage}
           </p>
         )}
       </div>
