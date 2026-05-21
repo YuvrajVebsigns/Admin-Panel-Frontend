@@ -44,6 +44,7 @@ export enum CommentStrategy {
 
 export interface BlogComment {
   id: string;
+  _id?: string;
   blogId: string | { id: string; title: string; createdAt: string };
   authorName: string;
   authorEmail: string;

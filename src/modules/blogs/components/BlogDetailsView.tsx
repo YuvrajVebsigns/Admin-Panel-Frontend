@@ -8,12 +8,11 @@ import {
   Eye,
   Calendar,
   User,
-  CheckCircle,
-  XCircle,
   Clock,
   ExternalLink,
   ShieldCheck,
   Plus,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
@@ -24,24 +23,50 @@ import TextArea from '@/components/form/input/TextArea';
 interface BlogDetailsViewProps {
   blog: Blog;
   comments: BlogComment[];
-  onUpdateCommentStatus: (commentId: string, status: 'Approved' | 'Rejected') => Promise<void>;
+  commentMeta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  commentFilter: string;
+  onFilterChange: (status: string) => void;
+  onPageChange: (page: number) => void;
+  onUpdateCommentStatus: (
+    commentId: string,
+    status: 'Pending' | 'Approved' | 'Rejected',
+  ) => Promise<void>;
   onLike: () => Promise<void>;
   onCreateComment: (data: {
     authorName: string;
     authorEmail: string;
     content: string;
   }) => Promise<void>;
+  isCommentsLoading?: boolean;
 }
 
 export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
   blog,
   comments,
+  commentMeta,
+  commentFilter,
+  onFilterChange,
+  onPageChange,
   onUpdateCommentStatus,
   onLike,
   onCreateComment,
+  isCommentsLoading = false,
 }) => {
   const [updatingComment, setUpdatingComment] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+
+  const toggleCommentExpand = (commentId: string) => {
+    setExpandedComments((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -127,7 +152,10 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
     });
   };
 
-  const handleStatusUpdate = async (commentId: string, status: 'Approved' | 'Rejected') => {
+  const handleStatusUpdate = async (
+    commentId: string,
+    status: 'Pending' | 'Approved' | 'Rejected',
+  ) => {
     setUpdatingComment(commentId);
     try {
       await onUpdateCommentStatus(commentId, status);
@@ -217,7 +245,7 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
         </div>
 
         {/* Comments Section */}
-        <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-theme-xl overflow-hidden border border-gray-100 dark:border-navy-800">
+        <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-theme-xl overflow-hidden border border-gray-100 dark:border-navy-800 flex flex-col">
           <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex items-center justify-between">
             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <MessageCircle className="text-brand-500" size={20} />
@@ -232,84 +260,122 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
                 <Plus size={14} />
               </button>
               <span className="bg-gray-50 text-gray-600 dark:bg-navy-800 px-2 py-1 rounded-full text-[10px] font-bold">
-                {comments.length}
+                {commentMeta.total}
               </span>
             </div>
           </div>
-          <div className="divide-y divide-gray-100 dark:border-navy-800 max-h-[500px] overflow-y-auto">
+
+          {/* Comment Status Filter Tabs */}
+          <div className="px-6 py-3 bg-gray-50/50 dark:bg-navy-800/50 border-b border-gray-100 dark:border-navy-800 flex items-center gap-2 overflow-x-auto scrollbar-none">
+            {['All', 'Pending', 'Approved', 'Rejected'].map((status) => (
+              <button
+                key={status}
+                onClick={() => onFilterChange(status)}
+                className={cn(
+                  'px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap',
+                  commentFilter === status
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-white dark:bg-navy-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-100 dark:border-navy-800',
+                )}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
+          <div className="divide-y divide-gray-100 dark:border-navy-800 max-h-[500px] overflow-y-auto relative min-h-[150px] flex-grow">
+            {isCommentsLoading && (
+              <div className="absolute inset-0 bg-white/60 dark:bg-navy-900/60 flex items-center justify-center z-10 transition-opacity">
+                <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+              </div>
+            )}
             {comments.length > 0 ? (
-              comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="p-4 hover:bg-gray-50/50 dark:hover:bg-navy-800/50 transition-colors"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center text-brand-600 text-xs font-bold shrink-0">
-                          {comment.authorName.charAt(0).toUpperCase()}
+              comments.map((comment) => {
+                const commentId = comment.id || comment._id || '';
+                const CHAR_LIMIT = 150;
+                const isLong = comment.content.length > CHAR_LIMIT;
+                const isExpanded = !!expandedComments[commentId];
+                const displayText =
+                  isLong && !isExpanded
+                    ? `${comment.content.substring(0, CHAR_LIMIT)}...`
+                    : comment.content;
+
+                return (
+                  <div
+                    key={commentId}
+                    className="p-4 hover:bg-gray-50/50 dark:hover:bg-navy-800/50 transition-colors"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center text-brand-600 text-xs font-bold shrink-0">
+                            {comment.authorName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-gray-900 dark:text-white text-xs truncate">
+                              {comment.authorName}
+                            </p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <Clock size={10} />
+                              {formatDate(
+                                comment.createdAt,
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                },
+                                true,
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-gray-900 dark:text-white text-xs truncate">
-                            {comment.authorName}
-                          </p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                            <Clock size={10} />
-                            {formatDate(
-                              comment.createdAt,
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              },
-                              true,
+
+                        <div className="shrink-0">
+                          <select
+                            disabled={updatingComment === commentId}
+                            value={comment.status}
+                            onChange={(e) =>
+                              handleStatusUpdate(
+                                commentId,
+                                e.target.value as 'Pending' | 'Approved' | 'Rejected',
+                              )
+                            }
+                            className={cn(
+                              'px-2 py-1 text-[10px] font-black uppercase rounded-lg border outline-none cursor-pointer transition-all dark:bg-navy-900',
+                              comment.status === 'Approved' &&
+                                'bg-green-50 text-green-600 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
+                              comment.status === 'Rejected' &&
+                                'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
+                              comment.status === 'Pending' &&
+                                'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20',
                             )}
-                          </p>
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
                         </div>
                       </div>
-
-                      {comment.status === 'Pending' && (
-                        <div className="flex items-center gap-1 shrink-0">
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50/50 dark:bg-navy-800/50 p-2 rounded-lg break-words">
+                          {displayText}
+                        </p>
+                        {isLong && (
                           <button
-                            disabled={!!updatingComment}
-                            onClick={() => handleStatusUpdate(comment.id, 'Approved')}
-                            className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 rounded transition-all"
+                            onClick={() => toggleCommentExpand(commentId)}
+                            className="text-[10px] font-bold text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-300 outline-none select-none transition-colors px-1"
                           >
-                            <CheckCircle size={16} />
+                            {isExpanded ? 'Show less' : 'Read full comment'}
                           </button>
-                          <button
-                            disabled={!!updatingComment}
-                            onClick={() => handleStatusUpdate(comment.id, 'Rejected')}
-                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-all"
-                          >
-                            <XCircle size={16} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50/50 dark:bg-navy-800/50 p-2 rounded-lg">
-                      {comment.content}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 rounded text-[9px] font-bold uppercase',
-                          comment.status === 'Approved'
-                            ? 'bg-green-50 text-green-600'
-                            : comment.status === 'Rejected'
-                              ? 'bg-red-50 text-red-600'
-                              : 'bg-orange-50 text-orange-600',
                         )}
-                      >
-                        {comment.status}
-                      </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="p-8 text-center">
+              <div className="p-8 text-center flex flex-col items-center justify-center min-h-[150px]">
                 <MessageCircle size={24} className="text-gray-300 mx-auto mb-2" />
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                   No comments yet
@@ -317,6 +383,29 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {commentMeta.totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 dark:border-navy-800 flex items-center justify-between bg-gray-50/30 dark:bg-navy-800/20">
+              <button
+                disabled={commentMeta.page <= 1}
+                onClick={() => onPageChange(commentMeta.page - 1)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed animate-hover"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Page {commentMeta.page} of {commentMeta.totalPages}
+              </span>
+              <button
+                disabled={commentMeta.page >= commentMeta.totalPages}
+                onClick={() => onPageChange(commentMeta.page + 1)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed animate-hover"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Metadata Card */}

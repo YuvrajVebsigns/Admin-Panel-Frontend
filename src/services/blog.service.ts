@@ -44,13 +44,23 @@ export const blogService = {
     });
   },
 
-  getBlogComments: async (blogId: string, admin = false): Promise<BlogComment[]> => {
-    return apiFetch<BlogComment[]>(
-      `/admin/blogs/${blogId}/comments?admin=${admin}&showMetadata=true`,
+  getBlogComments: async (
+    blogId: string,
+    params: { admin?: boolean; status?: string; page?: number; limit?: number } = {},
+  ): Promise<PaginatedResponse<BlogComment>> => {
+    const queryParams = new URLSearchParams();
+    if (params.admin !== undefined) queryParams.append('admin', params.admin.toString());
+    if (params.status) queryParams.append('status', params.status);
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    queryParams.append('showMetadata', 'true');
+
+    return apiFetch<PaginatedResponse<BlogComment>>(
+      `/admin/blogs/${blogId}/comments?${queryParams.toString()}`,
     );
   },
 
-  updateCommentStatus: async (commentId: string, status: 'Approved' | 'Rejected') => {
+  updateCommentStatus: async (commentId: string, status: 'Pending' | 'Approved' | 'Rejected') => {
     return apiFetch<BlogComment>(`/admin/blogs/comments/${commentId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
