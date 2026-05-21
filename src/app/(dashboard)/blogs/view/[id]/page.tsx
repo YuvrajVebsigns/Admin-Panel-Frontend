@@ -13,16 +13,38 @@ export default function ViewBlogPage() {
   const [blog, setBlog] = useState<Blog | null>(null);
   const [comments, setComments] = useState<BlogComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [commentFilter, setCommentFilter] = useState<string>('All');
+  const [commentMeta, setCommentMeta] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }>({ page: 1, limit: 5, total: 0, totalPages: 1 });
+
+  const fetchComments = async (page: number, filterStatus: string) => {
+    setIsCommentsLoading(true);
+    try {
+      const response = await blogService.getBlogComments(id, {
+        admin: true,
+        status: filterStatus === 'All' ? undefined : filterStatus,
+        page,
+        limit: 5,
+      });
+      setComments(response.data);
+      setCommentMeta(response.meta);
+    } catch (error) {
+      toast.error('Failed to load comments');
+    } finally {
+      setIsCommentsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBlogData = async () => {
       try {
-        const [blogData, commentsData] = await Promise.all([
-          blogService.getBlog(id),
-          blogService.getBlogComments(id, true).catch(() => []), // Pass true for admin to get all comments
-        ]);
+        const blogData = await blogService.getBlog(id);
         setBlog(blogData);
-        setComments(commentsData);
         // Increment views
         blogService.incrementViews(id).catch(() => {});
       } catch (error) {
@@ -32,14 +54,34 @@ export default function ViewBlogPage() {
       }
     };
 
-    fetchData();
+    fetchBlogData();
   }, [id]);
 
-  const handleUpdateCommentStatus = async (commentId: string, status: 'Approved' | 'Rejected') => {
+  useEffect(() => {
+    fetchComments(commentMeta.page, commentFilter);
+  }, [id, commentFilter, commentMeta.page]);
+
+  const handleFilterChange = (status: string) => {
+    setCommentFilter(status);
+    setCommentMeta((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setCommentMeta((prev) => ({ ...prev, page }));
+  };
+
+  const handleUpdateCommentStatus = async (
+    commentId: string,
+    status: 'Pending' | 'Approved' | 'Rejected',
+  ) => {
     try {
       await blogService.updateCommentStatus(commentId, status);
       setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, status } : c)));
-      toast.success(`Comment ${status.toLowerCase()} successfully`);
+      toast.success(`Comment status updated to ${status.toLowerCase()} successfully`);
+      // If we are filtering by a specific status, re-fetch comments to reflect potential list changes
+      if (commentFilter !== 'All' && commentFilter !== status) {
+        fetchComments(commentMeta.page, commentFilter);
+      }
     } catch (error) {
       toast.error('Failed to update comment status');
     }
@@ -71,8 +113,7 @@ export default function ViewBlogPage() {
     content: string;
   }) => {
     try {
-      const newComment = await blogService.createComment(id, data);
-      setComments((prev) => [newComment, ...prev]);
+      await blogService.createComment(id, data);
       if (blog) {
         setBlog({
           ...blog,
@@ -85,6 +126,12 @@ export default function ViewBlogPage() {
         });
       }
       toast.success('Comment posted successfully!');
+      // Switch filter back to 'All' and reset to page 1 to see the new comment
+      setCommentFilter('All');
+      setCommentMeta((prev) => ({ ...prev, page: 1 }));
+      if (commentFilter === 'All' && commentMeta.page === 1) {
+        fetchComments(1, 'All');
+      }
     } catch (error) {
       toast.error('Failed to post comment');
     }
@@ -152,9 +199,14 @@ export default function ViewBlogPage() {
       <BlogDetailsView
         blog={blog}
         comments={comments}
+        commentMeta={commentMeta}
+        commentFilter={commentFilter}
+        onFilterChange={handleFilterChange}
+        onPageChange={handlePageChange}
         onUpdateCommentStatus={handleUpdateCommentStatus}
         onLike={handleLike}
         onCreateComment={handleCreateComment}
+        isCommentsLoading={isCommentsLoading}
       />
     </div>
   );
