@@ -36,7 +36,20 @@ import {
 } from '../types/blog.types';
 import { useBlogs } from '../hooks/useBlogs';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
-import Editor from '@/components/ui/editor/Editor';
+import dynamicImport from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
+
+const Editor = dynamicImport(() => import('@/components/ui/editor/Editor'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 flex items-center justify-center border border-gray-100 dark:border-navy-700 rounded-2xl bg-white dark:bg-navy-900">
+      <div className="flex flex-col items-center gap-2 text-gray-400">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+        <span className="text-xs font-semibold">Loading editor...</span>
+      </div>
+    </div>
+  ),
+});
 import Badge from '@/components/ui/badge/Badge';
 import { Modal } from '@/components/ui/modal';
 import { BlogPreview } from './BlogPreview';
