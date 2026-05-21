@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Save,
@@ -117,6 +117,8 @@ const STEPS = [
 
 export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const websiteIdParam = searchParams.get('websiteId');
   const isEdit = !!initialData;
   const { createEvent, updateEvent, isCreating, isUpdating } = useEvents();
   const { websites } = useWebsites({ limit: 100 });
@@ -156,7 +158,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
           status: EventStatus.DRAFT,
           startDate: '',
           endDate: '',
-          websites: [],
+          websites: websiteIdParam ? [websiteIdParam] : [],
           isActive: true,
           agenda: [],
           invitedEmails: [],

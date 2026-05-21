@@ -14,12 +14,14 @@ import {
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
+import { useEvents } from '@/modules/events/hooks/useEvents';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import Button from '@/components/ui/button/Button';
 import { DataTable } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
 import Image from 'next/image';
 import { BlogTable } from '@/modules/blogs/components/BlogTable';
+import { EventTable } from '@/modules/events/components/EventTable';
 
 const TABS = [
   { id: 'blogs', label: 'Blogs', icon: <FileText size={18} /> },
@@ -41,9 +43,10 @@ export default function WebsiteDashboardPage() {
   const websiteId = params.id as string;
   const { website, isLoading } = useWebsite(websiteId);
   const { meta: blogsMeta } = useBlogs({ limit: 1000, websiteId });
+  const { events: websiteEvents, isLoading: isEventsLoading } = useEvents({ websiteId });
   const [activeTab, setActiveTab] = useState('blogs');
 
-  if (isLoading) {
+  if (isLoading || isEventsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
@@ -87,7 +90,7 @@ export default function WebsiteDashboardPage() {
     },
     {
       title: 'TOTAL EVENTS',
-      value: 0, // Pending backend
+      value: websiteEvents?.length || 0,
       icon: <Calendar size={24} strokeWidth={1.5} />,
       bgIllustration: <Calendar size={100} strokeWidth={1} />,
       iconBgColor: 'bg-purple-50 dark:bg-purple-500/10',
@@ -205,6 +208,8 @@ export default function WebsiteDashboardPage() {
                 onClick={() => {
                   if (activeTab === 'blogs') {
                     router.push(`/blogs/create?websiteId=${websiteId}`);
+                  } else if (activeTab === 'events') {
+                    router.push(`/events/new?websiteId=${websiteId}`);
                   }
                 }}
               >
@@ -222,7 +227,12 @@ export default function WebsiteDashboardPage() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
                 {activeTab}{' '}
                 <span className="ml-2 text-sm font-medium text-gray-400">
-                  {activeTab === 'pages' ? '5' : activeTab === 'blogs' ? '12' : '8'} Total
+                  {activeTab === 'pages'
+                    ? '5'
+                    : activeTab === 'blogs'
+                      ? blogsMeta?.total || 0
+                      : websiteEvents?.length || 0}{' '}
+                  Total
                 </span>
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -314,12 +324,7 @@ export default function WebsiteDashboardPage() {
           ) : activeTab === 'blogs' ? (
             <BlogTable websiteId={websiteId} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-gray-50/50 rounded-2xl dark:bg-navy-900/50">
-              <Calendar size={48} className="text-gray-200 mb-4" />
-              <p className="text-gray-500 font-medium text-center max-w-xs">
-                Event management for this website will be available soon.
-              </p>
-            </div>
+            <EventTable websiteId={websiteId} />
           )}
         </div>
       </div>
