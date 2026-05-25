@@ -14,6 +14,7 @@ import { PageType, PageStatus, WebsitePage } from '../types/cms.types';
 import { useWebsitePages } from '../hooks/useWebsitePages';
 import dynamicImport from 'next/dynamic';
 import { Loader2, Info, HelpCircle } from 'lucide-react';
+import { useAuthStore } from '@/store/auth.store';
 
 const Editor = dynamicImport(() => import('@/components/ui/editor/Editor'), {
   ssr: false,
@@ -83,6 +84,8 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   const isEdit = !!pageData;
   const { createPage, updatePage, isCreating, isUpdating } = useWebsitePages({ siteId });
   const [activeTab, setActiveTab] = useState<'info' | 'editor' | 'seo'>('info');
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role?.roleKey === 'super_admin';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editorContent, setEditorContent] = useState<any>(null);
 
@@ -249,17 +252,19 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
           >
             General Details
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('editor')}
-            className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
-              activeTab === 'editor'
-                ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
-            }`}
-          >
-            Page Section Builder
-          </button>
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('editor')}
+              className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
+                activeTab === 'editor'
+                  ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
+              }`}
+            >
+              Page Section Builder
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setActiveTab('seo')}
@@ -372,7 +377,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
               </div>
             )}
 
-            {activeTab === 'editor' && (
+            {activeTab === 'editor' && isSuperAdmin && (
               <div className="space-y-4">
                 <div className="flex items-start gap-3 p-4 bg-brand-50/50 dark:bg-brand-950/10 border border-brand-100 dark:border-brand-900/30 rounded-2xl">
                   <Info size={18} className="text-brand-500 shrink-0 mt-0.5" />

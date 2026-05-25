@@ -7,6 +7,7 @@ import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import { PageFormModal } from './PageFormModal';
 import { Edit, Trash2, Copy, Globe, Lock, Plus, Search, Loader2 } from 'lucide-react';
+import { useAuthStore } from '@/store/auth.store';
 
 interface PageManagerProps {
   siteId: string;
@@ -17,6 +18,9 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
   const [status, setStatus] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WebsitePage | null>(null);
+
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
   const { pages, isLoading, deletePage, publishPage, unpublishPage, duplicatePage } =
     useWebsitePages({
@@ -136,13 +140,15 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
             {item.status === PageStatus.PUBLISHED ? <Globe size={16} /> : <Lock size={16} />}
           </button>
 
-          <button
-            onClick={() => handleDuplicate(item.id)}
-            title="Duplicate Page"
-            className="p-2 text-gray-400 hover:text-brand-600 hover:bg-gray-50 dark:hover:bg-navy-900 rounded-lg transition-colors border-none bg-transparent"
-          >
-            <Copy size={16} />
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => handleDuplicate(item.id)}
+              title="Duplicate Page"
+              className="p-2 text-gray-400 hover:text-brand-600 hover:bg-gray-50 dark:hover:bg-navy-900 rounded-lg transition-colors border-none bg-transparent"
+            >
+              <Copy size={16} />
+            </button>
+          )}
 
           <button
             onClick={() => handleEdit(item)}
@@ -152,13 +158,15 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
             <Edit size={16} />
           </button>
 
-          <button
-            onClick={() => handleDelete(item.id)}
-            title="Delete Page"
-            className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors border-none bg-transparent"
-          >
-            <Trash2 size={16} />
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => handleDelete(item.id)}
+              title="Delete Page"
+              className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors border-none bg-transparent"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -195,10 +203,12 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
           </select>
         </div>
 
-        <Button variant="primary" onClick={handleCreate} className="w-full sm:w-auto">
-          <Plus size={18} className="mr-2" />
-          Create Page
-        </Button>
+        {isSuperAdmin && (
+          <Button variant="primary" onClick={handleCreate} className="w-full sm:w-auto">
+            <Plus size={18} className="mr-2" />
+            Create Page
+          </Button>
+        )}
       </div>
 
       {/* Pages Data Table */}
