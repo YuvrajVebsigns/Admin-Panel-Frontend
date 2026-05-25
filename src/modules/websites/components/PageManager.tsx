@@ -128,17 +128,19 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
       header: 'ACTIONS',
       accessor: (item: WebsitePage) => (
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => handleTogglePublish(item)}
-            title={item.status === PageStatus.PUBLISHED ? 'Unpublish Page' : 'Publish Page'}
-            className={`p-2 rounded-lg transition-colors border-none bg-transparent ${
-              item.status === PageStatus.PUBLISHED
-                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
-                : 'text-gray-400 hover:text-brand-600 hover:bg-gray-50 dark:hover:bg-navy-900'
-            }`}
-          >
-            {item.status === PageStatus.PUBLISHED ? <Globe size={16} /> : <Lock size={16} />}
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => handleTogglePublish(item)}
+              title={item.status === PageStatus.PUBLISHED ? 'Unpublish Page' : 'Publish Page'}
+              className={`p-2 rounded-lg transition-colors border-none bg-transparent ${
+                item.status === PageStatus.PUBLISHED
+                  ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
+                  : 'text-gray-400 hover:text-brand-600 hover:bg-gray-50 dark:hover:bg-navy-900'
+              }`}
+            >
+              {item.status === PageStatus.PUBLISHED ? <Globe size={16} /> : <Lock size={16} />}
+            </button>
+          )}
 
           {isSuperAdmin && (
             <button
