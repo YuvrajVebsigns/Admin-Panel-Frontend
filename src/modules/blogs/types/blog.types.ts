@@ -1,8 +1,10 @@
+import { ImageLinks } from '@/modules/websites/types/website.types';
+
 export interface BlogSEO {
   metaTitle?: string;
   metaDescription?: string;
   keywords?: string[];
-  ogImage?: string;
+  ogImage?: string | ImageLinks;
   ogImageId?: string;
   canonicalUrl?: string;
 }
@@ -68,7 +70,7 @@ export interface Blog {
   seo?: BlogSEO;
   websites: (Record<string, unknown> | string)[];
   author: Record<string, unknown>;
-  featureImage?: string;
+  featureImage?: string | ImageLinks;
   featureImageId?: string;
   tags?: string[];
   isActive: boolean;
@@ -91,7 +93,7 @@ export interface CreateBlogDto {
   slug: string;
   excerpt?: string;
   content: BlogContent;
-  featureImage?: string;
+  featureImage?: string | ImageLinks;
   featureImageId?: string;
   tags?: string[];
   seo?: BlogSEO;

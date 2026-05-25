@@ -186,7 +186,7 @@ export default function ViewBlogPage() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push(`/blogs/update/${blog.id}`)}
+            onClick={() => router.push(`/blogs/update/${id}`)}
             className="flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-xl font-bold text-sm hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/25 active:scale-95"
           >
             <Edit size={18} />

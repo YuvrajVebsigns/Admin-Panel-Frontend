@@ -1,4 +1,5 @@
 import { BlogContent } from '@/modules/blogs/types/blog.types';
+import { ImageLinks } from '@/modules/websites/types/website.types';
 
 export enum EventType {
   ONLINE = 'ONLINE',
@@ -34,7 +35,7 @@ export interface EventSeo {
   metaTitle: string;
   metaDescription: string;
   keywords: string[];
-  ogImage: string;
+  ogImage: string | ImageLinks;
   ogImageId: string;
 }
 
@@ -50,6 +51,7 @@ export interface EventManagement {
   endDate: string;
   location?: EventLocation;
   meetingLink?: string;
+  bannerImage?: ImageLinks;
   bannerImageId?: string;
   websites: string[] | unknown[];
   sponsors: string[] | unknown[];

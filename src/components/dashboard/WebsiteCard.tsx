@@ -2,10 +2,12 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { MoveRight, Search } from 'lucide-react';
 import Image from 'next/image';
+import { ImageLinks } from '@/modules/websites/types/website.types';
+import { getImageUrl } from '@/lib/utils';
 
 export interface WebsiteCardProps {
   id: string;
-  logo?: string;
+  logo?: string | ImageLinks;
   title: string;
   status: 'ACTIVE' | 'INACTIVE';
   blogsCount: number;
@@ -21,6 +23,7 @@ export const WebsiteCard: React.FC<WebsiteCardProps> = ({
   eventsCount,
 }) => {
   const router = useRouter();
+  const resolvedLogoUrl = getImageUrl(logo);
 
   return (
     <div className="group relative flex flex-col p-5 bg-white border border-gray-100 rounded-2xl shadow-theme-sm hover:shadow-theme-lg hover:-translate-y-1 transition-all duration-300 dark:bg-navy-800 dark:border-navy-700">
@@ -36,11 +39,12 @@ export const WebsiteCard: React.FC<WebsiteCardProps> = ({
       {/* Top Header Section */}
       <div className="flex items-center gap-4 mb-2 pr-8">
         <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-brand-50 dark:bg-brand-500/5 flex items-center justify-center border border-brand-100/50 dark:border-brand-500/10 shrink-0">
-          {logo ? (
+          {resolvedLogoUrl ? (
             <Image
-              src={logo}
+              src={resolvedLogoUrl}
               alt={title}
               fill
+              sizes="56px"
               className="object-contain p-2.5 transition-transform duration-500 group-hover:scale-110"
             />
           ) : (

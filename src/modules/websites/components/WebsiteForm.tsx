@@ -12,6 +12,7 @@ import TagInput from '@/components/form/input/TagInput';
 import Button from '@/components/ui/button/Button';
 import { useWebsites } from '../hooks/useWebsites';
 import { Website } from '../types/website.types';
+import { getImageUrl } from '@/lib/utils';
 
 const websiteSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -57,14 +58,14 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
           name: initialData.name,
           slug: initialData.slug,
           domain: initialData.domain,
-          logo: initialData.logo || '',
+          logo: getImageUrl(initialData.logo) || '',
           description: initialData.description || '',
           isActive: initialData.isActive,
           seo: {
             metaTitle: initialData.seo?.metaTitle || '',
             metaDescription: initialData.seo?.metaDescription || '',
             metaKeywords: initialData.seo?.metaKeywords || [],
-            ogImage: initialData.seo?.ogImage || '',
+            ogImage: getImageUrl(initialData.seo?.ogImage) || '',
           },
         }
       : {

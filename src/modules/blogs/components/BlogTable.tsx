@@ -6,6 +6,7 @@ import { useBlogs } from '../hooks/useBlogs';
 import { useRouter } from 'next/navigation';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { useDebounce } from '@/hooks/useDebounce';
+import { getImageUrl } from '@/lib/utils';
 
 interface BlogTableProps {
   websiteId?: string;
@@ -82,9 +83,9 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
                     <div className="bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 rounded-lg shadow-xl px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded overflow-hidden bg-white border border-gray-100 dark:border-navy-600 flex-shrink-0 flex items-center justify-center">
-                          {website.logo ? (
+                          {getImageUrl(website.logo) ? (
                             <img
-                              src={website.logo}
+                              src={getImageUrl(website.logo)}
                               alt=""
                               className="w-full h-full object-contain p-0.5"
                             />

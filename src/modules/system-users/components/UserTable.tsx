@@ -31,7 +31,13 @@ export const UserTable: React.FC<UserTableProps> = ({ onEdit, onDelete }) => {
         <div className="flex items-center gap-3">
           <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
             {user.profileImage ? (
-              <Image src={user.profileImage} alt={user.fullName} fill className="object-cover" />
+              <Image
+                src={user.profileImage}
+                alt={user.fullName}
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-gray-400">
                 <UserIcon size={20} />

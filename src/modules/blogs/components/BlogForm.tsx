@@ -56,7 +56,7 @@ import { BlogPreview } from './BlogPreview';
 import TagInput from '@/components/form/input/TagInput';
 import { UniversalImagePicker } from '@/components/form/UniversalImagePicker';
 import { Calendar, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getImageUrl } from '@/lib/utils';
 
 const blogSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
@@ -140,7 +140,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
           title: initialData.title,
           slug: initialData.slug,
           excerpt: initialData.excerpt,
-          featureImage: initialData.featureImage || '',
+          featureImage: getImageUrl(initialData.featureImage) || '',
           featureImageId: initialData.featureImageId,
           tags: initialData.tags || [],
           isActive: initialData.isActive !== undefined ? initialData.isActive : true,
@@ -154,7 +154,13 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
           websites: initialData.websites.map((w) =>
             typeof w === 'string' ? w : ((w.id || w._id) as string),
           ),
-          seo: initialData.seo,
+          seo: initialData.seo
+            ? {
+                ...initialData.seo,
+                ogImage: getImageUrl(initialData.seo.ogImage) || '',
+                keywords: initialData.seo.keywords || [],
+              }
+            : undefined,
           isHyperlinked: initialData.isHyperlinked || false,
           hyperlinkWebsites: (initialData.hyperlinkWebsites || []).map((w) =>
             typeof w === 'string' ? w : ((w.id || w._id) as string),
@@ -743,9 +749,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
                           className="hidden"
                         />
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 p-1 shrink-0">
-                          {website.logo ? (
+                          {getImageUrl(website.logo) ? (
                             <img
-                              src={website.logo}
+                              src={getImageUrl(website.logo)}
                               alt=""
                               className="w-full h-full object-contain"
                             />
@@ -794,9 +800,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
                               className="hidden"
                             />
                             <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 p-1 shrink-0">
-                              {website.logo ? (
+                              {getImageUrl(website.logo) ? (
                                 <img
-                                  src={website.logo}
+                                  src={getImageUrl(website.logo)}
                                   alt=""
                                   className="w-full h-full object-contain"
                                 />

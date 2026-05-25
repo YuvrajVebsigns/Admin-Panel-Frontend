@@ -1,7 +1,15 @@
 'use client';
 import React, { Suspense } from 'react';
 import { EventForm } from '@/modules/events/components/EventForm';
+import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+
+function CreateEventContent() {
+  const searchParams = useSearchParams();
+  const websiteId = searchParams.get('websiteId');
+
+  return <EventForm defaultWebsiteId={websiteId} />;
+}
 
 export default function NewEventPage() {
   return (
@@ -13,7 +21,7 @@ export default function NewEventPage() {
           </div>
         }
       >
-        <EventForm />
+        <CreateEventContent />
       </Suspense>
     </div>
   );
