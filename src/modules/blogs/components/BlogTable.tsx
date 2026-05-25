@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
-import { Blog } from '../types/blog.types';
+import { Blog, BlogStatus } from '../types/blog.types';
 import { FileText, Edit, Loader2, Eye, Link2 } from 'lucide-react';
 import { useBlogs } from '../hooks/useBlogs';
 import { useRouter } from 'next/navigation';
@@ -32,7 +32,13 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
       accessor: (blog) => (
         <div
           className="flex items-center gap-4 py-2 group cursor-pointer"
-          onClick={() => router.push(`/blogs/update/${blog.id}`)}
+          onClick={() =>
+            router.push(
+              `/blogs/update/${blog.id}${
+                websiteId ? `?from=/websites/dashboard/${websiteId}` : ''
+              }`,
+            )
+          }
         >
           <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform duration-300">
             <FileText size={20} strokeWidth={1.5} />
@@ -118,17 +124,95 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
     },
     {
       header: 'STATUS',
-      accessor: (blog) => (
-        <span
-          className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-            blog.isActive
-              ? 'bg-green-50 text-green-600 dark:bg-green-500/10'
-              : 'bg-orange-50 text-orange-600 dark:bg-orange-500/10'
-          }`}
-        >
-          {blog.isActive ? 'PUBLISHED' : 'DRAFT'}
-        </span>
-      ),
+      accessor: (blog) => {
+        let badgeClass = 'bg-gray-100 text-gray-600 dark:bg-navy-700 dark:text-gray-400';
+        let label = 'DRAFT';
+
+        switch (blog.status) {
+          case BlogStatus.PUBLISHED:
+            badgeClass =
+              'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400';
+            label = 'PUBLISHED';
+            break;
+          case BlogStatus.SCHEDULED:
+            badgeClass = 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400';
+            label = 'SCHEDULED';
+            break;
+          case BlogStatus.ARCHIVED:
+            badgeClass = 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400';
+            label = 'ARCHIVED';
+            break;
+          case BlogStatus.DRAFT:
+          default:
+            badgeClass = 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400';
+            label = 'DRAFT';
+            break;
+        }
+
+        return (
+          <span
+            className={`text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full ${badgeClass}`}
+          >
+            {label}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'PUBLISH TIMING',
+      accessor: (blog) => {
+        if (blog.status === BlogStatus.PUBLISHED && blog.publishedAt) {
+          return (
+            <div className="flex flex-col text-xs font-medium text-gray-600 dark:text-gray-300">
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                Published At
+              </span>
+              <span className="text-[11px]">
+                {new Date(blog.publishedAt).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          );
+        }
+        if (blog.status === BlogStatus.SCHEDULED && blog.scheduledAt) {
+          return (
+            <div className="flex flex-col text-xs font-medium text-gray-600 dark:text-gray-300">
+              <span className="font-semibold text-blue-600 dark:text-blue-400">Scheduled For</span>
+              <span className="text-[11px]">
+                {new Date(blog.scheduledAt).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          );
+        }
+        if (blog.status === BlogStatus.ARCHIVED && blog.autoArchiveAt) {
+          return (
+            <div className="flex flex-col text-xs font-medium text-gray-600 dark:text-gray-300">
+              <span className="font-semibold text-rose-600 dark:text-rose-400">Archived At</span>
+              <span className="text-[11px]">
+                {new Date(blog.autoArchiveAt).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          );
+        }
+        return <span className="text-xs text-gray-400 dark:text-gray-500">—</span>;
+      },
     },
     {
       header: 'ACTIONS',
@@ -142,7 +226,13 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
             <Eye size={18} />
           </button>
           <button
-            onClick={() => router.push(`/blogs/update/${blog.id}`)}
+            onClick={() =>
+              router.push(
+                `/blogs/update/${blog.id}${
+                  websiteId ? `?from=/websites/dashboard/${websiteId}` : ''
+                }`,
+              )
+            }
             className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
             title="Edit Blog"
           >

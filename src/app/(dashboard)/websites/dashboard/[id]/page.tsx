@@ -214,9 +214,13 @@ export default function WebsiteDashboardPage() {
                 variant="primary"
                 onClick={() => {
                   if (activeTab === 'blogs') {
-                    router.push(`/blogs/create?websiteId=${websiteId}`);
+                    router.push(
+                      `/blogs/create?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                    );
                   } else if (activeTab === 'events') {
-                    router.push(`/events/new?websiteId=${websiteId}`);
+                    router.push(
+                      `/events/new?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                    );
                   }
                 }}
               >

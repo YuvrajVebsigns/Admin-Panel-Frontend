@@ -29,8 +29,9 @@ export const useBlogs = (params: BlogQueryParams = {}) => {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBlogDto }) =>
       blogService.updateBlog(id, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blog', variables.id] });
       toast.success('Blog updated successfully');
     },
     onError: (error: Error) => {

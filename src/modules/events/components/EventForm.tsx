@@ -120,6 +120,8 @@ const STEPS = [
 export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsiteId }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectUrl = searchParams ? searchParams.get('from') || '/events' : '/events';
+  const backLabel = redirectUrl.includes('dashboard') ? 'Back to Dashboard' : 'Back to Events';
   const websiteIdParam = defaultWebsiteId || searchParams.get('websiteId');
   const isEdit = !!initialData;
   const { createEvent, updateEvent, isCreating, isUpdating } = useEvents();
@@ -242,7 +244,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
       } else {
         await createEvent(payload as unknown as CreateEventInput);
       }
-      router.push('/events');
+      router.push(redirectUrl);
     } catch (error) {
       // Handled by hook
     }
@@ -722,8 +724,9 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/events')}
+            onClick={() => router.push(redirectUrl)}
             className="p-2.5 rounded-xl bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 text-gray-500 hover:text-brand-500 transition-all shadow-theme-xs hover:shadow-theme-sm"
+            title={backLabel}
           >
             <ArrowLeft size={20} />
           </button>
@@ -740,7 +743,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => router.push('/events')}
+            onClick={() => router.push(redirectUrl)}
             className="bg-white dark:bg-navy-800"
           >
             Cancel

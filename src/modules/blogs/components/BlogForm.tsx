@@ -3,7 +3,8 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   Save,
@@ -57,6 +58,15 @@ import TagInput from '@/components/form/input/TagInput';
 import { UniversalImagePicker } from '@/components/form/UniversalImagePicker';
 import { Calendar, Clock } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
+const getFileId = (file: unknown): string => {
+  if (!file) return '';
+  if (typeof file === 'string') return file;
+  if (typeof file === 'object' && file !== null) {
+    const record = file as Record<string, unknown>;
+    return (record.id as string) || (record._id as string) || '';
+  }
+  return '';
+};
 
 const blogSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
@@ -95,6 +105,9 @@ interface BlogFormProps {
 
 export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteId }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams ? searchParams.get('from') || '/blogs' : '/blogs';
+  const backLabel = redirectUrl.includes('dashboard') ? 'Back to Dashboard' : 'Back to Blogs';
   const isEdit = !!initialData;
   const { websites } = useWebsites({ limit: 100 });
   const { createBlog, updateBlog, isCreating, isUpdating } = useBlogs();
@@ -141,7 +154,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
           slug: initialData.slug,
           excerpt: initialData.excerpt,
           featureImage: getImageUrl(initialData.featureImage) || '',
-          featureImageId: initialData.featureImageId,
+          featureImageId: getFileId(initialData.featureImageId),
           tags: initialData.tags || [],
           isActive: initialData.isActive !== undefined ? initialData.isActive : true,
           status: initialData.status || BlogStatus.DRAFT,
@@ -158,6 +171,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
             ? {
                 ...initialData.seo,
                 ogImage: getImageUrl(initialData.seo.ogImage) || '',
+                ogImageId: getFileId(initialData.seo.ogImageId),
                 keywords: initialData.seo.keywords || [],
               }
             : undefined,
@@ -199,6 +213,20 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
       setValue('slug', slug, { shouldValidate: true });
     }
   }, [titleValue, isEdit, setValue]);
+
+  React.useEffect(() => {
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const errorList = errorKeys
+        .map((field) => {
+          const err = errors[field as keyof typeof errors];
+          const msg = err && typeof err === 'object' && 'message' in err ? String(err.message) : '';
+          return `${field}: ${msg || 'Invalid field'}`;
+        })
+        .join(', ');
+      toast.error(`Please correct form validation errors: ${errorList}`);
+    }
+  }, [errors]);
 
   const selectedWebsites = watch('websites') || [];
   const isHyperlinked = watch('isHyperlinked');
@@ -293,7 +321,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
       }
 
       if (shouldRedirect) {
-        router.push('/blogs');
+        router.push(redirectUrl);
       }
     } catch (error) {
       // Toast handled in hook
@@ -344,26 +372,26 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
         <div className="flex items-center justify-between mb-8">
           <button
             type="button"
-            onClick={() => router.push('/blogs')}
+            onClick={() => router.push(redirectUrl)}
             className="flex items-center gap-2 text-gray-500 hover:text-brand-500 transition-colors font-medium group text-sm"
           >
             <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-            Back to Blogs
+            {backLabel}
           </button>
 
           <div className="flex items-center gap-3">
             <Badge
               color={
-                watch('status') === BlogStatus.PUBLISHED
+                (initialData?.status || BlogStatus.DRAFT) === BlogStatus.PUBLISHED
                   ? 'success'
-                  : watch('status') === BlogStatus.SCHEDULED
+                  : (initialData?.status || BlogStatus.DRAFT) === BlogStatus.SCHEDULED
                     ? 'info'
-                    : watch('status') === BlogStatus.ARCHIVED
+                    : (initialData?.status || BlogStatus.DRAFT) === BlogStatus.ARCHIVED
                       ? 'error'
                       : 'warning'
               }
             >
-              {watch('status').toUpperCase()}
+              {(initialData?.status || BlogStatus.DRAFT).toUpperCase()}
             </Badge>
 
             {/* Manual Save Button */}
@@ -387,13 +415,13 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
               ) : (
                 <>
                   <CheckCircle size={18} className="mr-2" />
-                  {isEdit
-                    ? 'Update & Exit'
-                    : watch('status') === BlogStatus.SCHEDULED
-                      ? 'Schedule'
-                      : watch('status') === BlogStatus.ARCHIVED
-                        ? 'Archive'
-                        : 'Publish'}
+                  {watch('status') === BlogStatus.SCHEDULED
+                    ? 'Schedule Blog'
+                    : watch('status') === BlogStatus.ARCHIVED
+                      ? 'Archive Blog'
+                      : watch('status') === BlogStatus.PUBLISHED
+                        ? 'Publish Blog'
+                        : 'Save Draft'}
                 </>
               )}
             </Button>
