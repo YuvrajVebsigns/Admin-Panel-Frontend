@@ -10,9 +10,14 @@ import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import { Modal } from '@/components/ui/modal';
 
-export const EventTable: React.FC = () => {
+interface EventTableProps {
+  websiteId?: string;
+  hideHeader?: boolean;
+}
+
+export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader }) => {
   const router = useRouter();
-  const { events, isLoading, deleteEvent } = useEvents();
+  const { events, isLoading, deleteEvent } = useEvents({ websiteId });
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
   const stats = React.useMemo(() => {
@@ -134,68 +139,76 @@ export const EventTable: React.FC = () => {
     },
   ];
 
+  const showHeader = !hideHeader && !websiteId;
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Event Management</h2>
-          <p className="text-sm text-gray-500">Create and manage your online and offline events</p>
-        </div>
-        <Button onClick={() => router.push('/events/new')}>Create New Event</Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={i}
-              className="group bg-white dark:bg-navy-800 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 shadow-theme-sm hover:shadow-theme-lg transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className={cn(
-                    'w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110',
-                    stat.color === 'blue'
-                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10'
-                      : stat.color === 'success'
-                        ? 'bg-success-50 text-success-600 dark:bg-success-500/10'
-                        : stat.color === 'warning'
-                          ? 'bg-warning-50 text-warning-600 dark:bg-warning-500/10'
-                          : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10',
-                  )}
-                >
-                  <Icon size={24} />
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stat.value}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                    {stat.label}
-                  </span>
-                </div>
-              </div>
-              <div className="h-1.5 w-full bg-gray-50 dark:bg-navy-900 rounded-full overflow-hidden">
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all duration-1000',
-                    stat.color === 'blue'
-                      ? 'bg-blue-500'
-                      : stat.color === 'success'
-                        ? 'bg-success-500'
-                        : stat.color === 'warning'
-                          ? 'bg-warning-500'
-                          : 'bg-brand-500',
-                  )}
-                  style={{ width: stat.value > 0 ? '70%' : '0%' }}
-                />
-              </div>
+      {showHeader && (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Event Management</h2>
+              <p className="text-sm text-gray-500">
+                Create and manage your online and offline events
+              </p>
             </div>
-          );
-        })}
-      </div>
+            <Button onClick={() => router.push('/events/new')}>Create New Event</Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={i}
+                  className="group bg-white dark:bg-navy-800 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 shadow-theme-sm hover:shadow-theme-lg transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110',
+                        stat.color === 'blue'
+                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10'
+                          : stat.color === 'success'
+                            ? 'bg-success-50 text-success-600 dark:bg-success-500/10'
+                            : stat.color === 'warning'
+                              ? 'bg-warning-50 text-warning-600 dark:bg-warning-500/10'
+                              : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10',
+                      )}
+                    >
+                      <Icon size={24} />
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {stat.value}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        {stat.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-50 dark:bg-navy-900 rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all duration-1000',
+                        stat.color === 'blue'
+                          ? 'bg-blue-500'
+                          : stat.color === 'success'
+                            ? 'bg-success-500'
+                            : stat.color === 'warning'
+                              ? 'bg-warning-500'
+                              : 'bg-brand-500',
+                      )}
+                      style={{ width: stat.value > 0 ? '70%' : '0%' }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <div className="bg-white dark:bg-navy-800/50 rounded-3xl border border-gray-100 dark:border-navy-700 overflow-hidden">
         <DataTable

@@ -14,6 +14,8 @@ import {
   List,
   CheckSquare,
   Quote as QuoteIcon,
+  Layout,
+  Info,
 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { FileBrowser } from '@/modules/media/components/FileBrowser';
@@ -22,12 +24,21 @@ import { useFiles } from '@/modules/media/hooks/useFiles';
 import { FileData } from '@/modules/media/types/file.types';
 import { toast } from 'react-hot-toast';
 import EditorToolbar from './EditorToolbar';
+import {
+  HeroBlockTool,
+  FeaturesBlockTool,
+  CtaBlockTool,
+  TestimonialsBlockTool,
+  FaqBlockTool,
+  RichTextBlockTool,
+} from './WebsiteBlocks';
 
 interface EditorProps {
   data?: OutputData;
   onChange: (data: OutputData) => void;
   holder?: string;
   placeholder?: string;
+  mode?: 'blog' | 'website';
 }
 
 export default function Editor({
@@ -35,6 +46,7 @@ export default function Editor({
   onChange,
   holder = 'editorjs',
   placeholder = "Start writing your blog... Type '/' for commands or click the '+' button to add images, headings, and lists.",
+  mode = 'blog',
 }: EditorProps) {
   const ejInstance = useRef<EditorJS | null>(null);
   const isInitializing = useRef(false);
@@ -217,6 +229,7 @@ export default function Editor({
           const editor = new EditorJSClass({
             holder: holder,
             placeholder: placeholder,
+            defaultBlock: mode === 'website' ? 'heroSection' : 'paragraph',
             ...(hasContent ? { data: normalizedData } : {}),
             onReady: () => {
               if (!cancelled) {
@@ -235,140 +248,168 @@ export default function Editor({
               }
             },
             tools: {
-              alignment: Alignment || undefined,
-              header: {
-                class: Header,
-                inlineToolbar: ['bold', 'italic', 'underline', 'color', 'marker', 'link'],
-                tunes: Alignment ? ['alignment'] : undefined,
-                config: {
-                  placeholder: 'Enter a header',
-                  levels: [2, 3, 4],
-                  defaultLevel: 2,
-                },
-              },
-              list: {
-                class: List,
-                inlineToolbar: true,
-                tunes: Alignment ? ['alignment'] : undefined,
-              },
-              checklist: {
-                class: Checklist,
-                inlineToolbar: true,
-              },
-              table: {
-                class: Table,
-                inlineToolbar: true,
-              },
-              quote: {
-                class: Quote,
-                inlineToolbar: true,
-                tunes: Alignment ? ['alignment'] : undefined,
-                config: {
-                  quotePlaceholder: 'Enter a quote',
-                  captionPlaceholder: "Quote's author",
-                },
-              },
-              embed: {
-                class: Embed,
-                config: {
-                  services: {
-                    youtube: true,
-                    twitter: true,
-                  },
-                },
-              },
-              image: {
-                class: ImageTool,
-                config: {
-                  endpoints: {
-                    byFile: '/api/v1/admin/blogs/upload-image',
-                  },
-                },
-              },
-              code: {
-                class: Code,
-              },
-              raw: {
-                class: Raw,
-              },
-              underline: Underline,
-              inlineCode: InlineCode,
-              color: {
-                class: ColorInlineTool,
-                config: {
-                  colorCollections: [
-                    '#1e1b4b',
-                    '#ef4444',
-                    '#3b82f6',
-                    '#10b981',
-                    '#f59e0b',
-                    '#6366f1',
-                    '#8b5cf6',
-                    '#ec4899',
-                    '#000000',
-                    '#ffffff',
-                  ],
-                  defaultColor: '#1e1b4b',
-                  type: 'text',
-                  customPicker: true,
-                },
-              },
-              marker: {
-                class: MarkerInlineTool,
-                config: {
-                  colorCollections: [
-                    '#1e1b4b',
-                    '#ef4444',
-                    '#3b82f6',
-                    '#10b981',
-                    '#f59e0b',
-                    '#6366f1',
-                    '#8b5cf6',
-                    '#ec4899',
-                    '#000000',
-                    '#ffffff',
-                  ],
-                  defaultColor: '#FFBF00',
-                  type: 'marker',
-                  customPicker: true,
-                },
-              },
-              delimiter: {
-                class: Delimiter,
-              },
-              spacer: {
-                class: class SpacerTool {
-                  constructor({
-                    data,
-                    config,
-                    api,
-                  }: {
-                    data: unknown;
-                    config: unknown;
-                    api: unknown;
-                  }) {
-                    void data;
-                    void config;
-                    void api;
+              ...(mode === 'website'
+                ? {
+                    heroSection: {
+                      class: HeroBlockTool,
+                    },
+                    featuresSection: {
+                      class: FeaturesBlockTool,
+                    },
+                    ctaSection: {
+                      class: CtaBlockTool,
+                    },
+                    testimonialsSection: {
+                      class: TestimonialsBlockTool,
+                      config: {
+                        onSelectImage: (callback: (url: string) => void) => {
+                          openGeneralImagePicker(callback, 'Select Reviewer Photo');
+                        },
+                      },
+                    },
+                    faqSection: {
+                      class: FaqBlockTool,
+                    },
+                    richTextSection: {
+                      class: RichTextBlockTool,
+                    },
                   }
-                  static get isReadOnlySupported() {
-                    return true;
-                  }
-                  render() {
-                    const el = document.createElement('div');
-                    el.className =
-                      'py-6 border-y border-dashed border-gray-100 dark:border-navy-800 text-center text-[10px] text-gray-400 uppercase tracking-widest pointer-events-none select-none';
-                    el.innerHTML = 'Empty Space';
-                    return el;
-                  }
-                  save() {
-                    return { height: '48px' };
-                  }
-                },
-              },
+                : {
+                    alignment: Alignment || undefined,
+                    header: {
+                      class: Header,
+                      inlineToolbar: ['bold', 'italic', 'underline', 'color', 'marker', 'link'],
+                      tunes: Alignment ? ['alignment'] : undefined,
+                      config: {
+                        placeholder: 'Enter a header',
+                        levels: [2, 3, 4],
+                        defaultLevel: 2,
+                      },
+                    },
+                    list: {
+                      class: List,
+                      inlineToolbar: true,
+                      tunes: Alignment ? ['alignment'] : undefined,
+                    },
+                    checklist: {
+                      class: Checklist,
+                      inlineToolbar: true,
+                    },
+                    table: {
+                      class: Table,
+                      inlineToolbar: true,
+                    },
+                    quote: {
+                      class: Quote,
+                      inlineToolbar: true,
+                      tunes: Alignment ? ['alignment'] : undefined,
+                      config: {
+                        quotePlaceholder: 'Enter a quote',
+                        captionPlaceholder: "Quote's author",
+                      },
+                    },
+                    embed: {
+                      class: Embed,
+                      config: {
+                        services: {
+                          youtube: true,
+                          twitter: true,
+                        },
+                      },
+                    },
+                    image: {
+                      class: ImageTool,
+                      config: {
+                        endpoints: {
+                          byFile: '/api/v1/admin/blogs/upload-image',
+                        },
+                      },
+                    },
+                    code: {
+                      class: Code,
+                    },
+                    raw: {
+                      class: Raw,
+                    },
+                    underline: Underline,
+                    inlineCode: InlineCode,
+                    color: {
+                      class: ColorInlineTool,
+                      config: {
+                        colorCollections: [
+                          '#1e1b4b',
+                          '#ef4444',
+                          '#3b82f6',
+                          '#10b981',
+                          '#f59e0b',
+                          '#6366f1',
+                          '#8b5cf6',
+                          '#ec4899',
+                          '#000000',
+                          '#ffffff',
+                        ],
+                        defaultColor: '#1e1b4b',
+                        type: 'text',
+                        customPicker: true,
+                      },
+                    },
+                    marker: {
+                      class: MarkerInlineTool,
+                      config: {
+                        colorCollections: [
+                          '#1e1b4b',
+                          '#ef4444',
+                          '#3b82f6',
+                          '#10b981',
+                          '#f59e0b',
+                          '#6366f1',
+                          '#8b5cf6',
+                          '#ec4899',
+                          '#000000',
+                          '#ffffff',
+                        ],
+                        defaultColor: '#FFBF00',
+                        type: 'marker',
+                        customPicker: true,
+                      },
+                    },
+                    delimiter: {
+                      class: Delimiter,
+                    },
+                    spacer: {
+                      class: class SpacerTool {
+                        constructor({
+                          data,
+                          config,
+                          api,
+                        }: {
+                          data: unknown;
+                          config: unknown;
+                          api: unknown;
+                        }) {
+                          void data;
+                          void config;
+                          void api;
+                        }
+                        static get isReadOnlySupported() {
+                          return true;
+                        }
+                        render() {
+                          const el = document.createElement('div');
+                          el.className =
+                            'py-6 border-y border-dashed border-gray-100 dark:border-navy-800 text-center text-[10px] text-gray-400 uppercase tracking-widest pointer-events-none select-none';
+                          el.innerHTML = 'Empty Space';
+                          return el;
+                        }
+                        save() {
+                          return { height: '48px' };
+                        }
+                      },
+                    },
+                  }),
             },
             // Enable tunes for built-in paragraph tool without redefining it explicitly
-            tunes: Alignment ? ['alignment'] : undefined,
+            tunes: mode === 'website' ? undefined : Alignment ? ['alignment'] : undefined,
           });
         }
       } catch (err) {
@@ -402,7 +443,10 @@ export default function Editor({
     }
   };
 
-  const openImagePicker = () => {
+  const openGeneralImagePicker = (
+    onSelect: (url: string) => void,
+    title: string = 'Select Image',
+  ) => {
     const openExistingBrowser = () => {
       openModal({
         title: 'Browse Image Library',
@@ -412,7 +456,7 @@ export default function Editor({
             <FileBrowser
               initialFileType="image"
               onSelect={(file: FileData) => {
-                insertImageBlock(file.url || '', file.metadata?.alt || '');
+                onSelect(file.url || '');
                 closeModal();
               }}
             />
@@ -459,9 +503,9 @@ export default function Editor({
 
         try {
           const response = await uploadFile(formData);
-          insertImageBlock(response.url || '', alt);
+          onSelect(response.url || '');
           closeModal();
-          toast.success('Image added to content');
+          toast.success('Image selected');
         } catch (error) {
           toast.error('Failed to upload image');
         }
@@ -471,7 +515,7 @@ export default function Editor({
         return (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6">
             <button
-              onClick={() => document.getElementById('editor-image-input')?.click()}
+              onClick={() => document.getElementById('editor-general-image-input')?.click()}
               className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-200 transition-all group text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
@@ -482,7 +526,7 @@ export default function Editor({
                 <p className="text-xs text-gray-500 mt-1">From computer</p>
               </div>
               <input
-                id="editor-image-input"
+                id="editor-general-image-input"
                 type="file"
                 className="hidden"
                 accept="image/*"
@@ -537,19 +581,21 @@ export default function Editor({
             onBack={() => setStep('selector')}
             onSubmit={handleFinalSubmit}
             isProcessing={isUploading}
-            submitLabel="Add to Editor"
+            submitLabel="Select Image"
           />
         </div>
       );
     };
 
     openModal({
-      title: 'Insert Image',
-      description: 'Choose an image to add to your blog content',
-      size: 'lg',
-      hideFooter: true,
+      title: title,
+      size: '2xl',
       content: <PickerModalContent />,
     });
+  };
+
+  const openImagePicker = () => {
+    openGeneralImagePicker((url) => insertImageBlock(url, ''), 'Insert Image');
   };
 
   const insertImageBlock = (url: string, caption: string = '') => {
@@ -574,7 +620,9 @@ export default function Editor({
 
   return (
     <div className="relative bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-2xl p-6 flex flex-col">
-      <EditorToolbar editor={ejInstance.current} onImageClick={openImagePicker} />
+      {mode !== 'website' && (
+        <EditorToolbar editor={ejInstance.current} onImageClick={openImagePicker} />
+      )}
 
       <div
         id={holder}
@@ -603,83 +651,123 @@ export default function Editor({
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <button
-              onClick={() => handleAddSection('paragraph')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Type size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Text</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('header')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Heading size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Heading</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('image')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <ImageIcon size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Image</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('list')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <List size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">List</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('checklist')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <CheckSquare size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Tasks</span>
-            </button>
-            {/* <button
-              onClick={() => handleAddSection('table')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <TableIcon size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Table</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('code')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Code size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Code Snippet</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('raw')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Terminal size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Raw HTML</span>
-            </button> */}
-            <button
-              onClick={() => handleAddSection('quote')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <QuoteIcon size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Quote</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('delimiter')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Minus size={20} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Divider</span>
-            </button>
-            <button
-              onClick={() => handleAddSection('spacer')}
-              className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn"
-            >
-              <Plus size={20} className="rotate-45" />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">Space</span>
-            </button>
+            {mode === 'website' ? (
+              <>
+                <button
+                  onClick={() => handleAddSection('heroSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <Globe size={20} className="text-brand-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    Hero Section
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('featuresSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <Layout size={20} className="text-emerald-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    Features Grid
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('ctaSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <Info size={20} className="text-purple-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    Call to Action
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('testimonialsSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <QuoteIcon size={20} className="text-pink-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    Testimonials
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('faqSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <CheckSquare size={20} className="text-amber-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    FAQ Accordion
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('richTextSection')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn border-dashed bg-transparent"
+                >
+                  <Type size={20} className="text-gray-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">
+                    Rich Content
+                  </span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleAddSection('paragraph')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <Type size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Text</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('header')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <Heading size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Heading</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('image')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <ImageIcon size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Image</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('list')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <List size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">List</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('checklist')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <CheckSquare size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Tasks</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('quote')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <QuoteIcon size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Quote</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('delimiter')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <Minus size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Divider</span>
+                </button>
+                <button
+                  onClick={() => handleAddSection('spacer')}
+                  className="flex flex-col items-center justify-center p-4 gap-2 border border-gray-100 dark:border-navy-700 rounded-xl hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 group/btn bg-transparent"
+                >
+                  <Plus size={20} className="rotate-45" />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Space</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : (

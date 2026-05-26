@@ -30,7 +30,7 @@ export default function UpdateBlogPage() {
 
   return (
     <div className="animate-fade-in">
-      <BlogForm initialData={blog} />
+      <BlogForm key={blog.updatedAt || blog.id} initialData={blog} />
     </div>
   );
 }

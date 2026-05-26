@@ -159,7 +159,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
                   <FileIcon size={40} />
                 )}
                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-                  {file.extension.replace('.', '')}
+                  {(file.extension || '').replace('.', '')}
                 </span>
               </div>
             )}

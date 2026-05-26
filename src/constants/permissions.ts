@@ -12,20 +12,20 @@ export const PERMISSIONS = {
   ROLES_DELETE: 'roles.delete',
 
   // Sidebar Menu
-  SIDEBAR_MENU_VIEW: 'sidebar-menu.view',
-  SIDEBAR_MENU_CREATE: 'sidebar-menu.create',
-  SIDEBAR_MENU_UPDATE: 'sidebar-menu.update',
-  SIDEBAR_MENU_DELETE: 'sidebar-menu.delete',
-  SIDEBAR_MENU_READ_ALL: 'sidebar-menu.read_all',
+  // SIDEBAR_MENU_VIEW: 'sidebar-menu.view',
+  // SIDEBAR_MENU_CREATE: 'sidebar-menu.create',
+  // SIDEBAR_MENU_UPDATE: 'sidebar-menu.update',
+  // SIDEBAR_MENU_DELETE: 'sidebar-menu.delete',
+  // SIDEBAR_MENU_READ_ALL: 'sidebar-menu.read_all',
 
   // Dashboard
   DASHBOARD_VIEW: 'dashboard.view',
 
   // Websites
   WEBSITES_VIEW: 'websites.view',
-  WEBSITES_CREATE: 'websites.create',
+  // WEBSITES_CREATE: 'websites.create',
   WEBSITES_UPDATE: 'websites.update',
-  WEBSITES_DELETE: 'websites.delete',
+  // WEBSITES_DELETE: 'websites.delete',
 
   // Pages
   PAGES_VIEW: 'pages.view',
@@ -34,8 +34,8 @@ export const PERMISSIONS = {
   PAGES_DELETE: 'pages.delete',
 
   // Feature Toggle
-  FEATURE_TOGGLE_VIEW: 'feature-toggle.view',
-  FEATURE_TOGGLE_UPDATE: 'feature-toggle.update',
+  // FEATURE_TOGGLE_VIEW: 'feature-toggle.view',
+  // FEATURE_TOGGLE_UPDATE: 'feature-toggle.update',
 
   // Settings
   SETTINGS_VIEW: 'settings.view',

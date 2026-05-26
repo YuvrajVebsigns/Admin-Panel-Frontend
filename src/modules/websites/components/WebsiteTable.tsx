@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { Website } from '../types/website.types';
 import { useWebsites } from '../hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
+import { useEvents } from '@/modules/events/hooks/useEvents';
 import { Edit, Trash2, ExternalLink, MoveRight, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { useAuthStore } from '@/store/auth.store';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
+import { getImageUrl } from '@/lib/utils';
 
 export const WebsiteTable: React.FC = () => {
   const router = useRouter();
@@ -25,6 +27,7 @@ export const WebsiteTable: React.FC = () => {
   const { websites, meta, isLoading, updateWebsite, deleteWebsite } = useWebsites(params);
 
   const { blogs: allBlogs } = useBlogs({ limit: 1000 });
+  const { events: allEvents } = useEvents();
 
   const blogCountsByWebsite = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -38,6 +41,24 @@ export const WebsiteTable: React.FC = () => {
     }
     return counts;
   }, [allBlogs]);
+
+  const eventCountsByWebsite = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (allEvents) {
+      allEvents.forEach((event) => {
+        event.websites?.forEach((w) => {
+          if (typeof w === 'string') {
+            if (w) counts[w] = (counts[w] || 0) + 1;
+          } else if (w && typeof w === 'object') {
+            const obj = w as { id?: string; _id?: string };
+            const id = obj.id || obj._id;
+            if (id) counts[id] = (counts[id] || 0) + 1;
+          }
+        });
+      });
+    }
+    return counts;
+  }, [allEvents]);
 
   const _handleToggleActive = async (website: Website) => {
     await updateWebsite({ id: website.id, data: { isActive: !website.isActive } });
@@ -70,8 +91,14 @@ export const WebsiteTable: React.FC = () => {
       accessor: (website) => (
         <div className="flex items-center gap-4 py-1">
           <div className="relative w-11 h-11 rounded-full overflow-hidden bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center border border-brand-100 dark:border-brand-500/20">
-            {website.logo ? (
-              <Image src={website.logo} alt={website.name} fill className="object-contain p-2" />
+            {getImageUrl(website.logo) ? (
+              <Image
+                src={getImageUrl(website.logo)}
+                alt={website.name}
+                fill
+                sizes="44px"
+                className="object-contain p-2"
+              />
             ) : (
               <Search className="w-5 h-5 text-brand-500" />
             )}
@@ -107,7 +134,9 @@ export const WebsiteTable: React.FC = () => {
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1 uppercase">
               Events
             </p>
-            <p className="text-base font-bold text-gray-900 dark:text-white leading-none">0</p>
+            <p className="text-base font-bold text-gray-900 dark:text-white leading-none">
+              {eventCountsByWebsite[website.id] || 0}
+            </p>
           </div>
         </div>
       ),

@@ -30,3 +30,26 @@ export function formatBytes(bytes: number, decimals: number = 2) {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+import { ImageLinks } from '@/modules/websites/types/website.types';
+
+/**
+ * Resolves a safe image URL from either a plain string or a backend ImageLinks object.
+ */
+export function getImageUrl(
+  image: string | ImageLinks | null | undefined,
+  variant: keyof ImageLinks = 'original',
+): string {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+
+  return (
+    image[variant] ||
+    image.thumbnail ||
+    image.small ||
+    image.medium ||
+    image.large ||
+    image.original ||
+    ''
+  );
+}

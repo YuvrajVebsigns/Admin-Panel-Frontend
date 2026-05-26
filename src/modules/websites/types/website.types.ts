@@ -1,8 +1,16 @@
+export interface ImageLinks {
+  original: string;
+  thumbnail?: string;
+  small?: string;
+  medium?: string;
+  large?: string;
+}
+
 export interface SeoMetadata {
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string[];
-  ogImage?: string;
+  ogImage?: string | ImageLinks;
 }
 
 export interface Website {
@@ -10,7 +18,7 @@ export interface Website {
   name: string;
   slug: string;
   domain: string;
-  logo?: string;
+  logo?: string | ImageLinks;
   description?: string;
   isActive: boolean;
   settings: Record<string, unknown>;

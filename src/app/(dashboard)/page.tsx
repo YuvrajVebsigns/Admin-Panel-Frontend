@@ -14,11 +14,14 @@ import {
 } from 'lucide-react';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
+import { useEvents } from '@/modules/events/hooks/useEvents';
 
 export default function DashboardPage() {
   const { websites, meta, isLoading } = useWebsites({ limit: 100 });
 
   const { meta: blogsMeta, blogs: allBlogs } = useBlogs({ limit: 1000 });
+
+  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
 
   const blogCountsByWebsite = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -32,6 +35,24 @@ export default function DashboardPage() {
     }
     return counts;
   }, [allBlogs]);
+
+  const eventCountsByWebsite = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (allEvents) {
+      allEvents.forEach((event) => {
+        event.websites?.forEach((w) => {
+          if (typeof w === 'string') {
+            if (w) counts[w] = (counts[w] || 0) + 1;
+          } else if (w && typeof w === 'object') {
+            const obj = w as { id?: string; _id?: string };
+            const id = obj.id || obj._id;
+            if (id) counts[id] = (counts[id] || 0) + 1;
+          }
+        });
+      });
+    }
+    return counts;
+  }, [allEvents]);
 
   const SUMMARY_DATA = [
     {
@@ -52,7 +73,7 @@ export default function DashboardPage() {
     },
     {
       title: 'TOTAL EVENTS',
-      value: 0, // Pending backend
+      value: allEvents?.length || 0,
       icon: <Users size={24} strokeWidth={1.5} />,
       bgIllustration: <Users size={100} strokeWidth={1} />,
       iconBgColor: 'bg-green-50 dark:bg-green-500/10',
@@ -100,7 +121,7 @@ export default function DashboardPage() {
     },
   ];
 
-  if (isLoading) {
+  if (isLoading || isEventsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
@@ -153,7 +174,7 @@ export default function DashboardPage() {
               title={site.name}
               status={site.isActive ? 'ACTIVE' : 'INACTIVE'}
               blogsCount={blogCountsByWebsite[site.id] || 0}
-              eventsCount={0} // Pending backend
+              eventsCount={eventCountsByWebsite[site.id] || 0}
             />
           ))}
         </div>

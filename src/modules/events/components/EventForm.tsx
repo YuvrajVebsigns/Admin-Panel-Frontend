@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Save,
@@ -22,7 +22,7 @@ import {
   Link as LinkIcon,
   Users,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getImageUrl } from '@/lib/utils';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
@@ -76,6 +76,7 @@ const eventSchema = z.object({
       lng: z.number().optional(),
     })
     .optional(),
+  bannerImage: z.string().optional().or(z.literal('')),
   bannerImageId: z.string().optional(),
   agenda: z
     .array(
@@ -92,7 +93,7 @@ const eventSchema = z.object({
       metaTitle: z.string().optional(),
       metaDescription: z.string().optional(),
       keywords: z.array(z.string()).default([]),
-      ogImage: z.string().optional(),
+      ogImage: z.string().optional().or(z.literal('')),
       ogImageId: z.string().optional(),
     })
     .optional(),
@@ -104,6 +105,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
   initialData?: EventManagement | null;
+  defaultWebsiteId?: string | null;
 }
 
 const STEPS = [
@@ -115,8 +117,12 @@ const STEPS = [
   { id: 'seo', title: 'SEO & Media', icon: Search },
 ];
 
-export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
+export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsiteId }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams ? searchParams.get('from') || '/events' : '/events';
+  const backLabel = redirectUrl.includes('dashboard') ? 'Back to Dashboard' : 'Back to Events';
+  const websiteIdParam = defaultWebsiteId || searchParams.get('websiteId');
   const isEdit = !!initialData;
   const { createEvent, updateEvent, isCreating, isUpdating } = useEvents();
   const { websites } = useWebsites({ limit: 100 });
@@ -142,8 +148,11 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
           websites: initialData.websites.map((w) =>
             typeof w === 'string' ? w : (w as { id: string }).id,
           ),
+          bannerImage: getImageUrl(initialData.bannerImage) || '',
+          bannerImageId: initialData.bannerImageId,
           seo: {
             ...initialData.seo,
+            ogImage: getImageUrl(initialData.seo?.ogImage) || '',
             keywords: initialData.seo?.keywords || [],
           },
           invitedEmails: initialData.invitedEmails || [],
@@ -156,11 +165,15 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
           status: EventStatus.DRAFT,
           startDate: '',
           endDate: '',
-          websites: [],
+          websites: websiteIdParam ? [websiteIdParam] : [],
+          bannerImage: '',
+          bannerImageId: '',
           isActive: true,
           agenda: [],
           invitedEmails: [],
           seo: {
+            ogImage: '',
+            ogImageId: '',
             keywords: [],
           },
         },
@@ -231,7 +244,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
       } else {
         await createEvent(payload as unknown as CreateEventInput);
       }
-      router.push('/events');
+      router.push(redirectUrl);
     } catch (error) {
       // Handled by hook
     }
@@ -341,8 +354,12 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
                       }}
                     />
                     <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 p-1">
-                      {site.logo ? (
-                        <img src={site.logo} alt="" className="w-full h-full object-contain" />
+                      {getImageUrl(site.logo) ? (
+                        <img
+                          src={getImageUrl(site.logo)}
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs font-bold text-brand-500">
                           {site.name[0]}
@@ -611,15 +628,14 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
                   </h3>
                   <div className="space-y-4">
                     <Controller
-                      name="bannerImageId"
+                      name="bannerImage"
                       control={control}
                       render={({ field }) => (
                         <UniversalImagePicker
                           label="Main Banner Image"
                           value={field.value}
-                          onChange={(file: unknown) =>
-                            field.onChange((file as { id?: string })?.id || '')
-                          }
+                          onChange={field.onChange}
+                          onSelect={(file) => setValue('bannerImageId', file?.id || '')}
                           aspectRatio="video"
                           module="events"
                           placeholder="Select event banner..."
@@ -708,8 +724,9 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/events')}
+            onClick={() => router.push(redirectUrl)}
             className="p-2.5 rounded-xl bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 text-gray-500 hover:text-brand-500 transition-all shadow-theme-xs hover:shadow-theme-sm"
+            title={backLabel}
           >
             <ArrowLeft size={20} />
           </button>
@@ -726,7 +743,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData }) => {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => router.push('/events')}
+            onClick={() => router.push(redirectUrl)}
             className="bg-white dark:bg-navy-800"
           >
             Cancel

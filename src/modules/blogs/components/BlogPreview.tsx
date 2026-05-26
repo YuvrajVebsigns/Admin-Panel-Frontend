@@ -3,15 +3,19 @@ import React from 'react';
 import Image from 'next/image';
 
 import { BlogContent } from '../types/blog.types';
+import { ImageLinks } from '@/modules/websites/types/website.types';
+import { getImageUrl } from '@/lib/utils';
+import { shouldSkipOptimization } from '@/lib/image';
 
 interface BlogPreviewProps {
   title: string;
   content: BlogContent | null;
-  featureImage?: string;
+  featureImage?: string | ImageLinks;
 }
 
 export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featureImage }) => {
   const hasContent = content && content.blocks && content.blocks.length > 0;
+  const resolvedFeatureImageUrl = getImageUrl(featureImage);
 
   if (!hasContent) {
     return (
@@ -49,9 +53,17 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
   return (
     <div className="max-w-4xl mx-auto bg-white dark:bg-navy-900 min-h-screen">
       {/* Featured Image */}
-      {featureImage && (
+      {resolvedFeatureImageUrl && (
         <div className="relative w-full h-[400px] mb-10 overflow-hidden rounded-b-3xl">
-          <Image src={featureImage} alt={title} fill className="object-cover" priority />
+          <Image
+            src={resolvedFeatureImageUrl}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, 896px"
+            className="object-cover"
+            priority
+            unoptimized={shouldSkipOptimization(resolvedFeatureImageUrl)}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10">
             <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
@@ -62,7 +74,7 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ title, content, featur
       )}
 
       <div className="px-6 md:px-10 pb-20">
-        {!featureImage && (
+        {!resolvedFeatureImageUrl && (
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-10 leading-tight">
             {title || 'Untitled Blog'}
           </h1>

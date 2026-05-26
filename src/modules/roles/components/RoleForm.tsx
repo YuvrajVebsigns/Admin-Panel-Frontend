@@ -209,34 +209,42 @@ const RoleForm: React.FC<RoleFormProps> = ({ initialData, onSubmit, isLoading, o
                       </span>
                       <div className="h-px grow bg-gray-100 dark:bg-navy-800/50" />
                     </div>
-                    <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2.5">
                       {subPermissions.map((perm) => {
                         const isView = perm.endsWith('.view');
                         const viewPerm = subPermissions.find((p) => p === `${prefix}.view`);
                         const isViewSelected = viewPerm
                           ? selectedPermissions.includes(viewPerm)
                           : true;
+                        const isSelected = selectedPermissions.includes(perm);
+                        const isDisabled = !isView && !isViewSelected;
 
                         return (
-                          <label
+                          <button
                             key={perm}
-                            className={`flex items-center gap-3 cursor-pointer group transition-opacity ${
-                              !isView && !isViewSelected ? 'opacity-40' : 'opacity-100'
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => togglePermission(perm)}
+                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-full border transition-all duration-200 select-none ${
+                              isDisabled
+                                ? 'opacity-35 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 dark:bg-navy-950/20 dark:text-navy-600 dark:border-navy-900'
+                                : isSelected
+                                  ? 'bg-brand-50 text-brand-600 border-brand-200 dark:bg-brand-500/10 dark:text-brand-400 dark:border-brand-500/30 ring-1 ring-brand-500/10 shadow-xs'
+                                  : 'bg-gray-50/50 text-gray-600 border-gray-100 hover:bg-gray-100 hover:text-gray-900 dark:bg-navy-950/30 dark:text-navy-300 dark:border-navy-800/60 dark:hover:bg-navy-950/70 dark:hover:text-white'
                             }`}
                           >
-                            <div className="relative flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={selectedPermissions.includes(perm)}
-                                onChange={() => togglePermission(perm)}
-                                disabled={!isView && !isViewSelected}
-                                className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500/20 dark:border-navy-600 dark:bg-navy-950 accent-brand-500 disabled:cursor-not-allowed cursor-pointer"
-                              />
-                            </div>
-                            <span className="text-[14px] font-medium text-gray-700 dark:text-navy-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                              {perm.split('.').join(' ').replace('_', ' ')}
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                isSelected
+                                  ? 'bg-brand-500 scale-100 shadow-[0_0_8px_#4f46e5]'
+                                  : 'bg-gray-300 dark:bg-navy-700 scale-75'
+                              }`}
+                            />
+                            <span className="capitalize">
+                              {perm.split('.').slice(1).join(' ').replace('_', ' ') ||
+                                perm.split('.').join(' ').replace('_', ' ')}
                             </span>
-                          </label>
+                          </button>
                         );
                       })}
                     </div>
