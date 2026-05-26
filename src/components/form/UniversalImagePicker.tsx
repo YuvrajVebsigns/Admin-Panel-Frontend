@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Image as ImageIcon, Upload, Globe, Search, X, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Upload, Globe, Search, X, Loader2, Video } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { useFiles } from '@/modules/media/hooks/useFiles';
 import { FileBrowser } from '@/modules/media/components/FileBrowser';
@@ -9,6 +9,7 @@ import { FileData } from '@/modules/media/types/file.types';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { AssetMetadataForm } from '@/modules/media/components/AssetMetadataForm';
+import TagInput from '@/components/form/input/TagInput';
 
 interface UniversalImagePickerProps {
   value?: string;
@@ -61,9 +62,9 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
     };
 
     const PickerModalContent = () => {
-      const [step, setStep] = React.useState<'selector' | 'upload_details' | 'url_details'>(
-        'selector',
-      );
+      const [step, setStep] = React.useState<
+        'selector' | 'upload_details' | 'url_details' | 'youtube_details'
+      >('selector');
       const [file, setFile] = React.useState<File | null>(null);
       const [url, setUrl] = React.useState('');
       const [alt, setAlt] = React.useState('');
@@ -83,7 +84,7 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
         const formData = new FormData();
         if (step === 'upload_details' && file) {
           formData.append('file', file);
-        } else if (step === 'url_details' && url) {
+        } else if ((step === 'url_details' || step === 'youtube_details') && url) {
           formData.append('url', url);
         } else {
           return;
@@ -91,7 +92,7 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
 
         formData.append('module', modalModule);
         formData.append('visibility', visibility);
-        formData.append('alt', alt);
+        formData.append('alt', alt || 'YouTube Video');
 
         keywords.forEach((k) => formData.append('keywords[]', k));
 
@@ -111,7 +112,7 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
 
       if (step === 'selector') {
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 py-6">
             <button
               onClick={() => document.getElementById('picker-file-input')?.click()}
               className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-200 transition-all group text-center"
@@ -157,6 +158,88 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
                 <p className="text-xs text-gray-500 mt-1">External link</p>
               </div>
             </button>
+
+            <button
+              onClick={() => setStep('youtube_details')}
+              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-200 transition-all group text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
+                <Video size={32} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">YouTube</p>
+                <p className="text-xs text-gray-500 mt-1">Add YT Video</p>
+              </div>
+            </button>
+          </div>
+        );
+      }
+
+      if (step === 'youtube_details') {
+        return (
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">
+                YouTube Video URL
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. https://www.youtube.com/watch?v=..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+              />
+              <p className="text-xs text-gray-500">
+                Paste any standard watch link, share link, or embedded YouTube link. We will extract
+                the video details automatically.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">Video Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Tutorial Video (Optional)"
+                value={alt}
+                onChange={(e) => setAlt(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">
+                Tags / Keywords
+              </label>
+              <TagInput
+                defaultValue={keywords}
+                onChange={setKeywords}
+                placeholder="Add tags (press Enter or comma)..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-navy-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setUrl('');
+                  setAlt('');
+                  setKeywords([]);
+                  setStep('selector');
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-navy-300 dark:hover:bg-navy-800 transition-all"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                disabled={!url || isUploading}
+                onClick={handleFinalSubmit}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              >
+                {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Add YouTube Video
+              </button>
+            </div>
           </div>
         );
       }
