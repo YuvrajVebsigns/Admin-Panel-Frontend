@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,7 +13,7 @@ import Button from '@/components/ui/button/Button';
 import { PageType, PageStatus, WebsitePage } from '../types/cms.types';
 import { useWebsitePages } from '../hooks/useWebsitePages';
 import dynamicImport from 'next/dynamic';
-import { Loader2, Info, HelpCircle } from 'lucide-react';
+import { Loader2, Info, HelpCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
 const Editor = dynamicImport(() => import('@/components/ui/editor/Editor'), {
@@ -51,7 +51,7 @@ const pageSchema = z.object({
   }),
 });
 
-type PageFormData = z.infer<typeof pageSchema>;
+type PageFormData = z.input<typeof pageSchema>;
 
 interface PageFormModalProps {
   isOpen: boolean;
@@ -89,16 +89,24 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editorContent, setEditorContent] = useState<any>(null);
 
+  const [createdPageId, setCreatedPageId] = useState<string | null>(pageData?.id || null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>(
+    'idle',
+  );
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const activePageIdRef = useRef<string | null>(pageData?.id || null);
+
   const {
     register,
     handleSubmit,
     setValue,
     control,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<PageFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(pageSchema) as any,
+    resolver: zodResolver(pageSchema),
     defaultValues: {
       title: '',
       slug: '',
@@ -127,6 +135,10 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
 
   // Set default values when editing page data
   useEffect(() => {
+    setApiError(null);
+    setAutoSaveStatus('idle');
+    setCreatedPageId(pageData?.id || null);
+    activePageIdRef.current = pageData?.id || null;
     if (pageData) {
       setValue('title', pageData.title);
       setValue('slug', pageData.slug);
@@ -204,30 +216,126 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     setEditorContent(data);
   };
 
-  const onSubmit = async (data: PageFormData) => {
+  const performAutoSave = async () => {
+    if (activeTab !== 'info') return;
+
+    const currentValues = getValues();
+    if (!currentValues.title || currentValues.title.length < 3 || !currentValues.slug) {
+      return;
+    }
+
     const payload: Partial<WebsitePage> = {
-      ...data,
+      title: currentValues.title,
+      slug: currentValues.slug,
+      pageType: currentValues.pageType,
+      status: currentValues.status,
+      isHomepage: currentValues.isHomepage,
+      shortDescription: currentValues.shortDescription || '',
       siteId,
       content: editorContent,
       sections: editorContent?.blocks
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          editorContent.blocks.map((block: any, idx: number) => ({
-            type: block.type,
-            order: idx,
-            data: block.data,
-          }))
+        ? (editorContent.blocks as { type: string; data: Record<string, unknown> }[]).map(
+            (block, idx: number) => ({
+              type: block.type,
+              order: idx,
+              data: block.data,
+            }),
+          )
         : [],
     };
 
     try {
-      if (isEdit && pageData) {
-        await updatePage({ id: pageData.id, data: payload });
+      setAutoSaveStatus('saving');
+      setApiError(null);
+      const activeId = activePageIdRef.current;
+
+      if (activeId) {
+        await updatePage({ id: activeId, data: payload });
       } else {
-        await createPage(payload);
+        const response = await createPage(payload);
+        if (response && response.id) {
+          activePageIdRef.current = response.id;
+          setCreatedPageId(response.id);
+        }
+      }
+      setAutoSaveStatus('saved');
+    } catch (e) {
+      setAutoSaveStatus('error');
+      const err = e as { message?: string; data?: { message?: string | string[] } };
+      const errorMsg = err?.message || 'Failed to auto-save page';
+      setApiError(Array.isArray(err?.data?.message) ? err.data.message.join(', ') : errorMsg);
+    }
+  };
+
+  const slugVal = watch('slug');
+  const pageTypeVal = watch('pageType');
+  const statusVal = watch('status');
+  const isHomepageVal = watch('isHomepage');
+  const shortDescriptionVal = watch('shortDescription');
+
+  // Debounced auto-save on field changes
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'info') return;
+
+    const timer = setTimeout(() => {
+      if (titleValue && titleValue.length >= 3 && slugVal) {
+        performAutoSave();
+      }
+    }, 2000); // 2-second debounce
+
+    return () => clearTimeout(timer);
+  }, [titleValue, slugVal, pageTypeVal, statusVal, isHomepageVal, shortDescriptionVal, isOpen]);
+
+  const handleTabChange = async (tab: 'info' | 'editor' | 'seo') => {
+    if (activeTab === 'info' && tab !== 'info') {
+      const currentValues = getValues();
+      if (!currentValues.title || currentValues.title.length < 3 || !currentValues.slug) {
+        handleSubmit(() => {})();
+        return; // Block switching tabs
+      }
+      await performAutoSave();
+    }
+    setActiveTab(tab);
+  };
+
+  const onSubmit = async (data: PageFormData) => {
+    const activeId = activePageIdRef.current;
+    const payload: Partial<WebsitePage> = {
+      ...data,
+      siteId,
+      content: editorContent,
+      seo: {
+        ...data.seo,
+        noIndex: !!data.seo?.noIndex,
+        noFollow: !!data.seo?.noFollow,
+      },
+      sections: editorContent?.blocks
+        ? (editorContent.blocks as { type: string; data: Record<string, unknown> }[]).map(
+            (block, idx: number) => ({
+              type: block.type,
+              order: idx,
+              data: block.data,
+            }),
+          )
+        : [],
+    };
+
+    try {
+      setApiError(null);
+      if (isEdit || activeId) {
+        await updatePage({ id: activeId || '', data: payload });
+      } else {
+        const response = await createPage(payload);
+        if (response && response.id) {
+          activePageIdRef.current = response.id;
+          setCreatedPageId(response.id);
+        }
       }
       onClose();
     } catch (e) {
-      // Handled by hook mutation onError
+      const err = e as { message?: string; data?: { message?: string | string[] } };
+      const errorMsg = err?.message || 'Failed to save page';
+      setApiError(Array.isArray(err?.data?.message) ? err.data.message.join(', ') : errorMsg);
     }
   };
 
@@ -240,43 +348,76 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     >
       <div className="flex flex-col h-[80vh] overflow-hidden">
         {/* Tab Headers */}
-        <div className="flex items-center gap-2 p-6 border-b border-gray-100 dark:border-navy-800">
-          <button
-            type="button"
-            onClick={() => setActiveTab('info')}
-            className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
-              activeTab === 'info'
-                ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
-            }`}
-          >
-            General Details
-          </button>
-          {isSuperAdmin && (
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-navy-800">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setActiveTab('editor')}
+              onClick={() => handleTabChange('info')}
               className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
-                activeTab === 'editor'
+                activeTab === 'info'
                   ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
                   : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
               }`}
             >
-              Page Section Builder
+              General Details
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setActiveTab('seo')}
-            className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
-              activeTab === 'seo'
-                ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
-            }`}
-          >
-            SEO Settings
-          </button>
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => handleTabChange('editor')}
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
+                  activeTab === 'editor'
+                    ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
+                }`}
+              >
+                Page Section Builder
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handleTabChange('seo')}
+              className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
+                activeTab === 'seo'
+                  ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
+              }`}
+            >
+              SEO Settings
+            </button>
+          </div>
+
+          {/* Auto-save Status Pill */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold select-none transition-all">
+            {autoSaveStatus === 'saving' && (
+              <span className="flex items-center gap-1.5 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/20 px-2 py-0.5 rounded-full">
+                <Loader2 size={12} className="animate-spin" />
+                Auto-saving...
+              </span>
+            )}
+            {autoSaveStatus === 'saved' && (
+              <span className="flex items-center gap-1.5 text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-950/20 px-2 py-0.5 rounded-full animate-fade-in">
+                <CheckCircle2 size={12} className="text-success-500" />
+                Draft saved
+              </span>
+            )}
+            {autoSaveStatus === 'error' && (
+              <span className="flex items-center gap-1.5 text-error-600 dark:text-error-400 bg-error-50 dark:bg-error-950/20 px-2 py-0.5 rounded-full">
+                <AlertTriangle size={12} className="text-error-500" />
+                Auto-save failed
+              </span>
+            )}
+          </div>
         </div>
+
+        {apiError && (
+          <div className="mx-6 mt-4 p-4 bg-error-50 dark:bg-error-500/10 border border-error-100 dark:border-error-500/20 rounded-2xl flex items-start gap-3">
+            <Info className="text-error-500 shrink-0 mt-0.5" size={18} />
+            <div className="flex-1 text-xs font-semibold text-error-600 dark:text-error-400">
+              {apiError}
+            </div>
+          </div>
+        )}
 
         {/* Modal Form Content */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
@@ -285,7 +426,9 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="col-span-2 flex flex-col space-y-2">
                   <div className="flex items-center">
-                    <Label htmlFor="pageTitle">Page Title</Label>
+                    <Label htmlFor="pageTitle">
+                      Page Title <span className="text-error-500">*</span>
+                    </Label>
                     <Tooltip content="The public name of the page, e.g. 'Services' or 'Contact Us'." />
                   </div>
                   <Input
@@ -299,7 +442,9 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
 
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-center">
-                    <Label htmlFor="urlSlug">URL Slug</Label>
+                    <Label htmlFor="urlSlug">
+                      URL Slug <span className="text-error-500">*</span>
+                    </Label>
                     <Tooltip content="The browser path URL for this page (e.g. '/services'). Homepage slugs are usually blank or '/'." />
                   </div>
                   <Input
@@ -575,11 +720,15 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
             <Button variant="outline" onClick={onClose} type="button">
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={isCreating || isUpdating}>
-              {isCreating || isUpdating
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isCreating || isUpdating || autoSaveStatus === 'saving'}
+            >
+              {isCreating || isUpdating || autoSaveStatus === 'saving'
                 ? 'Saving Changes...'
-                : isEdit
-                  ? 'Update Page'
+                : isEdit || createdPageId
+                  ? 'Save Page'
                   : 'Create Page'}
             </Button>
           </div>
