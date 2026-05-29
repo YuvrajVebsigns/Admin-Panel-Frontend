@@ -21,6 +21,9 @@ import {
   CheckCircle,
   Link as LinkIcon,
   Users,
+  Building2,
+  User,
+  Award,
 } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
 import Button from '@/components/ui/button/Button';
@@ -46,6 +49,7 @@ const Editor = dynamicImport(() => import('@/components/ui/editor/Editor'), {
     </div>
   ),
 });
+import { ImageLinks } from '@/modules/websites/types/website.types';
 import {
   EventManagement,
   EventType,
@@ -54,6 +58,8 @@ import {
   UpdateEventInput,
 } from '../types/event.types';
 import { useEvents } from '../hooks/useEvents';
+import { useSponsors } from '@/modules/sponsors/hooks/useSponsors';
+import { SponsorType } from '@/modules/sponsors/types/sponsor.types';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { BlogContent } from '@/modules/blogs/types/blog.types';
 
@@ -98,6 +104,7 @@ const eventSchema = z.object({
     })
     .optional(),
   invitedEmails: z.array(z.string().email('Invalid email address')).default([]),
+  sponsors: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
 });
 
@@ -113,7 +120,7 @@ const STEPS = [
   { id: 'schedule', title: 'Schedule & Content', icon: Calendar },
   { id: 'venue', title: 'Venue & Links', icon: MapPin },
   { id: 'agenda', title: 'Agenda', icon: Clock },
-  { id: 'invites', title: 'Invites', icon: Users },
+  { id: 'invites', title: 'Invites & Sponsors', icon: Users },
   { id: 'seo', title: 'SEO & Media', icon: Search },
 ];
 
@@ -126,6 +133,8 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
   const isEdit = !!initialData;
   const { createEvent, updateEvent, isCreating, isUpdating } = useEvents();
   const { websites } = useWebsites({ limit: 100 });
+  const { sponsors: allSponsors } = useSponsors({ limit: 1000 });
+  const [sponsorSearch, setSponsorSearch] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [content, setContent] = useState<BlogContent | null>(initialData?.description || null);
 
@@ -156,6 +165,21 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
             keywords: initialData.seo?.keywords || [],
           },
           invitedEmails: initialData.invitedEmails || [],
+          sponsors: initialData.sponsors
+            ? initialData.sponsors
+                .map((s) => {
+                  if (typeof s === 'string') return s;
+                  if (s && typeof s === 'object') {
+                    return (
+                      (s as { id?: string; _id?: string }).id ||
+                      (s as { id?: string; _id?: string })._id ||
+                      ''
+                    );
+                  }
+                  return '';
+                })
+                .filter(Boolean)
+            : [],
         }
       : {
           title: '',
@@ -171,6 +195,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
           isActive: true,
           agenda: [],
           invitedEmails: [],
+          sponsors: [],
           seo: {
             ogImage: '',
             ogImageId: '',
@@ -223,7 +248,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
       case 3:
         return ['agenda'];
       case 4:
-        return ['invitedEmails'];
+        return ['invitedEmails', 'sponsors'];
       case 5:
         return ['seo.metaTitle', 'seo.metaDescription'];
       default:
@@ -580,38 +605,187 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
         );
 
       case 4:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="p-8 bg-brand-50 dark:bg-brand-500/10 rounded-3xl border border-brand-100 dark:border-brand-900/30 flex items-center gap-6">
-              <div className="w-14 h-14 rounded-2xl bg-white dark:bg-navy-900 flex items-center justify-center text-brand-500 shadow-sm">
-                <Users size={32} />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">Invite People</h4>
-                <p className="text-sm text-gray-500">
-                  Manage your event invitation list. Add emails of people you want to invite.
-                </p>
-              </div>
-            </div>
+        const selectedSponsorIds = watch('sponsors') || [];
 
-            <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-sm space-y-4">
-              <Label>Invitation List (Emails)</Label>
-              <Controller
-                name="invitedEmails"
-                control={control}
-                render={({ field }) => (
-                  <TagInput
-                    defaultValue={field.value}
-                    onChange={field.onChange}
-                    placeholder="Type email and press Enter..."
-                    error={!!errors.invitedEmails?.message}
+        const sortedSponsors = [...(allSponsors || [])]
+          .filter((s) => {
+            const term = sponsorSearch.toLowerCase();
+            return (
+              s.name.toLowerCase().includes(term) ||
+              s.companyName?.toLowerCase().includes(term) ||
+              s.tier?.toLowerCase().includes(term)
+            );
+          })
+          .sort((a, b) => {
+            const aSelected = selectedSponsorIds.includes(a.id);
+            const bSelected = selectedSponsorIds.includes(b.id);
+            if (aSelected && !bSelected) return -1;
+            if (!aSelected && bSelected) return 1;
+            return 0;
+          });
+
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column: Invites */}
+              <div className="space-y-6">
+                <div className="p-6 bg-brand-50 dark:bg-brand-500/10 rounded-3xl border border-brand-100 dark:border-brand-900/30 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white dark:bg-navy-900 flex items-center justify-center text-brand-500 shadow-sm shrink-0">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">
+                      Invite Attendees
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Manage your event invitation list. Add emails of people you want to invite.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-6 shadow-sm space-y-4">
+                  <Label>Invitation List (Emails)</Label>
+                  <Controller
+                    name="invitedEmails"
+                    control={control}
+                    render={({ field }) => (
+                      <TagInput
+                        defaultValue={field.value}
+                        onChange={field.onChange}
+                        placeholder="Type email and press Enter..."
+                        error={!!errors.invitedEmails?.message}
+                      />
+                    )}
                   />
-                )}
-              />
-              <p className="text-[11px] text-gray-400 flex items-center gap-2">
-                <Info size={14} />
-                Invited people will receive an automated email notification with event details.
-              </p>
+                  <p className="text-[10px] text-gray-400 flex items-center gap-1.5">
+                    <Info size={12} className="shrink-0" />
+                    Invited people will receive an automated email notification with event details.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column: Sponsors Alignment */}
+              <div className="space-y-6">
+                <div className="p-6 bg-purple-50 dark:bg-purple-500/10 rounded-3xl border border-purple-100 dark:border-purple-900/30 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white dark:bg-navy-900 flex items-center justify-center text-purple-500 shadow-sm shrink-0">
+                    <Award size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">
+                      Event Sponsors & Partners
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Align active sponsors to this event to display them on the event detail pages.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-6 shadow-sm space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sponsor-search">Search Sponsors</Label>
+                    <div className="relative">
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={16}
+                      />
+                      <input
+                        id="sponsor-search"
+                        type="text"
+                        placeholder="Search by name, company, or tier..."
+                        value={sponsorSearch}
+                        onChange={(e) => setSponsorSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* List of active/selected sponsors */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {sortedSponsors.map((sponsor) => {
+                      const isSelected = selectedSponsorIds.includes(sponsor.id);
+                      let logoUrl = '';
+                      if (typeof sponsor.logo === 'string') {
+                        logoUrl = sponsor.logo;
+                      } else if (sponsor.logo && typeof sponsor.logo === 'object') {
+                        logoUrl =
+                          (sponsor.logo as ImageLinks).thumbnail ||
+                          (sponsor.logo as ImageLinks).original ||
+                          '';
+                      }
+
+                      return (
+                        <div
+                          key={sponsor.id}
+                          onClick={() => {
+                            const newSelected = isSelected
+                              ? selectedSponsorIds.filter((id) => id !== sponsor.id)
+                              : [...selectedSponsorIds, sponsor.id];
+                            setValue('sponsors', newSelected, { shouldValidate: true });
+                          }}
+                          className={cn(
+                            'flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer select-none',
+                            isSelected
+                              ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-500/10'
+                              : 'border-gray-50 dark:border-navy-900 hover:border-gray-200 dark:hover:border-navy-700',
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-100 dark:border-navy-850 bg-gray-50 dark:bg-navy-950 flex items-center justify-center">
+                              {logoUrl ? (
+                                <img
+                                  src={logoUrl}
+                                  alt=""
+                                  className="object-cover w-full h-full animate-fade-in"
+                                />
+                              ) : (
+                                <div className="text-gray-400">
+                                  {sponsor.type === SponsorType.INDIVIDUAL ? (
+                                    <User size={16} />
+                                  ) : (
+                                    <Building2 size={16} />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-gray-800 dark:text-white truncate">
+                                {sponsor.name}
+                              </p>
+                              <p className="text-[10px] text-gray-400 truncate">
+                                {sponsor.companyName || 'Individual Sponsor'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {sponsor.tier && (
+                              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-gray-100 dark:bg-navy-750 text-gray-500 dark:text-navy-300">
+                                {sponsor.tier}
+                              </span>
+                            )}
+                            <div
+                              className={cn(
+                                'w-5 h-5 rounded-md border flex items-center justify-center transition-all',
+                                isSelected
+                                  ? 'border-brand-500 bg-brand-500 text-white'
+                                  : 'border-gray-200 dark:border-navy-700',
+                              )}
+                            >
+                              {isSelected && <CheckCircle size={12} className="text-white" />}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {sortedSponsors.length === 0 && (
+                      <p className="text-xs text-center text-gray-400 py-6 italic">
+                        No active sponsors found matching query.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );

@@ -12,33 +12,33 @@ export const eventService = {
     if (filters.websiteId) query.append('websiteId', filters.websiteId);
     if (filters.status) query.append('status', filters.status);
 
-    return apiFetch<EventManagement[]>(`/event-management?${query.toString()}`);
+    return apiFetch<EventManagement[]>(`/admin/events?${query.toString()}`);
   },
 
   getEventById: async (id: string) => {
-    return apiFetch<EventManagement>(`/event-management/${id}`);
+    return apiFetch<EventManagement>(`/admin/events/${id}`);
   },
 
   getEventBySlug: async (slug: string) => {
-    return apiFetch<EventManagement>(`/event-management/slug/${slug}`);
+    return apiFetch<EventManagement>(`/website/events/${slug}`);
   },
 
   createEvent: async (data: CreateEventInput) => {
-    return apiFetch<EventManagement>('/event-management', {
+    return apiFetch<EventManagement>('/admin/events', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   updateEvent: async (id: string, data: UpdateEventInput) => {
-    return apiFetch<EventManagement>(`/event-management/${id}`, {
+    return apiFetch<EventManagement>(`/admin/events/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   deleteEvent: async (id: string) => {
-    return apiFetch<void>(`/event-management/${id}`, {
+    return apiFetch<void>(`/admin/events/${id}`, {
       method: 'DELETE',
     });
   },
