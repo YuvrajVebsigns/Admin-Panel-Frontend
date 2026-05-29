@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { Sponsor, SponsorType, SponsorTier } from '../types/sponsor.types';
 import { useSponsors } from '../hooks/useSponsors';
-import { Edit, Trash2, Globe, Building2, User, Award } from 'lucide-react';
+import { Edit, Trash2, Globe, Building2, User, Award, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Badge from '@/components/ui/badge/Badge';
+import { useRouter } from 'next/navigation';
 
 interface SponsorTableProps {
   onEdit: (sponsor: Sponsor) => void;
@@ -14,6 +15,7 @@ interface SponsorTableProps {
 }
 
 export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) => {
+  const router = useRouter();
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -173,6 +175,13 @@ export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) 
       header: 'Actions',
       accessor: (sponsor) => (
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => router.push(`/sponsors/${sponsor.id}`)}
+            className="p-2 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-xl transition-all"
+            title="View Sponsor"
+          >
+            <Eye size={16} />
+          </button>
           <button
             onClick={() => onEdit(sponsor)}
             className="p-2 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-xl transition-all"

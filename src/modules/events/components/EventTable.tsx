@@ -1,7 +1,17 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Edit, Trash2, Calendar, MapPin, Globe, Users, CheckCircle, Clock } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  Calendar,
+  MapPin,
+  Globe,
+  Users,
+  CheckCircle,
+  Clock,
+  Eye,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { EventManagement, EventStatus, EventType } from '../types/event.types';
@@ -121,9 +131,16 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
       accessor: (event) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={() => router.push(`/events/${event.id}/view`)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-navy-700 rounded-lg text-gray-500 hover:text-brand-500 transition-colors"
+            title="View Details"
+          >
+            <Eye size={18} />
+          </button>
+          <button
             onClick={() => router.push(`/events/${event.id}`)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-navy-700 rounded-lg text-gray-500 hover:text-brand-500 transition-colors"
-            title="View/Edit"
+            title="Edit"
           >
             <Edit size={18} />
           </button>
