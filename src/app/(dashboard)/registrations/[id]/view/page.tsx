@@ -1,12 +1,12 @@
-import { AttendeeDetailsView } from '@/modules/attendees/components/AttendeeDetailsView';
+import { RegistreeDetailsView } from '@/modules/attendees/components/RegistreeDetailsView';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Attendee Details & Registration History - Core Media Admin',
+  title: 'Registree Details & Event History - Core Media Admin',
   description:
-    'View attendee contact details, verified boarding passes, check-in history, and event list.',
+    'View registree contact details, event registration history, and attendance records.',
 };
 
-export default function AttendeeViewPage() {
-  return <AttendeeDetailsView />;
+export default function RegistreeViewPage() {
+  return <RegistreeDetailsView />;
 }
