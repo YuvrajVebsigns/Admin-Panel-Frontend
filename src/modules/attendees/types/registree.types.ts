@@ -16,6 +16,7 @@ export interface RegistreeHistoryItem {
   organization?: string;
   websiteId?: string;
   eventId?: string;
+  event?: RegistreeEvent;
   passCode?: string;
   qrCode?: string;
   attended: boolean;

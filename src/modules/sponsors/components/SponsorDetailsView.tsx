@@ -86,7 +86,7 @@ const EventAttendeesList: React.FC<{
                 </td>
                 <td className="py-3.5 px-4 text-gray-600 dark:text-navy-300">{attendee.email}</td>
                 <td className="py-3.5 px-4 text-gray-500 dark:text-navy-500">
-                  {attendee.phone || '—'}
+                  {attendee.phoneNumber || '—'}
                 </td>
                 <td className="py-3.5 px-4">
                   <Badge

@@ -2,18 +2,20 @@
 
 import React from 'react';
 import { Attendee } from '../types/attendee.types';
-import { X, Calendar, MapPin, Building, ShieldCheck, Download } from 'lucide-react';
+import { X, Calendar, MapPin, Building, ShieldCheck, Download, Printer } from 'lucide-react';
 
 interface AttendeePassModalProps {
   isOpen: boolean;
   onClose: () => void;
   attendee: Attendee | null;
+  onPrint?: () => void;
 }
 
 export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
   isOpen,
   onClose,
   attendee,
+  onPrint,
 }) => {
   if (!isOpen || !attendee) return null;
 
@@ -94,7 +96,7 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
 
           <div className="mt-5">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{attendee.name}</h3>
-            <p className="text-xs font-medium text-gray-500 mt-0.5">{attendee.email}</p>
+            <p className="text-xs font-medium text-gray-505 mt-0.5">{attendee.email}</p>
             {attendee.organization && (
               <div className="flex items-center justify-center gap-1.5 mt-1.5 text-xs text-brand-600 dark:text-brand-400 font-semibold bg-brand-500/5 px-2.5 py-1 rounded-full">
                 <Building size={12} />
@@ -140,15 +142,24 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="w-full border-t border-gray-100 dark:border-navy-700 px-6 py-4 bg-gray-50 dark:bg-navy-900/30 flex justify-center rounded-b-3xl">
+        <div className="w-full border-t border-gray-100 dark:border-navy-700 px-6 py-4 bg-gray-50 dark:bg-navy-900/30 flex justify-between items-center rounded-b-3xl gap-4">
           <button
             onClick={downloadPass}
             disabled={!attendee.qrCode}
-            className="flex items-center gap-2 text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+            className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <Download size={14} />
-            Download QR Pass Code
+            Download QR
           </button>
+          {onPrint && (
+            <button
+              onClick={onPrint}
+              className="flex items-center gap-2 text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors animate-fade-in"
+            >
+              <Printer size={14} />
+              Print Pass (PDF)
+            </button>
+          )}
         </div>
       </div>
     </div>
