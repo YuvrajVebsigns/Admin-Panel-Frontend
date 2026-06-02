@@ -9,10 +9,10 @@ import {
 
 export const attendeeService = {
   getAttendeesByEvent: async (eventId: string): Promise<Attendee[]> => {
-    return apiFetch<Attendee[]>(`/attendees/event/${eventId}`);
+    return apiFetch<Attendee[]>(`/admin/attendees/event/${eventId}`);
   },
   getAttendeeCountByEvent: async (eventId: string): Promise<number> => {
-    return apiFetch<number>(`/attendees/event/${eventId}/count`);
+    return apiFetch<number>(`/admin/attendees/event/${eventId}/count`);
   },
   getAttendees: async (params?: AttendeeQueryParams): Promise<PaginatedAttendeesResponse> => {
     const searchParams = new URLSearchParams();
@@ -25,30 +25,30 @@ export const attendeeService = {
       if (params.websiteId) searchParams.append('websiteId', params.websiteId);
     }
     const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
-    return apiFetch<PaginatedAttendeesResponse>(`/attendees${queryStr}`);
+    return apiFetch<PaginatedAttendeesResponse>(`/admin/attendees${queryStr}`);
   },
   getAttendeeById: async (id: string): Promise<Attendee> => {
-    return apiFetch<Attendee>(`/attendees/${id}`);
+    return apiFetch<Attendee>(`/admin/attendees/${id}`);
   },
   createAttendee: async (data: CreateAttendeeInput): Promise<Attendee> => {
-    return apiFetch<Attendee>('/attendees', {
+    return apiFetch<Attendee>('/admin/attendees', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   updateAttendee: async (id: string, data: UpdateAttendeeInput): Promise<Attendee> => {
-    return apiFetch<Attendee>(`/attendees/${id}`, {
+    return apiFetch<Attendee>(`/admin/attendees/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
   deleteAttendee: async (id: string): Promise<void> => {
-    return apiFetch<void>(`/attendees/${id}`, {
+    return apiFetch<void>(`/admin/attendees/${id}`, {
       method: 'DELETE',
     });
   },
   checkInAttendee: async (passCode: string): Promise<Attendee> => {
-    return apiFetch<Attendee>(`/attendees/${passCode}/check-in`, {
+    return apiFetch<Attendee>(`/admin/attendees/${passCode}/check-in`, {
       method: 'PATCH',
     });
   },
