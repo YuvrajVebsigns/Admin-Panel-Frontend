@@ -123,14 +123,14 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
           </div>
           <div className="min-w-0">
             <Link
-              href={`/registrations/${attendee.id}/view`}
+              href={`/attendance/${attendee.id}/view`}
               className="text-sm font-bold text-gray-900 dark:text-white hover:text-brand-500 transition-colors truncate block"
             >
               {attendee.name}
             </Link>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{attendee.email}</p>
-            {attendee.phone && (
-              <p className="text-[11px] text-gray-400 dark:text-navy-400">{attendee.phone}</p>
+            {attendee.phoneNumber && (
+              <p className="text-[11px] text-gray-400 dark:text-navy-400">{attendee.phoneNumber}</p>
             )}
           </div>
         </div>
@@ -215,7 +215,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
             )}
 
           <Link
-            href={`/registrations/${attendee.id}/view`}
+            href={`/attendance/${attendee.id}/view`}
             title="View History Details"
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-indigo-500 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all hover:scale-105"
           >

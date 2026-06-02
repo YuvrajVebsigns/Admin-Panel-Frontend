@@ -2,9 +2,8 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAttendee, useAttendees, useCheckInAttendee } from '../hooks/useAttendees';
-import { AttendeeStatus, Attendee } from '../types/attendee.types';
-import { AttendeePassModal } from './AttendeePassModal';
+import { useAttendee, useCheckInAttendee } from '../hooks/useAttendees';
+import { AttendeeStatus } from '../types/attendee.types';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import {
@@ -13,15 +12,21 @@ import {
   Phone,
   Building,
   Calendar,
-  QrCode,
   CheckCircle,
   Clock,
   User,
   AlertCircle,
   Loader2,
-  Users,
+  MapPin,
+  Globe,
+  Eye,
+  Printer,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { useEvent } from '@/modules/events/hooks/useEvents';
+import { AttendeePassModal } from './AttendeePassModal';
 
 export const AttendeeDetailsView: React.FC = () => {
   const params = useParams();
@@ -31,33 +36,17 @@ export const AttendeeDetailsView: React.FC = () => {
   const { data: attendee, isLoading, error } = useAttendee(id);
   const checkInMutation = useCheckInAttendee();
 
-  // Selected attendee for printing pass
-  const [selectedPassAttendee, setSelectedPassAttendee] = useState<Attendee | null>(null);
+  // Pass modal open state
+  const [isPassOpen, setIsPassOpen] = useState(false);
 
-  // Pagination states for history table
-  const [historyPage, setHistoryPage] = useState(1);
-  const historyLimit = 5;
+  // Extract primary event assigned ID
+  const primaryEventId =
+    attendee && typeof attendee.eventId === 'object' && attendee.eventId
+      ? attendee.eventId.id
+      : (attendee?.eventId as string);
 
-  // Fetch paginated events this attendee is registered for (queried by their exact email)
-  const { data: historyData, isLoading: isHistoryLoading } = useAttendees({
-    email: attendee?.email,
-    page: historyPage,
-    limit: historyLimit,
-  });
-
-  const registrations = historyData?.data || [];
-  const totalHistoryItems = historyData?.meta?.total || 0;
-  const totalHistoryPages = historyData?.meta?.totalPages || 1;
-
-  // Compute statistics (based on all history items if possible, or current page)
-  const stats = React.useMemo(() => {
-    if (!registrations.length) return { total: 0, attended: 0, rate: 0 };
-    const total = totalHistoryItems || registrations.length;
-    // Count attended registrations on current fetched list
-    const attended = registrations.filter((r) => r.status === AttendeeStatus.CHECKED_IN).length;
-    const rate = Math.round((attended / registrations.length) * 100);
-    return { total, attended, rate };
-  }, [registrations, totalHistoryItems]);
+  // Query full event details mapped to this registration
+  const { data: fullEvent, isLoading: isEventLoading } = useEvent(primaryEventId || '');
 
   const handleCheckIn = async (passCode: string, name: string) => {
     try {
@@ -66,6 +55,50 @@ export const AttendeeDetailsView: React.FC = () => {
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || 'Failed to check in attendee');
+    }
+  };
+
+  const generatePdfAndPrint = async () => {
+    const element = document.getElementById('print-pass-area');
+    if (!element) {
+      toast.error('Pass ticket template element not found');
+      return;
+    }
+
+    const loadingToast = toast.loading('Generating ticket PDF...');
+
+    try {
+      // Small timeout to allow styling painting
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(element, {
+        scale: 3, // High scale for clear text and barcodes
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [90, 140], // standard pocket wallet ticket format
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, 90, 140);
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Open in a new tab for native printing
+      const newTab = window.open(blobUrl, '_blank');
+      if (newTab) {
+        toast.success('Pass opened in new tab for printing', { id: loadingToast });
+      } else {
+        toast.error('Pop-up blocked. Please enable popups for this site.', { id: loadingToast });
+      }
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || 'Failed to print PDF', { id: loadingToast });
     }
   };
 
@@ -105,25 +138,54 @@ export const AttendeeDetailsView: React.FC = () => {
         <p className="text-sm text-gray-500 mt-1 max-w-xs">
           The requested registrant profile does not exist or has been deleted.
         </p>
-        <Button variant="outline" onClick={() => router.push('/registrations')} className="mt-4">
+        <Button variant="outline" onClick={() => router.push('/attendance')} className="mt-4">
           Return to Console
         </Button>
       </div>
     );
   }
 
+  const event = attendee.eventId;
+  const eventTitle = typeof event === 'object' && event ? event.title : 'Event';
+  const eventDate =
+    typeof event === 'object' && event
+      ? new Date(event.startDate).toLocaleDateString([], {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : '';
+  const eventLocation =
+    typeof event === 'object' && event ? event.location?.address || 'Online Venue' : 'Online Venue';
+
   return (
     <div className="space-y-6">
       {/* Top action header bar */}
       <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-800 pb-4 mb-4">
         <button
-          onClick={() => router.push('/registrations')}
+          onClick={() => router.push('/attendance')}
           className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft size={16} />
-          Back to Registrations
+          Back to Attendance
         </button>
         <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => setIsPassOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2 rounded-xl text-xs py-2"
+          >
+            <Eye size={15} />
+            View Pass
+          </Button>
+          <Button
+            onClick={generatePdfAndPrint}
+            className="flex items-center gap-2 rounded-xl text-xs py-2 bg-gradient-to-r from-brand-500 to-indigo-500 border-none hover:opacity-95"
+          >
+            <Printer size={15} />
+            Print Pass (PDF)
+          </Button>
           {attendee.status !== AttendeeStatus.CHECKED_IN &&
             attendee.status !== AttendeeStatus.BLOCKED && (
               <Button
@@ -138,7 +200,7 @@ export const AttendeeDetailsView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Attendee Card Details */}
+        {/* Left Column: Attendee Card Details & Ticket preview */}
         <div className="space-y-6 lg:col-span-1">
           {/* Card: Profile Identity */}
           <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs relative overflow-hidden">
@@ -147,7 +209,7 @@ export const AttendeeDetailsView: React.FC = () => {
 
             <div className="flex flex-col items-center text-center pt-2">
               <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-gray-100 dark:border-navy-700 bg-gray-50 dark:bg-navy-900/50 flex items-center justify-center text-gray-500 shadow-md mb-4">
-                <User size={36} className="text-gray-400 dark:text-navy-500 animate-pulse" />
+                <User size={36} className="text-gray-400 dark:text-navy-500" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
                 {attendee.name}
@@ -191,7 +253,7 @@ export const AttendeeDetailsView: React.FC = () => {
                     Phone Number
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white">
-                    {attendee.phone || '—'}
+                    {attendee.phoneNumber || '—'}
                   </p>
                 </div>
               </div>
@@ -218,171 +280,295 @@ export const AttendeeDetailsView: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Column: History table & metrics */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Quick Metrics Row */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5">
-              <div className="h-10 w-10 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
-                <Calendar size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Total Events
-                </p>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isHistoryLoading ? '...' : stats.total}
-                </h3>
+          {/* Card: On Desk Check-in Log / Action */}
+          {attendee.status === AttendeeStatus.CHECKED_IN ? (
+            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+              <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <CheckCircle className="text-emerald-500" size={18} />
+                On Desk Check-in
+              </h4>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                    Checked In By
+                  </p>
+                  <p className="text-xs font-semibold text-gray-800 dark:text-white mt-1">
+                    {attendee.checkedInBy ? (
+                      <span>
+                        {attendee.checkedInBy.name} ({attendee.checkedInBy.email})
+                      </span>
+                    ) : (
+                      <span className="text-gray-505 font-medium">Self / QR Pass Scan</span>
+                    )}
+                  </p>
+                </div>
+                {attendee.checkedInAt && (
+                  <div>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Check-in Time
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white mt-1">
+                      {new Date(attendee.checkedInAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-                <CheckCircle size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Page Attended
+          ) : (
+            attendee.status !== AttendeeStatus.BLOCKED && (
+              <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs relative overflow-hidden space-y-4">
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-brand-500" />
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Clock className="text-brand-500" size={18} />
+                  On Desk Check-in
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Mark this attendee as checked in at the physical reception desk. This will record
+                  your admin details in the audit log.
                 </p>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isHistoryLoading ? '...' : stats.attended}
-                </h3>
+                <Button
+                  onClick={() => handleCheckIn(attendee.passCode, attendee.name)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl text-xs py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold"
+                >
+                  <CheckCircle size={15} />
+                  Mark as Checked In
+                </Button>
               </div>
-            </div>
+            )
+          )}{' '}
+          {/* Off-screen Ticket Pass for canvas rendering/printing */}
+          <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+            <div
+              id="print-pass-area"
+              className="bg-white text-gray-900 border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col items-center p-5 max-w-[280px] w-[280px] text-center"
+              style={{ fontFamily: 'sans-serif' }}
+            >
+              <div className="w-full bg-brand-600 p-4 text-center text-white rounded-t-lg relative">
+                <h4 className="text-[9px] font-bold tracking-widest uppercase text-brand-200">
+                  Official Event Pass
+                </h4>
+                <h2 className="text-sm font-extrabold mt-1 line-clamp-1">{eventTitle}</h2>
+              </div>
 
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5">
-              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
-                <Users size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Attended Rate
-                </p>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isHistoryLoading ? '...' : `${stats.rate}%`}
-                </h3>
+              <div className="w-full border-t-2 border-dashed border-gray-200 my-4" />
+
+              <div className="w-full flex flex-col items-center">
+                <div className="relative h-28 w-28 border border-gray-200 rounded-lg bg-gray-50 p-2 flex items-center justify-center">
+                  {attendee.qrCode ? (
+                    <img
+                      src={attendee.qrCode}
+                      alt="QR Code"
+                      className="object-contain w-full h-full"
+                    />
+                  ) : (
+                    <div className="text-gray-400 text-[10px]">QR Code unavailable</div>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-bold text-gray-900">{attendee.name}</h3>
+                  <p className="text-[10px] font-medium text-gray-505 mt-0.5">{attendee.email}</p>
+                  {attendee.organization && (
+                    <div className="inline-block mt-1 text-[10px] text-brand-600 font-bold bg-brand-50 px-2 py-0.5 rounded-full">
+                      {attendee.organization}
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full mt-4 bg-gray-50 rounded-xl p-3 space-y-2 text-left border border-gray-150 text-[11px]">
+                  <div>
+                    <p className="text-[8px] uppercase tracking-wider text-gray-400 font-bold">
+                      Date & Time
+                    </p>
+                    <p className="font-semibold text-gray-700">{eventDate || 'Scheduled Event'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] uppercase tracking-wider text-gray-400 font-bold">
+                      Venue Address
+                    </p>
+                    <p className="font-semibold text-gray-700 line-clamp-2">{eventLocation}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-col items-center gap-1 w-full">
+                  <div className="h-8 w-full bg-[repeating-linear-gradient(90deg,#9ca3af,#9ca3af_2px,transparent_2px,transparent_6px)] opacity-60 rounded" />
+                  <span className="text-[8px] font-mono tracking-widest text-gray-505 font-bold uppercase">
+                    PASS-{attendee.passCode}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Table: Detailed Event History */}
-          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs">
-            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
-              Registration & Attendance History
-            </h4>
-
-            {isHistoryLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+        {/* Right Column: Current Event Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-700 pb-4">
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                  Current Event Assignment
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Details of the event mapped to this registration
+                </p>
               </div>
-            ) : registrations.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed border-gray-100 dark:border-navy-700 rounded-2xl">
-                <Calendar size={32} className="text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 dark:text-navy-400">No events registered.</p>
+              {fullEvent && (
+                <div className="flex items-center gap-2">
+                  <Badge
+                    color={fullEvent.type === 'ONLINE' ? 'success' : 'primary'}
+                    variant="light"
+                  >
+                    {fullEvent.type}
+                  </Badge>
+                  <Badge
+                    color={fullEvent.status === 'ON_GOING' ? 'success' : 'primary'}
+                    variant="light"
+                  >
+                    {fullEvent.status.replace('_', ' ')}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {isEventLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                <p className="text-xs text-gray-400">Loading event information...</p>
+              </div>
+            ) : !fullEvent ? (
+              <div className="text-center py-16 border-2 border-dashed border-gray-150 dark:border-navy-700 rounded-2xl">
+                <AlertCircle size={32} className="text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-navy-450 font-medium">
+                  Event details unavailable or deleted.
+                </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-100 dark:border-navy-800 text-[10px] uppercase font-bold text-gray-400 dark:text-navy-500 tracking-wider">
-                        <th className="py-3.5 pr-4">Event Details</th>
-                        <th className="py-3.5 px-4">Pass Code</th>
-                        <th className="py-3.5 px-4">Registration Status</th>
-                        <th className="py-3.5 px-4">Attended?</th>
-                        <th className="py-3.5 pl-4 text-right">Pass Option</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-navy-850/50 text-xs">
-                      {registrations.map((reg) => {
-                        const ev = reg.eventId;
-                        const title = typeof ev === 'object' && ev ? ev.title : 'Event details';
-                        const type = typeof ev === 'object' && ev ? ev.type : '';
-                        const isCheckedIn = reg.status === AttendeeStatus.CHECKED_IN;
+              <div className="space-y-6">
+                {/* Event Banner */}
+                {fullEvent.bannerImage?.original && (
+                  <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-gray-150 dark:border-navy-750">
+                    <img
+                      src={fullEvent.bannerImage.original}
+                      alt={fullEvent.title}
+                      className="object-cover w-full h-full hover:scale-[1.02] transition-transform duration-500"
+                    />
+                  </div>
+                )}
 
-                        return (
-                          <tr
-                            key={reg.id}
-                            className="hover:bg-gray-50/50 dark:hover:bg-navy-950/20 transition-colors"
-                          >
-                            <td className="py-4 pr-4">
-                              <div>
-                                <p className="font-bold text-gray-800 dark:text-white line-clamp-1">
-                                  {title}
-                                </p>
-                                {type && (
-                                  <span className="text-[10px] font-bold text-brand-500 dark:text-brand-400 uppercase tracking-widest block mt-0.5">
-                                    {type}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300">
-                              {reg.passCode}
-                            </td>
-                            <td className="py-4 px-4">
-                              <Badge color={getStatusColor(reg.status)} variant="light">
-                                {reg.status.replace('_', ' ')}
-                              </Badge>
-                            </td>
-                            <td className="py-4 px-4">
-                              {isCheckedIn ? (
-                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full w-fit">
-                                  <CheckCircle size={12} />
-                                  <span className="text-[10px] uppercase">Attended (Yes)</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-full w-fit">
-                                  <Clock size={12} />
-                                  <span className="text-[10px] uppercase">Not Attended (No)</span>
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-4 pl-4 text-right">
-                              <button
-                                onClick={() => setSelectedPassAttendee(reg)}
-                                title="View Ticket Boarding Pass"
-                                className="inline-flex h-8 items-center gap-1.5 px-3 rounded-lg border border-gray-150 dark:border-navy-700 bg-white dark:bg-navy-900 text-brand-500 text-[11px] font-bold shadow-theme-xs hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-all"
-                              >
-                                <QrCode size={13} />
-                                Boarding Pass
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                {/* Event Title */}
+                <div>
+                  <h2 className="text-xl font-extrabold text-gray-900 dark:text-white leading-snug">
+                    {fullEvent.title}
+                  </h2>
+                  {fullEvent.excerpt && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed font-medium">
+                      {fullEvent.excerpt}
+                    </p>
+                  )}
                 </div>
 
-                {/* Paginated Footer Controls */}
-                {totalHistoryPages > 1 && (
-                  <div className="flex items-center justify-between border-t border-gray-100 dark:border-navy-800 pt-4 mt-4">
-                    <span className="text-[11px] text-gray-500 dark:text-navy-450 font-semibold">
-                      Showing {registrations.length} of {totalHistoryItems} registrations
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setHistoryPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={historyPage === 1}
-                        className="flex h-7 px-2.5 items-center justify-center rounded-lg border border-gray-200 dark:border-navy-700 text-gray-500 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-navy-950 font-bold transition-all text-[11px]"
-                      >
-                        Previous
-                      </button>
-                      <span className="text-[11px] font-bold text-gray-700 dark:text-navy-300 px-1">
-                        Page {historyPage} of {totalHistoryPages}
+                {/* Logistics Info Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Date/Time Block */}
+                  <div className="bg-gray-50 dark:bg-navy-950/40 border border-gray-100 dark:border-navy-900 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center gap-2 text-brand-500">
+                      <Calendar size={16} />
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider">
+                        Date & Time
                       </span>
-                      <button
-                        onClick={() =>
-                          setHistoryPage((prev) => Math.min(prev + 1, totalHistoryPages))
-                        }
-                        disabled={historyPage === totalHistoryPages}
-                        className="flex h-7 px-2.5 items-center justify-center rounded-lg border border-gray-200 dark:border-navy-700 text-gray-500 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-navy-950 font-bold transition-all text-[11px]"
-                      >
-                        Next
-                      </button>
+                    </div>
+                    <div className="text-xs text-gray-705 dark:text-gray-300 space-y-2 font-medium">
+                      <p>
+                        <span className="text-gray-400">Start:</span>{' '}
+                        {new Date(fullEvent.startDate).toLocaleString(undefined, {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                      <p>
+                        <span className="text-gray-400">End:</span>{' '}
+                        {new Date(fullEvent.endDate).toLocaleString(undefined, {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Venue / Meeting Block */}
+                  <div className="bg-gray-50 dark:bg-navy-950/40 border border-gray-100 dark:border-navy-900 rounded-2xl p-5 space-y-3">
+                    {fullEvent.type === 'ONLINE' ? (
+                      <>
+                        <div className="flex items-center gap-2 text-emerald-500">
+                          <Globe size={16} />
+                          <span className="text-[10px] uppercase font-extrabold tracking-wider">
+                            Online Event Access
+                          </span>
+                        </div>
+                        <div className="text-xs font-medium">
+                          {fullEvent.meetingLink ? (
+                            <div className="space-y-2">
+                              <p className="text-gray-400">Meeting Link:</p>
+                              <a
+                                href={fullEvent.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-brand-500 hover:text-brand-600 hover:underline font-bold break-all block"
+                              >
+                                {fullEvent.meetingLink}
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">No meeting link provided</span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-indigo-500">
+                          <MapPin size={16} />
+                          <span className="text-[10px] uppercase font-extrabold tracking-wider">
+                            Location Venue
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-705 dark:text-gray-300 space-y-1 font-medium">
+                          <p className="font-bold text-gray-900 dark:text-white">
+                            {fullEvent.location?.city || 'Venue'}
+                          </p>
+                          <p className="text-gray-400 line-clamp-2">
+                            {fullEvent.location?.address || 'No venue address specified'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description content */}
+                {fullEvent.description && (
+                  <div className="border-t border-gray-100 dark:border-navy-700 pt-6">
+                    <h5 className="text-[10px] uppercase font-extrabold tracking-wider text-gray-450 dark:text-gray-500 mb-3">
+                      Event Summary
+                    </h5>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {typeof fullEvent.description === 'string' ? (
+                        <p className="whitespace-pre-wrap">{fullEvent.description}</p>
+                      ) : (
+                        <p>
+                          {fullEvent.excerpt ||
+                            'Event description is available inside the main event manager.'}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -392,12 +578,13 @@ export const AttendeeDetailsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Printable Badge Pass Modal */}
-      {selectedPassAttendee && (
+      {/* Ticket Pass Modal */}
+      {isPassOpen && (
         <AttendeePassModal
-          isOpen={!!selectedPassAttendee}
-          onClose={() => setSelectedPassAttendee(null)}
-          attendee={selectedPassAttendee}
+          isOpen={isPassOpen}
+          onClose={() => setIsPassOpen(false)}
+          attendee={attendee}
+          onPrint={generatePdfAndPrint}
         />
       )}
     </div>

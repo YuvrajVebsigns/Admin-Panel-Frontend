@@ -17,10 +17,10 @@ export interface Attendee {
         startDate: string;
         endDate: string;
         location?: { address: string };
-      }; // Supports nested Event population
+      };
   name: string;
   email: string;
-  phone?: string;
+  phoneNumber?: string;
   organization?: string;
   status: AttendeeStatus;
   passCode: string;
@@ -28,6 +28,11 @@ export interface Attendee {
   websiteId?: string | { id: string; name: string; domain?: string; logo?: string };
   registeredAt: string;
   checkedInAt?: string;
+  checkedInBy?: {
+    userId: string;
+    name: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -46,7 +51,7 @@ export interface CreateAttendeeInput {
   eventId: string;
   name: string;
   email: string;
-  phone?: string;
+  phoneNumber?: string;
   organization?: string;
   status?: AttendeeStatus;
   websiteId?: string;
