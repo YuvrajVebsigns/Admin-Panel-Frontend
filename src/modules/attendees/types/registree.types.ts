@@ -34,6 +34,7 @@ export interface Registree {
   websiteId?: string | { id: string; name: string; domain?: string; logo?: string };
   eventIds?: RegistreeEvent[];
   history?: RegistreeHistoryItem[];
+  joinedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

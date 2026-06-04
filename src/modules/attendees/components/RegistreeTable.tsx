@@ -130,11 +130,13 @@ export const RegistreeTable: React.FC = () => {
       header: 'Joined',
       accessor: (registree) => (
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {new Date(registree.createdAt).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          {registree.joinedAt
+            ? new Date(registree.joinedAt).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            : 'Unknown'}
         </span>
       ),
     },
