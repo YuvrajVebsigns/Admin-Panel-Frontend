@@ -112,7 +112,9 @@ export const useWebsitePages = (params: {
   });
 
   return {
-    pages: data?.data || [],
+    // Normalize: API may return _id instead of id when showMetaData=true
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pages: (data?.data || []).map((p: any) => ({ ...p, id: p.id || p._id })),
     meta: data?.meta,
     isLoading,
     error,
