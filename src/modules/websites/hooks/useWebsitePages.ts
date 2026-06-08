@@ -30,6 +30,11 @@ export const useWebsitePages = (params: {
     },
   });
 
+  // Silent create — used by auto-save (no toast, no refetch)
+  const silentCreatePageMutation = useMutation({
+    mutationFn: (data: Partial<WebsitePage>) => websitePageService.createPage(data),
+  });
+
   const updatePageMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<WebsitePage> }) =>
       websitePageService.updatePage(id, data),
@@ -41,6 +46,12 @@ export const useWebsitePages = (params: {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update page');
     },
+  });
+
+  // Silent update — used by auto-save (no toast, no refetch)
+  const silentUpdatePageMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<WebsitePage> }) =>
+      websitePageService.updatePage(id, data),
   });
 
   const deletePageMutation = useMutation({
@@ -107,8 +118,10 @@ export const useWebsitePages = (params: {
     error,
     refetch,
     createPage: createPageMutation.mutateAsync,
+    silentCreatePage: silentCreatePageMutation.mutateAsync,
     isCreating: createPageMutation.isPending,
     updatePage: updatePageMutation.mutateAsync,
+    silentUpdatePage: silentUpdatePageMutation.mutateAsync,
     isUpdating: updatePageMutation.isPending,
     deletePage: deletePageMutation.mutateAsync,
     isDeleting: deletePageMutation.isPending,

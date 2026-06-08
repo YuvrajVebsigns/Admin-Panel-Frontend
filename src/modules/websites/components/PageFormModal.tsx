@@ -75,6 +75,18 @@ const Tooltip: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
+const mapBlockTypeToSectionType = (editorType: string): string => {
+  const mapping: Record<string, string> = {
+    heroSection: 'HERO',
+    featuresSection: 'FEATURES',
+    ctaSection: 'CTA',
+    testimonialsSection: 'TESTIMONIALS',
+    faqSection: 'FAQ',
+    richTextSection: 'TEXT_BLOCK',
+  };
+  return mapping[editorType] || editorType.toUpperCase();
+};
+
 export const PageFormModal: React.FC<PageFormModalProps> = ({
   isOpen,
   onClose,
@@ -82,7 +94,8 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   pageData,
 }) => {
   const isEdit = !!pageData;
-  const { createPage, updatePage, isCreating, isUpdating } = useWebsitePages({ siteId });
+  const { createPage, updatePage, silentCreatePage, silentUpdatePage, isCreating, isUpdating } =
+    useWebsitePages({ siteId });
   const [activeTab, setActiveTab] = useState<'info' | 'editor' | 'seo'>('info');
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
@@ -96,6 +109,10 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   const [apiError, setApiError] = useState<string | null>(null);
 
   const activePageIdRef = useRef<string | null>(pageData?.id || null);
+  const isSavingRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentSavePromiseRef = useRef<Promise<unknown> | null>(null);
 
   const {
     register,
@@ -139,6 +156,13 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     setAutoSaveStatus('idle');
     setCreatedPageId(pageData?.id || null);
     activePageIdRef.current = pageData?.id || null;
+    isSavingRef.current = false;
+    isSubmittingRef.current = false;
+    currentSavePromiseRef.current = null;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
     if (pageData) {
       setValue('title', pageData.title);
       setValue('slug', pageData.slug);
@@ -216,8 +240,55 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     setEditorContent(data);
   };
 
+  /**
+   * Core save function used by both auto-save and manual submit.
+   * Serialized via currentSavePromiseRef to prevent duplicate page creation.
+   * @param silent - If true, uses silent mutations (no toast/refetch) for auto-save.
+   */
+  const executeSave = async (payload: Partial<WebsitePage>, silent = false): Promise<void> => {
+    // If there is already a save operation in-flight, await its completion (success or failure)
+    if (currentSavePromiseRef.current) {
+      try {
+        await currentSavePromiseRef.current;
+      } catch (error) {
+        // Ignore previous errors so the current save attempt can proceed
+      }
+    }
+
+    const activeId = activePageIdRef.current;
+    let promise;
+
+    if (activeId) {
+      if (silent) {
+        promise = silentUpdatePage({ id: activeId, data: payload });
+      } else {
+        promise = updatePage({ id: activeId, data: payload });
+      }
+    } else {
+      promise = silent ? silentCreatePage(payload) : createPage(payload);
+    }
+
+    currentSavePromiseRef.current = promise;
+
+    try {
+      const response = await promise;
+      if (response && response.id) {
+        activePageIdRef.current = response.id;
+        setCreatedPageId(response.id);
+      }
+    } finally {
+      // Clear currentSavePromiseRef only if it hasn't been overwritten by another request
+      if (currentSavePromiseRef.current === promise) {
+        currentSavePromiseRef.current = null;
+      }
+    }
+  };
+
   const performAutoSave = async () => {
     if (activeTab !== 'info') return;
+
+    // Prevent concurrent auto-save triggers
+    if (isSavingRef.current) return;
 
     const currentValues = getValues();
     if (!currentValues.title || currentValues.title.length < 3 || !currentValues.slug) {
@@ -236,7 +307,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       sections: editorContent?.blocks
         ? (editorContent.blocks as { type: string; data: Record<string, unknown> }[]).map(
             (block, idx: number) => ({
-              type: block.type,
+              type: mapBlockTypeToSectionType(block.type),
               order: idx,
               data: block.data,
             }),
@@ -245,25 +316,20 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     };
 
     try {
+      isSavingRef.current = true;
       setAutoSaveStatus('saving');
       setApiError(null);
-      const activeId = activePageIdRef.current;
 
-      if (activeId) {
-        await updatePage({ id: activeId, data: payload });
-      } else {
-        const response = await createPage(payload);
-        if (response && response.id) {
-          activePageIdRef.current = response.id;
-          setCreatedPageId(response.id);
-        }
-      }
+      await executeSave(payload, true);
+
       setAutoSaveStatus('saved');
     } catch (e) {
       setAutoSaveStatus('error');
       const err = e as { message?: string; data?: { message?: string | string[] } };
       const errorMsg = err?.message || 'Failed to auto-save page';
       setApiError(Array.isArray(err?.data?.message) ? err.data.message.join(', ') : errorMsg);
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -277,13 +343,23 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   useEffect(() => {
     if (!isOpen || activeTab !== 'info') return;
 
-    const timer = setTimeout(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
       if (titleValue && titleValue.length >= 3 && slugVal) {
         performAutoSave();
       }
     }, 2000); // 2-second debounce
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
   }, [titleValue, slugVal, pageTypeVal, statusVal, isHomepageVal, shortDescriptionVal, isOpen]);
 
   const handleTabChange = async (tab: 'info' | 'editor' | 'seo') => {
@@ -299,7 +375,16 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   };
 
   const onSubmit = async (data: PageFormData) => {
-    const activeId = activePageIdRef.current;
+    // Prevent double manual submissions
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
+    // Cancel any pending debounced auto-save
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
     const payload: Partial<WebsitePage> = {
       ...data,
       siteId,
@@ -312,7 +397,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       sections: editorContent?.blocks
         ? (editorContent.blocks as { type: string; data: Record<string, unknown> }[]).map(
             (block, idx: number) => ({
-              type: block.type,
+              type: mapBlockTypeToSectionType(block.type),
               order: idx,
               data: block.data,
             }),
@@ -322,20 +407,14 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
 
     try {
       setApiError(null);
-      if (isEdit || activeId) {
-        await updatePage({ id: activeId || '', data: payload });
-      } else {
-        const response = await createPage(payload);
-        if (response && response.id) {
-          activePageIdRef.current = response.id;
-          setCreatedPageId(response.id);
-        }
-      }
+      await executeSave(payload);
       onClose();
     } catch (e) {
       const err = e as { message?: string; data?: { message?: string | string[] } };
       const errorMsg = err?.message || 'Failed to save page';
       setApiError(Array.isArray(err?.data?.message) ? err.data.message.join(', ') : errorMsg);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
