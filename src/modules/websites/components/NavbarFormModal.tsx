@@ -124,13 +124,14 @@ export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
   }, [selectedMenuType, setValue]);
 
   const onSubmit = async (data: NavbarItemFormData) => {
-    const payload = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = {
       ...data,
       siteId,
-      // Map empty options to null
-      parentId: data.parentId || null,
-      pageId: data.pageId || null,
     };
+    // Remove pageId and parentId if empty to avoid backend MongoId validation
+    if (!data.pageId || data.pageId === 'null') delete payload.pageId;
+    if (!data.parentId || data.parentId === 'null') delete payload.parentId;
 
     try {
       if (isEdit && itemData) {

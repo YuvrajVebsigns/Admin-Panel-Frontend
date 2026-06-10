@@ -20,7 +20,7 @@ export const websitePageService = {
     if (params.limit) queryParams.append('limit', params.limit.toString());
 
     return apiFetch<PaginatedResponse<WebsitePage>>(
-      `/admin/website/pages?${queryParams.toString()}`,
+      `/admin/website/pages?showMetaData=true&${queryParams.toString()}`,
     );
   },
 
