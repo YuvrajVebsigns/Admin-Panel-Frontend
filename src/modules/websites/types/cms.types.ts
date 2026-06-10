@@ -83,3 +83,31 @@ export interface NavbarItem {
   pageId?: string | null;
   children?: NavbarItem[];
 }
+
+export interface Report {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  fileId: string;
+  file?: unknown;
+  downloadCount: number;
+  websiteId?: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportDownloader {
+  registreeId: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  designation: string;
+  industry: string;
+  phoneNumber: string;
+  countryCode: string;
+  downloadedAt: string;
+}

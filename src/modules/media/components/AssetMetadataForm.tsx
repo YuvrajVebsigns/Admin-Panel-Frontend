@@ -34,7 +34,9 @@ const MODULE_OPTIONS = [
   { value: 'websites', label: 'Websites' },
   { value: 'events', label: 'Events' },
   { value: 'documents', label: 'Documents' },
+  { value: 'reports', label: 'Reports' },
   { value: 'branding', label: 'Branding' },
+  { value: 'teams', label: 'Teams' },
 ];
 
 export const AssetMetadataForm: React.FC<AssetMetadataFormProps> = ({

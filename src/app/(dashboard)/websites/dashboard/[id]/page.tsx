@@ -13,10 +13,12 @@ import {
   Layout,
   Compass,
   Globe,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 import { useEvents } from '@/modules/events/hooks/useEvents';
+import { useWebsiteReports } from '@/modules/websites/hooks/useWebsiteReports';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import Button from '@/components/ui/button/Button';
 import Badge from '@/components/ui/badge/Badge';
@@ -26,6 +28,7 @@ import { EventTable } from '@/modules/events/components/EventTable';
 import { PageManager } from '@/modules/websites/components/PageManager';
 import { NavbarManager } from '@/modules/websites/components/NavbarManager';
 import { WebsiteSeoManager } from '@/modules/websites/components/WebsiteSeoManager';
+import { ReportManager } from '@/modules/websites/components/ReportManager';
 import { useWebsitePages } from '@/modules/websites/hooks/useWebsitePages';
 import { getImageUrl } from '@/lib/utils';
 
@@ -35,6 +38,7 @@ const TABS = [
   { id: 'pages', label: 'Pages', icon: <Layout size={18} /> },
   { id: 'navbar', label: 'Navigation', icon: <Compass size={18} /> },
   { id: 'seo', label: 'Website SEO', icon: <Globe size={18} /> },
+  { id: 'reports', label: 'Reports', icon: <FileSpreadsheet size={18} /> },
 ];
 
 export default function WebsiteDashboardPage() {
@@ -48,9 +52,13 @@ export default function WebsiteDashboardPage() {
     siteId: websiteId,
     limit: 1000,
   });
+  const { meta: reportsMeta, isLoading: isReportsLoading } = useWebsiteReports({
+    websiteId,
+    limit: 1,
+  });
   const [activeTab, setActiveTab] = useState('blogs');
 
-  if (isLoading || isEventsLoading || isPagesLoading) {
+  if (isLoading || isEventsLoading || isPagesLoading || isReportsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
@@ -248,7 +256,9 @@ export default function WebsiteDashboardPage() {
                       ? blogsMeta?.total || 0
                       : activeTab === 'events'
                         ? websiteEvents?.length || 0
-                        : ''}{' '}
+                        : activeTab === 'reports'
+                          ? reportsMeta?.total || 0
+                          : ''}{' '}
                   {activeTab !== 'seo' && activeTab !== 'navbar' && 'Total'}
                 </span>
               </h2>
@@ -266,6 +276,8 @@ export default function WebsiteDashboardPage() {
             <WebsiteSeoManager siteId={websiteId} />
           ) : activeTab === 'blogs' ? (
             <BlogTable websiteId={websiteId} />
+          ) : activeTab === 'reports' ? (
+            <ReportManager siteId={websiteId} />
           ) : (
             <EventTable websiteId={websiteId} />
           )}
