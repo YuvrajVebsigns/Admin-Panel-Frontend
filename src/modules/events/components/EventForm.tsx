@@ -63,6 +63,16 @@ import { SponsorType } from '@/modules/sponsors/types/sponsor.types';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { BlogContent } from '@/modules/blogs/types/blog.types';
 
+const getFileId = (file: unknown): string => {
+  if (!file) return '';
+  if (typeof file === 'string') return file;
+  if (typeof file === 'object' && file !== null) {
+    const record = file as Record<string, unknown>;
+    return (record.id as string) || (record._id as string) || '';
+  }
+  return '';
+};
+
 const eventSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
   slug: z.string().min(3, 'Slug must be at least 3 characters'),
@@ -158,10 +168,11 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
             typeof w === 'string' ? w : (w as { id: string }).id,
           ),
           bannerImage: getImageUrl(initialData.bannerImage) || '',
-          bannerImageId: initialData.bannerImageId,
+          bannerImageId: getFileId(initialData.bannerImageId),
           seo: {
             ...initialData.seo,
             ogImage: getImageUrl(initialData.seo?.ogImage) || '',
+            ogImageId: getFileId(initialData.seo?.ogImageId),
             keywords: initialData.seo?.keywords || [],
           },
           invitedEmails: initialData.invitedEmails || [],
@@ -179,6 +190,21 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                   return '';
                 })
                 .filter(Boolean)
+            : [],
+          agenda: initialData.agenda
+            ? initialData.agenda.map((item) => {
+                let formattedTime = item.time;
+                if (item.time && !item.time.includes('-') && !item.time.includes('/')) {
+                  const datePart = initialData.startDate
+                    ? initialData.startDate.split('T')[0]
+                    : new Date().toISOString().split('T')[0];
+                  formattedTime = `${datePart} ${item.time}`;
+                }
+                return {
+                  ...item,
+                  time: formattedTime,
+                };
+              })
             : [],
         }
       : {
@@ -256,6 +282,27 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
     }
   };
 
+  const parseFlatpickrDate = (str: string) => {
+    if (!str) return null;
+    if (str.includes('T') && str.endsWith('Z')) {
+      return new Date(str);
+    }
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})\s+(AM|PM)$/i);
+    if (match) {
+      const [_, y, m, d, hrStr, minStr, ampm] = match;
+      let hr = parseInt(hrStr, 10);
+      const min = parseInt(minStr, 10);
+      if (ampm.toUpperCase() === 'PM' && hr < 12) {
+        hr += 12;
+      } else if (ampm.toUpperCase() === 'AM' && hr === 12) {
+        hr = 0;
+      }
+      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10), hr, min);
+    }
+    const fallback = new Date(str);
+    return isNaN(fallback.getTime()) ? null : fallback;
+  };
+
   const onSubmit = async (data: EventFormData) => {
     if (!content) {
       setCurrentStep(1);
@@ -263,7 +310,44 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
     }
 
     try {
-      const payload = { ...data, description: content };
+      const parsedStartDate = parseFlatpickrDate(data.startDate);
+      const parsedEndDate = parseFlatpickrDate(data.endDate);
+
+      const payload = {
+        ...data,
+        startDate: parsedStartDate ? parsedStartDate.toISOString() : data.startDate,
+        endDate: parsedEndDate ? parsedEndDate.toISOString() : data.endDate,
+        bannerImageId: data.bannerImageId || undefined,
+        bannerImage: data.bannerImage ? { original: data.bannerImage } : undefined,
+        agenda: data.agenda
+          ? data.agenda.map((item) => {
+              const parsedTime = parseFlatpickrDate(item.time);
+              return {
+                ...item,
+                time: parsedTime ? parsedTime.toISOString() : item.time,
+              };
+            })
+          : [],
+        seo: data.seo
+          ? {
+              metaTitle: data.seo.metaTitle || undefined,
+              metaDescription: data.seo.metaDescription || undefined,
+              keywords: data.seo.keywords || [],
+              ogImageId: data.seo.ogImageId || undefined,
+              ogImage: data.seo.ogImage ? { original: data.seo.ogImage } : undefined,
+            }
+          : undefined,
+        description: content,
+      };
+
+      if (payload.location) {
+        if (!payload.location.address) delete payload.location.address;
+        if (!payload.location.city) delete payload.location.city;
+        if (!payload.location.mapLink) {
+          delete payload.location.mapLink;
+        }
+      }
+
       if (isEdit && initialData) {
         await updateEvent({ id: initialData.id, data: payload as unknown as UpdateEventInput });
       } else {
@@ -555,12 +639,21 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                     <Trash2 size={16} />
                   </button>
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-3 space-y-2">
-                      <Label>Time</Label>
-                      <Input
-                        {...register(`agenda.${index}.time`)}
-                        placeholder="09:00 AM"
-                        error={errors.agenda?.[index]?.time?.message}
+                    <div className="md:col-span-3">
+                      <Controller
+                        name={`agenda.${index}.time`}
+                        control={control}
+                        render={({ field }) => (
+                          <DateTimePicker
+                            id={`agenda.${index}.time`}
+                            label="Time"
+                            showTime
+                            value={field.value}
+                            onChange={(date) => field.onChange(date)}
+                            error={errors.agenda?.[index]?.time?.message}
+                            placeholder="Select date & time..."
+                          />
+                        )}
                       />
                     </div>
                     <div className="md:col-span-9 space-y-2">
