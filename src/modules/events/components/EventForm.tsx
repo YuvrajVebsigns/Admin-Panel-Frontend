@@ -288,8 +288,13 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
       return new Date(str);
     }
     const match = str.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})\s+(AM|PM)$/i);
-    if (match) {
-      const [_, y, m, d, hrStr, minStr, ampm] = match;
+    if (match && match[1] && match[2] && match[3] && match[4] && match[5] && match[6]) {
+      const y = match[1];
+      const m = match[2];
+      const d = match[3];
+      const hrStr = match[4];
+      const minStr = match[5];
+      const ampm = match[6];
       let hr = parseInt(hrStr, 10);
       const min = parseInt(minStr, 10);
       if (ampm.toUpperCase() === 'PM' && hr < 12) {
