@@ -37,4 +37,22 @@ export const registreeService = {
       method: 'DELETE',
     });
   },
+
+  approveRegistration: async (id: string, eventId: string): Promise<unknown> => {
+    return apiFetch<unknown>(`/admin/registrees/${id}/registrations/${eventId}/approve`, {
+      method: 'PATCH',
+    });
+  },
+
+  rejectRegistration: async (id: string, eventId: string): Promise<unknown> => {
+    return apiFetch<unknown>(`/admin/registrees/${id}/registrations/${eventId}/reject`, {
+      method: 'PATCH',
+    });
+  },
+
+  blockRegistration: async (id: string, eventId: string): Promise<unknown> => {
+    return apiFetch<unknown>(`/admin/registrees/${id}/registrations/${eventId}/block`, {
+      method: 'PATCH',
+    });
+  },
 };

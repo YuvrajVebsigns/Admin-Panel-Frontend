@@ -4,9 +4,27 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { Registree } from '../types/registree.types';
-import { useRegistrees, useDeleteRegistree } from '../hooks/useRegistrees';
+import {
+  useRegistrees,
+  useDeleteRegistree,
+  useApproveRegistration,
+  useRejectRegistration,
+  useBlockRegistration,
+} from '../hooks/useRegistrees';
 import { useEvents } from '@/modules/events/hooks/useEvents';
-import { Trash2, User, Users, Calendar, CheckCircle, Percent, Eye, Building } from 'lucide-react';
+import {
+  Trash2,
+  User,
+  Users,
+  Calendar,
+  CheckCircle,
+  Percent,
+  Eye,
+  Building,
+  Check,
+  X,
+  Ban,
+} from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import toast from 'react-hot-toast';
 
@@ -26,6 +44,9 @@ export const RegistreeTable: React.FC = () => {
   const { events } = useEvents();
 
   const deleteMutation = useDeleteRegistree();
+  const approveMutation = useApproveRegistration();
+  const rejectMutation = useRejectRegistration();
+  const blockMutation = useBlockRegistration();
 
   const totalItems = data?.meta?.total || 0;
 
@@ -53,6 +74,46 @@ export const RegistreeTable: React.FC = () => {
       } catch (err: unknown) {
         const error = err as Error;
         toast.error(error.message || 'Failed to delete contact');
+      }
+    }
+  };
+
+  const handleApprove = async (id: string, eventId: string) => {
+    if (confirm('Are you sure you want to approve this registration?')) {
+      try {
+        await approveMutation.mutateAsync({ id, eventId });
+        toast.success('Registration approved successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to approve registration');
+      }
+    }
+  };
+
+  const handleReject = async (id: string, eventId: string) => {
+    if (confirm('Are you sure you want to reject this registration?')) {
+      try {
+        await rejectMutation.mutateAsync({ id, eventId });
+        toast.success('Registration rejected successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to reject registration');
+      }
+    }
+  };
+
+  const handleBlock = async (id: string, eventId: string) => {
+    if (
+      confirm(
+        'Are you sure you want to block this registration? Blocked users cannot register for future events.',
+      )
+    ) {
+      try {
+        await blockMutation.mutateAsync({ id, eventId });
+        toast.success('Registration blocked successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to block registration');
       }
     }
   };
@@ -91,6 +152,33 @@ export const RegistreeTable: React.FC = () => {
         </span>
       ),
     },
+    ...(params.eventId
+      ? [
+          {
+            header: 'Registration Status',
+            accessor: (registree: Registree) => {
+              const matchHistory = registree.history?.find((h) => h.eventId === params.eventId);
+              const status = matchHistory?.status || 'APPROVED';
+              return (
+                <Badge
+                  color={
+                    status === 'APPROVED'
+                      ? 'success'
+                      : status === 'PENDING'
+                        ? 'warning'
+                        : status === 'REJECTED'
+                          ? 'error'
+                          : 'dark'
+                  }
+                  variant="light"
+                >
+                  {status}
+                </Badge>
+              );
+            },
+          } as Column<Registree>,
+        ]
+      : []),
     {
       header: 'Events Registered',
       accessor: (registree) => {
@@ -143,25 +231,67 @@ export const RegistreeTable: React.FC = () => {
     {
       header: 'Actions',
       className: 'text-right',
-      accessor: (registree) => (
-        <div className="flex items-center justify-end gap-2">
-          <Link
-            href={`/registrations/${registree.id}/view`}
-            title="View Contact Details"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-indigo-500 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all hover:scale-105"
-          >
-            <Eye size={16} />
-          </Link>
+      accessor: (registree) => {
+        const matchHistory = params.eventId
+          ? registree.history?.find((h) => h.eventId === params.eventId)
+          : null;
+        const status = matchHistory?.status || 'APPROVED';
 
-          <button
-            onClick={() => handleDelete(registree)}
-            title="Delete Contact"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      ),
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {params.eventId && (
+              <>
+                {(status === 'PENDING' || status === 'REJECTED' || status === 'BLOCKED') && (
+                  <button
+                    onClick={() => handleApprove(registree.id, params.eventId!)}
+                    disabled={approveMutation.isPending}
+                    title="Approve Registration"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-emerald-600 shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all hover:scale-105"
+                  >
+                    <Check size={16} />
+                  </button>
+                )}
+                {status === 'PENDING' && (
+                  <button
+                    onClick={() => handleReject(registree.id, params.eventId!)}
+                    disabled={rejectMutation.isPending}
+                    title="Reject Registration"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-rose-600 shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all hover:scale-105"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                {status !== 'BLOCKED' && (
+                  <button
+                    onClick={() => handleBlock(registree.id, params.eventId!)}
+                    disabled={blockMutation.isPending}
+                    title="Block Registration"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
+                  >
+                    <Ban size={16} />
+                  </button>
+                )}
+              </>
+            )}
+
+            <Link
+              href={`/registrations/${registree.id}/view`}
+              title="View Contact Details"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-indigo-500 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all hover:scale-105"
+            >
+              <Eye size={16} />
+            </Link>
+
+            <button
+              onClick={() => handleDelete(registree)}
+              title="Delete Contact"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 

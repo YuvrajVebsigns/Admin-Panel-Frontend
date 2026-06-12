@@ -38,3 +38,41 @@ export const useDeleteRegistree = () => {
     },
   });
 };
+
+export const useApproveRegistration = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, eventId }: { id: string; eventId: string }) =>
+      registreeService.approveRegistration(id, eventId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['registrees'] });
+      queryClient.invalidateQueries({ queryKey: ['registree', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['attendees'] });
+    },
+  });
+};
+
+export const useRejectRegistration = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, eventId }: { id: string; eventId: string }) =>
+      registreeService.rejectRegistration(id, eventId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['registrees'] });
+      queryClient.invalidateQueries({ queryKey: ['registree', variables.id] });
+    },
+  });
+};
+
+export const useBlockRegistration = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, eventId }: { id: string; eventId: string }) =>
+      registreeService.blockRegistration(id, eventId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['registrees'] });
+      queryClient.invalidateQueries({ queryKey: ['registree', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['attendees'] });
+    },
+  });
+};

@@ -2,7 +2,12 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useRegistree } from '../hooks/useRegistrees';
+import {
+  useRegistree,
+  useApproveRegistration,
+  useRejectRegistration,
+  useBlockRegistration,
+} from '../hooks/useRegistrees';
 import { RegistreeHistoryItem, RegistreeEvent } from '../types/registree.types';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
@@ -24,8 +29,11 @@ import {
   Copy,
   Check,
   Printer,
+  X,
+  Ban,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
+import toast from 'react-hot-toast';
 
 export const RegistreeDetailsView: React.FC = () => {
   const params = useParams();
@@ -33,6 +41,50 @@ export const RegistreeDetailsView: React.FC = () => {
   const id = params.id as string;
 
   const { data: registree, isLoading, error } = useRegistree(id);
+
+  const approveMutation = useApproveRegistration();
+  const rejectMutation = useRejectRegistration();
+  const blockMutation = useBlockRegistration();
+
+  const handleApprove = async (eventId: string) => {
+    if (confirm('Are you sure you want to approve this registration?')) {
+      try {
+        await approveMutation.mutateAsync({ id, eventId });
+        toast.success('Registration approved successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to approve registration');
+      }
+    }
+  };
+
+  const handleReject = async (eventId: string) => {
+    if (confirm('Are you sure you want to reject this registration?')) {
+      try {
+        await rejectMutation.mutateAsync({ id, eventId });
+        toast.success('Registration rejected successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to reject registration');
+      }
+    }
+  };
+
+  const handleBlock = async (eventId: string) => {
+    if (
+      confirm(
+        'Are you sure you want to block this registration? Blocked users cannot register for future events.',
+      )
+    ) {
+      try {
+        await blockMutation.mutateAsync({ id, eventId });
+        toast.success('Registration blocked successfully');
+      } catch (err) {
+        const error = err as { message?: string };
+        toast.error(error.message || 'Failed to block registration');
+      }
+    }
+  };
 
   // Pass modal state
   const [selectedPass, setSelectedPass] = useState<RegistreeHistoryItem | null>(null);
@@ -310,6 +362,7 @@ export const RegistreeDetailsView: React.FC = () => {
                     <thead>
                       <tr className="border-b border-gray-100 dark:border-navy-800 text-[10px] uppercase font-bold text-gray-400 dark:text-navy-500 tracking-wider">
                         <th className="py-3.5 pr-4">Event</th>
+                        <th className="py-3.5 px-4">Status</th>
                         <th className="py-3.5 px-4">Pass Code</th>
                         <th className="py-3.5 px-4">Organization</th>
                         <th className="py-3.5 px-4">Attended</th>
@@ -339,6 +392,22 @@ export const RegistreeDetailsView: React.FC = () => {
                                   </span>
                                 )}
                               </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <Badge
+                                color={
+                                  item.status === 'APPROVED'
+                                    ? 'success'
+                                    : item.status === 'PENDING'
+                                      ? 'warning'
+                                      : item.status === 'REJECTED'
+                                        ? 'error'
+                                        : 'dark'
+                                }
+                                variant="light"
+                              >
+                                {item.status || 'APPROVED'}
+                              </Badge>
                             </td>
                             <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300">
                               {item.passCode || '—'}
@@ -370,13 +439,46 @@ export const RegistreeDetailsView: React.FC = () => {
                                     <Eye size={14} />
                                   </button>
                                 )}
-                                {item.qrCode && (
+                                {(item.status === 'APPROVED' || !item.status) && item.qrCode && (
                                   <button
                                     onClick={() => setSelectedPass(item)}
                                     className="h-8 w-8 rounded-lg bg-gray-50 hover:bg-indigo-500/10 text-gray-500 hover:text-indigo-500 flex items-center justify-center border border-gray-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
                                     title="View Generated Pass"
                                   >
                                     <Ticket size={14} />
+                                  </button>
+                                )}
+                                {matchEvent?.id &&
+                                  (item.status === 'PENDING' ||
+                                    item.status === 'REJECTED' ||
+                                    item.status === 'BLOCKED') && (
+                                    <button
+                                      onClick={() => handleApprove(matchEvent.id)}
+                                      disabled={approveMutation.isPending}
+                                      className="h-8 w-8 rounded-lg bg-emerald-50 hover:bg-emerald-500/15 text-emerald-600 flex items-center justify-center border border-emerald-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
+                                      title="Approve Registration"
+                                    >
+                                      <Check size={14} />
+                                    </button>
+                                  )}
+                                {matchEvent?.id && item.status === 'PENDING' && (
+                                  <button
+                                    onClick={() => handleReject(matchEvent.id)}
+                                    disabled={rejectMutation.isPending}
+                                    className="h-8 w-8 rounded-lg bg-rose-50 hover:bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
+                                    title="Reject Registration"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                )}
+                                {matchEvent?.id && item.status !== 'BLOCKED' && (
+                                  <button
+                                    onClick={() => handleBlock(matchEvent.id)}
+                                    disabled={blockMutation.isPending}
+                                    className="h-8 w-8 rounded-lg bg-gray-50 hover:bg-red-500/10 text-red-500 flex items-center justify-center border border-gray-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
+                                    title="Block Registration"
+                                  >
+                                    <Ban size={14} />
                                   </button>
                                 )}
                               </div>
