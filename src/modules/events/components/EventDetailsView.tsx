@@ -17,25 +17,166 @@ import {
   User,
   Building2,
   Search,
+  Printer,
 } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
-import { useEvent } from '@/modules/events/hooks/useEvents';
+import {
+  useEvent,
+  useEventMeetings,
+  useDeleteEventMeeting,
+} from '@/modules/events/hooks/useEvents';
 import { useEventAttendees, useEventAttendeeCount } from '@/modules/attendees/hooks/useAttendees';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
-import { EventStatus, EventType } from '../types/event.types';
+import { EventStatus, EventType, EventMeeting } from '../types/event.types';
 import { Attendee } from '@/modules/attendees/types/attendee.types';
 import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
+import { EventMeetingModal } from './EventMeetingModal';
 
 export const EventDetailsView: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
   const [attendeeSearch, setAttendeeSearch] = useState('');
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [meetingToEdit, setMeetingToEdit] = useState<EventMeeting | null>(null);
 
   // Fetch event and attendee data
   const { data: event, isLoading: isEventLoading } = useEvent(id as string);
   const { data: attendees, isLoading: isAttendeesLoading } = useEventAttendees(id as string);
   const { data: attendeeCountData } = useEventAttendeeCount(id as string);
+  const { data: meetings = [], isLoading: isMeetingsLoading } = useEventMeetings(id as string);
+  const deleteMeetingMutation = useDeleteEventMeeting();
+
+  const handleBookMeeting = () => {
+    setMeetingToEdit(null);
+    setIsMeetingModalOpen(true);
+  };
+
+  const handleEditMeeting = (meeting: EventMeeting) => {
+    setMeetingToEdit(meeting);
+    setIsMeetingModalOpen(true);
+  };
+
+  const handleCancelMeeting = async (meetingId: string) => {
+    if (confirm('Are you sure you want to cancel this meeting reservation?')) {
+      try {
+        await deleteMeetingMutation.mutateAsync({ eventId: id as string, meetingId });
+      } catch (err) {
+        // error handled by hook
+      }
+    }
+  };
+
+  const handlePrintMeetings = () => {
+    if (!meetings || meetings.length === 0 || !event) return;
+
+    const rows = meetings
+      .map((meeting, idx) => {
+        const sponsorObj =
+          typeof meeting.sponsorId === 'object' ? (meeting.sponsorId as Sponsor) : null;
+        const sponsorName = sponsorObj ? sponsorObj.name : 'Unknown Sponsor';
+        const sponsorCompany = sponsorObj?.companyName || '';
+
+        const attendeeNames = (meeting.attendeeIds || []).map((att) =>
+          typeof att === 'object' ? (att as Attendee).name : 'Unknown Guest',
+        );
+
+        return `
+          <tr>
+            <td style="text-align:center;font-weight:600;">${idx + 1}</td>
+            <td>
+              <strong>${meeting.agendaTime || '—'}</strong>
+            </td>
+            <td>${meeting.agendaTitle || '—'}</td>
+            <td>
+              <strong>${sponsorName}</strong>
+              ${sponsorCompany ? `<br/><span style="font-size:11px;color:#666;">${sponsorCompany}</span>` : ''}
+            </td>
+            <td>${attendeeNames.join(', ') || '—'}</td>
+            <td style="font-size:11px;color:#555;">${meeting.notes || '—'}</td>
+            <td>&nbsp;</td>
+          </tr>`;
+      })
+      .join('');
+
+    const eventDate = new Date(event.startDate).toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Meeting Schedule — ${event.title}</title>
+        <style>
+          @page { size: A4 portrait; margin: 14mm 12mm; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; padding: 0; }
+          .header { text-align: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 3px solid #e31e24; }
+          .header h1 { font-size: 20px; font-weight: 700; color: #0a192f; margin-bottom: 4px; }
+          .header p { font-size: 12px; color: #555; }
+          .meta { display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 14px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          thead th {
+            background: #0a192f; color: #fff; padding: 10px 8px;
+            text-align: left; font-weight: 600; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+          }
+          tbody tr { border-bottom: 1px solid #e5e5e5; }
+          tbody tr:nth-child(even) { background: #f9fafb; }
+          tbody td { padding: 10px 8px; vertical-align: top; line-height: 1.5; }
+          .notes-col { min-width: 180px; }
+          .footer { text-align: center; margin-top: 24px; font-size: 10px; color: #999; padding-top: 10px; border-top: 1px solid #e5e5e5; }
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            thead th { background: #0a192f !important; color: #fff !important; }
+            tbody tr:nth-child(even) { background: #f9fafb !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${event.title}</h1>
+          <p>Guest–Sponsor Scheduled Meetings</p>
+        </div>
+        <div class="meta">
+          <span><strong>Date:</strong> ${eventDate}</span>
+          <span><strong>Total Meetings:</strong> ${meetings.length}</span>
+          <span><strong>Printed:</strong> ${new Date().toLocaleString('en-IN')}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:35px;text-align:center;">#</th>
+              <th style="width:85px;">Time</th>
+              <th>Agenda / Session</th>
+              <th>Sponsor</th>
+              <th>Invitee Guests</th>
+              <th>System Notes</th>
+              <th class="notes-col">Handwritten Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+        <div class="footer">
+          Generated from Core Media Admin Panel &bull; ${event.title}
+        </div>
+      </body>
+      </html>`;
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=700');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 400);
+    }
+  };
 
   if (isEventLoading) {
     return (
@@ -125,6 +266,14 @@ export const EventDetailsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleBookMeeting}
+            className="bg-white dark:bg-navy-800 border-brand-200 dark:border-brand-900/50 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 text-brand-600 dark:text-brand-400"
+          >
+            <Calendar size={16} className="mr-2" />
+            Book Meeting
+          </Button>
           <Button
             variant="outline"
             onClick={() => router.push(`/events/${event.id}`)}
@@ -397,6 +546,142 @@ export const EventDetailsView: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Scheduled Meetings Card */}
+          <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Users size={20} className="text-brand-500" />
+                Guest-Sponsor Scheduled Meetings
+              </h3>
+              <div className="flex items-center gap-2">
+                {meetings && meetings.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePrintMeetings}
+                    className="text-xs px-3 py-1.5"
+                    type="button"
+                  >
+                    <Printer size={14} className="mr-1.5" />
+                    Print List
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleBookMeeting}
+                  className="text-xs px-3 py-1.5"
+                >
+                  <Clock size={14} className="mr-1.5" />
+                  Reserve Slot
+                </Button>
+              </div>
+            </div>
+
+            {isMeetingsLoading ? (
+              <div className="text-center py-6 text-xs text-gray-400">
+                Loading meeting reservations...
+              </div>
+            ) : meetings && meetings.length > 0 ? (
+              <div className="space-y-4">
+                {meetings.map((meeting) => {
+                  const sponsorObj =
+                    typeof meeting.sponsorId === 'object' ? (meeting.sponsorId as Sponsor) : null;
+                  const sponsorName = sponsorObj ? sponsorObj.name : 'Unknown Sponsor';
+                  const sponsorCompany = sponsorObj ? sponsorObj.companyName : '';
+
+                  const attendeeNames = (meeting.attendeeIds || []).map((att) =>
+                    typeof att === 'object' ? (att as Attendee).name : 'Unknown Guest',
+                  );
+
+                  return (
+                    <div
+                      key={meeting.id}
+                      className="p-5 rounded-2xl border border-gray-50 dark:border-navy-900 bg-gray-50/50 dark:bg-navy-900/30 hover:border-gray-200 dark:hover:border-navy-750 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4"
+                    >
+                      <div className="space-y-3 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-extrabold uppercase bg-brand-50 dark:bg-brand-500/10 text-brand-600 px-2 py-0.5 rounded-md">
+                            {meeting.agendaTime}
+                          </span>
+                          <span className="text-xs font-bold text-gray-800 dark:text-white truncate">
+                            {meeting.agendaTitle}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex items-start gap-2.5">
+                            <Building2 size={16} className="text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                Sponsor
+                              </p>
+                              <p className="text-xs font-bold text-gray-800 dark:text-white mt-0.5">
+                                {sponsorName}
+                              </p>
+                              {sponsorCompany && (
+                                <p className="text-[10px] text-gray-400">{sponsorCompany}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2.5">
+                            <User size={16} className="text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                Invitees
+                              </p>
+                              <p className="text-xs font-medium text-gray-800 dark:text-white mt-0.5">
+                                {attendeeNames.join(', ')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {meeting.notes && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-navy-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-navy-800 max-w-2xl">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Note:
+                            </span>{' '}
+                            {meeting.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex md:flex-col items-center justify-end gap-2 shrink-0 self-end md:self-start">
+                        <button
+                          onClick={() => handleEditMeeting(meeting)}
+                          className="px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-brand-500 dark:hover:text-brand-400 bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 rounded-xl transition-colors shadow-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleCancelMeeting(meeting.id)}
+                          className="px-3 py-1.5 text-xs font-bold text-error-600 hover:text-error-750 dark:hover:text-error-400 bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 rounded-xl transition-colors shadow-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 border border-dashed border-gray-100 dark:border-navy-750 rounded-2xl">
+                <Users className="mx-auto text-gray-300 mb-3" size={40} />
+                <p className="text-xs text-gray-400 italic">
+                  No meetings scheduled for this event yet.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBookMeeting}
+                  className="mt-4 text-xs bg-white dark:bg-navy-800"
+                >
+                  Book First Meeting
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Sponsors & Registered Attendees */}
@@ -551,6 +836,15 @@ export const EventDetailsView: React.FC = () => {
           </div>
         </div>
       </div>
+      <EventMeetingModal
+        isOpen={isMeetingModalOpen}
+        onClose={() => {
+          setIsMeetingModalOpen(false);
+          setMeetingToEdit(null);
+        }}
+        event={event}
+        meetingToEdit={meetingToEdit}
+      />
     </div>
   );
 };
