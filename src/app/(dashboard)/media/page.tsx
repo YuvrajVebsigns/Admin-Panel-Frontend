@@ -3,13 +3,12 @@
 import React, { useState } from 'react';
 import { FileBox, Plus, Search, Filter, RefreshCcw, LayoutGrid, List } from 'lucide-react';
 import Button from '@/components/ui/button/Button';
-import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { FileTable } from '@/modules/media/components/FileTable';
 import { FileGrid } from '@/modules/media/components/FileGrid';
 import { FileUploadModal } from '@/modules/media/components/FileUploadModal';
 
 export default function FilesPage() {
-  const { openModal } = useGlobalModal();
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [params, setParams] = useState({
     page: 1,
@@ -18,15 +17,6 @@ export default function FilesPage() {
     module: '',
     visibility: '',
   });
-
-  const openUploadModal = () => {
-    openModal({
-      title: 'Add New File',
-      size: 'lg',
-      hideFooter: true,
-      content: <FileUploadModal isOpen={true} onClose={() => {}} />, // FileUploadModal handles its own close logic or we can refactor it further
-    });
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParams((prev) => ({ ...prev, search: e.target.value, page: 1 }));
@@ -53,7 +43,7 @@ export default function FilesPage() {
         <div className="flex items-center gap-3">
           <Button
             variant="primary"
-            onClick={openUploadModal}
+            onClick={() => setIsUploadOpen(true)}
             className="shadow-lg shadow-brand-500/20"
           >
             <Plus size={18} className="mr-2" />
@@ -125,6 +115,9 @@ export default function FilesPage() {
           )}
         </div>
       </div>
+
+      {/* Upload Modal — rendered directly, not inside GlobalModal */}
+      <FileUploadModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} />
     </div>
   );
 }
