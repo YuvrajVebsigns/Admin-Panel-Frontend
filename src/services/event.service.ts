@@ -4,6 +4,9 @@ import {
   CreateEventInput,
   UpdateEventInput,
   EventStatus,
+  EventMeeting,
+  CreateEventMeetingInput,
+  UpdateEventMeetingInput,
 } from '@/modules/events/types/event.types';
 
 export const eventService = {
@@ -39,6 +42,30 @@ export const eventService = {
 
   deleteEvent: async (id: string) => {
     return apiFetch<void>(`/admin/events/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  getEventMeetings: async (eventId: string) => {
+    return apiFetch<EventMeeting[]>(`/admin/events/${eventId}/meetings`);
+  },
+
+  createEventMeeting: async (eventId: string, data: CreateEventMeetingInput) => {
+    return apiFetch<EventMeeting>(`/admin/events/${eventId}/meetings`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateEventMeeting: async (eventId: string, meetingId: string, data: UpdateEventMeetingInput) => {
+    return apiFetch<EventMeeting>(`/admin/events/${eventId}/meetings/${meetingId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteEventMeeting: async (eventId: string, meetingId: string) => {
+    return apiFetch<void>(`/admin/events/${eventId}/meetings/${meetingId}`, {
       method: 'DELETE',
     });
   },

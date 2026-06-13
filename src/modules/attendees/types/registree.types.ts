@@ -19,6 +19,7 @@ export interface RegistreeHistoryItem {
   event?: RegistreeEvent;
   passCode?: string;
   qrCode?: string;
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'BLOCKED';
   attended: boolean;
   attendedAt?: string;
   savedAt: string;

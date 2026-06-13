@@ -66,3 +66,32 @@ export interface EventManagement {
 
 export type CreateEventInput = Omit<EventManagement, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>;
 export type UpdateEventInput = Partial<CreateEventInput>;
+
+import { Attendee } from '@/modules/attendees/types/attendee.types';
+import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
+
+export interface EventMeeting {
+  id: string;
+  eventId: string;
+  agendaIndex: number;
+  agendaTime: string;
+  agendaTitle: string;
+  attendeeIds: string[] | Attendee[];
+  sponsorId: string | Sponsor;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEventMeetingInput {
+  eventId: string;
+  agendaIndex: number;
+  agendaTime: string;
+  agendaTitle: string;
+  attendeeIds: string[];
+  sponsorId: string;
+  notes?: string;
+}
+
+export type UpdateEventMeetingInput = Partial<CreateEventMeetingInput>;

@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventService } from '@/services/event.service';
-import { CreateEventInput, UpdateEventInput, EventStatus } from '../types/event.types';
+import {
+  CreateEventInput,
+  UpdateEventInput,
+  EventStatus,
+  CreateEventMeetingInput,
+  UpdateEventMeetingInput,
+} from '../types/event.types';
 import toast from 'react-hot-toast';
 
 export const useEvents = (filters: { websiteId?: string; status?: EventStatus } = {}) => {
@@ -67,5 +73,65 @@ export const useEvent = (id: string) => {
     queryKey: ['event', id],
     queryFn: () => eventService.getEventById(id),
     enabled: !!id,
+  });
+};
+
+export const useEventMeetings = (eventId: string) => {
+  return useQuery({
+    queryKey: ['event-meetings', eventId],
+    queryFn: () => eventService.getEventMeetings(eventId),
+    enabled: !!eventId,
+  });
+};
+
+export const useCreateEventMeeting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, data }: { eventId: string; data: CreateEventMeetingInput }) =>
+      eventService.createEventMeeting(eventId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-meetings', variables.eventId] });
+      toast.success('Meeting booked successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to book meeting');
+    },
+  });
+};
+
+export const useUpdateEventMeeting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      meetingId,
+      data,
+    }: {
+      eventId: string;
+      meetingId: string;
+      data: UpdateEventMeetingInput;
+    }) => eventService.updateEventMeeting(eventId, meetingId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-meetings', variables.eventId] });
+      toast.success('Meeting updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update meeting');
+    },
+  });
+};
+
+export const useDeleteEventMeeting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, meetingId }: { eventId: string; meetingId: string }) =>
+      eventService.deleteEventMeeting(eventId, meetingId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-meetings', variables.eventId] });
+      toast.success('Meeting reservation deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete meeting reservation');
+    },
   });
 };

@@ -1,15 +1,15 @@
 'use client';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   className?: string;
   children: React.ReactNode;
-  showCloseButton?: boolean; // New prop to control close button visibility
-  isFullscreen?: boolean; // Default to false for backwards compatibility
-  title?: string; // Modal title
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | 'auto'; // Modal size
+  showCloseButton?: boolean;
+  isFullscreen?: boolean;
+  title?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | 'auto';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -17,12 +17,22 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   className,
-  showCloseButton = true, // Default to true for backwards compatibility
+  showCloseButton = true,
   isFullscreen = false,
   title,
   size = 'md',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Trigger animation on next frame for enter transition
+      requestAnimationFrame(() => setIsAnimating(true));
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -70,29 +80,37 @@ export const Modal: React.FC<ModalProps> = ({
 
   const contentClasses = isFullscreen
     ? 'w-full h-full'
-    : `relative w-full ${sizeClasses[size]} rounded-3xl bg-white dark:bg-gray-900 shadow-2xl`;
+    : `relative w-full ${sizeClasses[size]} rounded-2xl bg-white dark:bg-navy-800 shadow-2xl border border-gray-100 dark:border-navy-700 overflow-hidden`;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-999999">
+      {/* Backdrop */}
       {!isFullscreen && (
         <div
-          className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+          className={`fixed inset-0 h-full w-full bg-navy-950/60 backdrop-blur-sm transition-opacity duration-300 ${
+            isAnimating ? 'opacity-100' : 'opacity-0'
+          }`}
           onClick={onClose}
-        ></div>
+        />
       )}
+
+      {/* Modal Content */}
       <div
         ref={modalRef}
-        className={`${contentClasses}  ${className}`}
+        className={`${contentClasses} transition-all duration-300 ease-out ${
+          isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
+        } ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
+            className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100/80 text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 hover:ring-2 hover:ring-gray-200 dark:bg-navy-700/80 dark:text-gray-400 dark:hover:bg-navy-600 dark:hover:text-white dark:hover:ring-navy-600 sm:right-4 sm:top-4 sm:h-9 sm:w-9"
           >
             <svg
-              width="24"
-              height="24"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -106,12 +124,18 @@ export const Modal: React.FC<ModalProps> = ({
             </svg>
           </button>
         )}
+
+        {/* Title Bar with accent */}
         {title && (
-          <div className="px-6 py-4 border-b border-gray-100 dark:border-navy-800">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
+          <div className="relative px-6 py-5 border-b border-gray-100 dark:border-navy-700">
+            {/* Brand accent line */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-500 via-brand-400 to-brand-600" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-10">{title}</h3>
           </div>
         )}
-        <div className={title ? 'p-0' : 'p-0'}>{children}</div>
+
+        {/* Content Area */}
+        <div className={title ? 'px-6 pb-6 pt-5' : 'p-0'}>{children}</div>
       </div>
     </div>
   );
