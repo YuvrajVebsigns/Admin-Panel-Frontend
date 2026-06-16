@@ -17,7 +17,6 @@ import {
   Trash2,
   Info,
   Search,
-  Image as ImageIcon,
   CheckCircle,
   Link as LinkIcon,
   Users,
@@ -264,7 +263,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 0:
-        return ['title', 'slug', 'type', 'status', 'websites'];
+        return ['title', 'slug', 'type', 'status', 'websites', 'bannerImage', 'bannerImageId'];
       case 1:
         return ['startDate', 'endDate'];
       case 2:
@@ -398,6 +397,27 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                 placeholder="Brief summary for listing cards..."
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2 max-w-[1000px]">
+              <Controller
+                name="bannerImage"
+                control={control}
+                render={({ field }) => (
+                  <UniversalImagePicker
+                    label="Event Banner Image"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onSelect={(file) => setValue('bannerImageId', file?.id || '')}
+                    aspectRatio="video"
+                    module="events"
+                    placeholder="Click to select event banner"
+                  />
+                )}
+              />
+              {errors.bannerImage && (
+                <p className="text-xs text-error-500 mt-1">{errors.bannerImage.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -893,30 +913,6 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2 space-y-6">
-                <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-sm">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <ImageIcon size={20} className="text-brand-500" />
-                    Media Assets
-                  </h3>
-                  <div className="space-y-4">
-                    <Controller
-                      name="bannerImage"
-                      control={control}
-                      render={({ field }) => (
-                        <UniversalImagePicker
-                          label="Main Banner Image"
-                          value={field.value}
-                          onChange={field.onChange}
-                          onSelect={(file) => setValue('bannerImageId', file?.id || '')}
-                          aspectRatio="video"
-                          module="events"
-                          placeholder="Select event banner..."
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-
                 <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-sm">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <Search size={20} className="text-brand-500" />
