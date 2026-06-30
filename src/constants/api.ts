@@ -25,6 +25,13 @@ export const API_ENDPOINTS = {
       BASE: '/admin/roles',
       BY_ID: (id: string) => `/admin/roles/${id}`,
     },
+    COMMUNICATIONS: {
+      LOGS: '/admin/communications/logs',
+      LOG_BY_ID: (id: string) => `/admin/communications/logs/${id}`,
+      SEND: '/admin/communications/send',
+      WEBHOOKS: '/admin/communications/webhooks',
+      WEBHOOK_BY_ID: (id: string) => `/admin/communications/webhooks/${id}`,
+    },
   },
   SYSTEM: {
     TEST_CONNECTION: '/test-connection',
