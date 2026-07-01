@@ -11,6 +11,7 @@ export const useSystemEvents = () => {
   return {
     events: data?.events || [],
     categories: data?.categories || {},
+    payloadRegistry: data?.payloadRegistry || {},
     isLoading,
     error,
   };

@@ -6,7 +6,7 @@ import { MessageTemplate, CommunicationChannel } from '../types/communication.ty
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
-import { TemplateFormModal } from './TemplateFormModal';
+import { useRouter } from 'next/navigation';
 import { TemplateSendModal } from './TemplateSendModal';
 import {
   Mail,
@@ -26,6 +26,7 @@ interface MessageTemplatesTabProps {
 }
 
 export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({ channel }) => {
+  const router = useRouter();
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -55,7 +56,6 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({ channe
 
   // Modal control states
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplate | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSendOpen, setIsSendOpen] = useState(false);
 
   // Pull sync state
@@ -63,13 +63,11 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({ channe
   const [isPulling, setIsPulling] = useState(false);
 
   const handleEdit = (template: MessageTemplate) => {
-    setSelectedTemplate(template);
-    setIsFormOpen(true);
+    router.push(`/communications/templates/${template.id}/edit`);
   };
 
   const handleCreate = () => {
-    setSelectedTemplate(null);
-    setIsFormOpen(true);
+    router.push(`/communications/templates/create${channel ? `?channel=${channel}` : ''}`);
   };
 
   const handleTestSend = (template: MessageTemplate) => {
@@ -390,14 +388,6 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({ channe
         limit={params.limit}
         onPageChange={(page) => setParams((p) => ({ ...p, page }))}
         onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
-      />
-
-      {/* Form Editor Modal */}
-      <TemplateFormModal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        editData={selectedTemplate}
-        defaultChannel={channel}
       />
 
       {/* Tester Modal */}

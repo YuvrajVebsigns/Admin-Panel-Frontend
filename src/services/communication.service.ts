@@ -254,10 +254,12 @@ export const communicationService = {
   getSystemEvents: async (): Promise<{
     events: string[];
     categories: Record<string, { key: string; value: string }[]>;
+    payloadRegistry: Record<string, { field: string; type: string; description: string }[]>;
   }> => {
     return apiFetch<{
       events: string[];
       categories: Record<string, { key: string; value: string }[]>;
+      payloadRegistry: Record<string, { field: string; type: string; description: string }[]>;
     }>(`${BASE}/system-events`);
   },
 

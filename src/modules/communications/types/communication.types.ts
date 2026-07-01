@@ -65,6 +65,7 @@ export interface MessageTemplate {
   };
   senderEmail?: string;
   senderName?: string;
+  linkedEvent?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -156,6 +157,7 @@ export interface CreateMessageTemplateDto {
   variables?: string[];
   senderEmail?: string;
   senderName?: string;
+  linkedEvent?: string;
   isActive?: boolean;
 }
 
@@ -168,7 +170,14 @@ export interface UpdateMessageTemplateDto {
   variables?: string[];
   senderEmail?: string;
   senderName?: string;
+  linkedEvent?: string;
   isActive?: boolean;
+}
+
+export interface EventPayloadField {
+  field: string;
+  type: string;
+  description: string;
 }
 
 export interface SendTemplateMessageDto {
