@@ -39,6 +39,13 @@ export default function DeploymentsPage() {
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [activeLogTab, setActiveLogTab] = useState<'deploy' | 'pm2' | 'restart'>('deploy');
   const [terminalLogs, setTerminalLogs] = useState<string>('');
+  const [terminalUrl, setTerminalUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setTerminalUrl(`${window.location.protocol}//${window.location.hostname}:8000`);
+    }
+  }, []);
 
   const triggerDeployMutation = useTriggerDeployMutation();
   const restartPm2Mutation = useRestartPm2Mutation();
@@ -561,6 +568,85 @@ export default function DeploymentsPage() {
             )}
             <div ref={terminalEndRef} />
           </div>
+        </div>
+      </div>
+
+      {/* Interactive Server Terminal (Port 8000) */}
+      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl overflow-hidden shadow-xs transition-colors duration-300">
+        <div className="p-6 border-b border-gray-100 dark:border-navy-700 bg-gray-50/30 dark:bg-navy-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
+              <Terminal size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 dark:text-white">
+                Interactive Server Terminal
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Access the secure Linux console terminal running on port 8000.
+              </p>
+            </div>
+          </div>
+          <div>
+            {terminalUrl && (
+              <a
+                href={terminalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 rounded-xl shadow-xs transition-all"
+              >
+                Open Terminal in New Tab
+              </a>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Instructions Box */}
+          <div className="bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 text-xs space-y-2 text-gray-700 dark:text-navy-200">
+            <p className="font-bold text-amber-700 dark:text-amber-400">
+              Note: Copy the SSH password and paste it into the terminal using{' '}
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded shadow-xs font-mono">
+                Shift + Insert
+              </kbd>{' '}
+              or{' '}
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded shadow-xs font-mono">
+                Ctrl + Shift + V
+              </kbd>
+              .
+            </p>
+            <p>
+              The linux console Terminal is configured to run on port <strong>8000</strong>. If the
+              terminal fails to load below, please make sure to allow port <strong>8000</strong> in
+              your firewall rules and check your connection. You must provide a valid system
+              username and password to authenticate.
+            </p>
+            {terminalUrl?.startsWith('https:') && (
+              <p className="text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                ⚠️ Since the admin panel is served over HTTPS, some browsers may restrict loading
+                HTTP terminal links in an iframe due to mixed-content security rules. If the frame
+                below is blank, use the <strong>Open Terminal in New Tab</strong> button above
+                instead.
+              </p>
+            )}
+          </div>
+
+          {/* Embedded Terminal Iframe */}
+          {terminalUrl ? (
+            <div className="bg-black border border-navy-800 dark:border-navy-900 rounded-3xl overflow-hidden h-[500px] relative shadow-inner">
+              <iframe
+                src={terminalUrl}
+                className="w-full h-full border-none bg-black"
+                title="Server Terminal Console"
+                sandbox="allow-same-origin allow-scripts allow-forms"
+              />
+            </div>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-gray-400">
+              <Loader2 className="animate-spin mr-2" size={16} />
+              Resolving terminal service connection...
+            </div>
+          )}
         </div>
       </div>
     </div>
