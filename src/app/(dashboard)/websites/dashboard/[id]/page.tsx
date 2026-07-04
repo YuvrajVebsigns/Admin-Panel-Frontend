@@ -14,6 +14,7 @@ import {
   Compass,
   Globe,
   FileSpreadsheet,
+  BarChart3,
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
@@ -29,6 +30,7 @@ import { PageManager } from '@/modules/websites/components/PageManager';
 import { NavbarManager } from '@/modules/websites/components/NavbarManager';
 import { WebsiteSeoManager } from '@/modules/websites/components/WebsiteSeoManager';
 import { ReportManager } from '@/modules/websites/components/ReportManager';
+import { AnalyticsDashboard } from '@/modules/websites/components/AnalyticsDashboard';
 import { useWebsitePages } from '@/modules/websites/hooks/useWebsitePages';
 import { getImageUrl } from '@/lib/utils';
 
@@ -39,6 +41,7 @@ const TABS = [
   { id: 'navbar', label: 'Navigation', icon: <Compass size={18} /> },
   { id: 'seo', label: 'Website SEO', icon: <Globe size={18} /> },
   { id: 'reports', label: 'Reports', icon: <FileSpreadsheet size={18} /> },
+  { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
 ];
 
 export default function WebsiteDashboardPage() {
@@ -248,7 +251,9 @@ export default function WebsiteDashboardPage() {
                   ? 'Navigation Menu links'
                   : activeTab === 'seo'
                     ? 'Global Website SEO'
-                    : activeTab}{' '}
+                    : activeTab === 'analytics'
+                      ? 'Visitor Analytics & Cookie Tracker'
+                      : activeTab}{' '}
                 <span className="ml-2 text-sm font-medium text-gray-400">
                   {activeTab === 'pages'
                     ? websitePages?.length || 0
@@ -259,11 +264,16 @@ export default function WebsiteDashboardPage() {
                         : activeTab === 'reports'
                           ? reportsMeta?.total || 0
                           : ''}{' '}
-                  {activeTab !== 'seo' && activeTab !== 'navbar' && 'Total'}
+                  {activeTab !== 'seo' &&
+                    activeTab !== 'navbar' &&
+                    activeTab !== 'analytics' &&
+                    'Total'}
                 </span>
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage and monitor your website's {activeTab} content
+                {activeTab === 'analytics'
+                  ? 'Monitor visitor traffic, unique pageviews, sessions, and cookie consent conversions'
+                  : `Manage and monitor your website's ${activeTab} content`}
               </p>
             </div>
           </div>
@@ -278,6 +288,8 @@ export default function WebsiteDashboardPage() {
             <BlogTable websiteId={websiteId} />
           ) : activeTab === 'reports' ? (
             <ReportManager siteId={websiteId} />
+          ) : activeTab === 'analytics' ? (
+            <AnalyticsDashboard siteId={websiteId} />
           ) : (
             <EventTable websiteId={websiteId} />
           )}
