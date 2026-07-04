@@ -6,6 +6,7 @@ export interface DeploymentTarget {
   branch: string;
   directory: string;
   command: string;
+  pm2ProcessName: string;
   isActive: boolean;
   websiteId?: string;
   status: 'idle' | 'deploying' | 'success' | 'failed';
