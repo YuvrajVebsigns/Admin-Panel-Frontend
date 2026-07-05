@@ -47,6 +47,7 @@ export const analyticsService = {
     const queryParams = new URLSearchParams();
     if (params.startDate) queryParams.append('startDate', params.startDate);
     if (params.endDate) queryParams.append('endDate', params.endDate);
+    queryParams.append('showMetadata', 'true');
 
     return apiFetch<AnalyticsSummary>(
       `/admin/analytics/${websiteId}/summary?${queryParams.toString()}`,

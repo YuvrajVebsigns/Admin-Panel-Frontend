@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Eye,
   Users,
@@ -33,8 +33,8 @@ const RANGE_OPTIONS = [
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ siteId }) => {
   const [days, setDays] = useState(30);
 
-  // Calculate startDate based on chosen range
-  const getQueryParams = () => {
+  // Calculate query params based on chosen range (memoized to avoid infinite React Query render/fetch loop)
+  const queryParams = useMemo(() => {
     const start = new Date();
     start.setDate(start.getDate() - days);
     start.setHours(0, 0, 0, 0);
@@ -42,9 +42,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ siteId }
       startDate: start.toISOString(),
       endDate: new Date().toISOString(),
     };
-  };
+  }, [days]);
 
-  const { summary, isLoading, error } = useAnalytics(siteId, getQueryParams());
+  const { summary, isLoading, error } = useAnalytics(siteId, queryParams);
 
   if (isLoading) {
     return (
@@ -164,16 +164,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ siteId }
   ];
 
   // Helper to format timestamps relative or clean IST format
-  const formatTime = (isoString: string) => {
+  const formatTime = (isoString?: string) => {
+    if (!isoString) return '-';
     try {
       const date = new Date(isoString);
+      if (isNaN(date.getTime())) {
+        return '-';
+      }
       return date.toLocaleString('en-IN', {
         timeZone: 'Asia/Kolkata',
         day: '2-digit',
         month: 'short',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
+        hour12: true,
       });
     } catch {
       return isoString;
@@ -480,16 +486,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ siteId }
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-50 dark:border-navy-700 pb-3">
-                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-40">
+                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-56 text-left pr-4">
                   Time (IST)
                 </th>
-                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-36">
+                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-44 text-left pr-4">
                   Visitor ID
                 </th>
-                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-32">
+                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider w-40 text-left pr-4">
                   Event
                 </th>
-                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <th className="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-left">
                   Location / Data
                 </th>
               </tr>
@@ -501,20 +507,24 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ siteId }
                     key={event.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-navy-800/30 text-sm"
                   >
-                    <td className="py-3.5 text-gray-500 font-mono text-xs whitespace-nowrap">
+                    <td className="py-3.5 pr-4 text-gray-500 font-mono text-xs whitespace-nowrap align-middle w-56">
                       {formatTime(event.createdAt)}
                     </td>
-                    <td className="py-3.5">
-                      <span className="font-mono text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-navy-950 px-2 py-1 rounded-lg border border-gray-100 dark:border-navy-800">
+                    <td className="py-3.5 pr-4 align-middle w-44">
+                      <span className="font-mono text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-navy-950 px-2 py-1 rounded-lg border border-gray-100 dark:border-navy-800 whitespace-nowrap block w-fit">
                         {event.visitorId.slice(0, 14)}...
                       </span>
                     </td>
-                    <td className="py-3.5">
-                      <Badge color={getBadgeColor(event.eventType)}>
+                    <td className="py-3.5 pr-4 align-middle w-40">
+                      <Badge
+                        color={getBadgeColor(event.eventType)}
+                        size="sm"
+                        className="whitespace-nowrap"
+                      >
                         <span className="capitalize">{event.eventType.replace('_', ' ')}</span>
                       </Badge>
                     </td>
-                    <td className="py-3.5">
+                    <td className="py-3.5 align-middle">
                       {event.eventType === 'pageview' ? (
                         <div className="flex items-center gap-1 max-w-md truncate font-mono text-xs">
                           <span className="text-gray-400">URL:</span>
