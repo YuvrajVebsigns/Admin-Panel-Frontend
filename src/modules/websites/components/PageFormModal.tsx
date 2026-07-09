@@ -440,19 +440,19 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
             >
               General Details
             </button>
-            {isSuperAdmin && (
-              <button
-                type="button"
-                onClick={() => handleTabChange('editor')}
-                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
-                  activeTab === 'editor'
-                    ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
-                }`}
-              >
-                Page Section Builder
-              </button>
-            )}
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('editor')}
+              className={`px-4 py-2 text-sm font-bold rounded-xl transition-all border-none ${
+                activeTab === 'editor'
+                  ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-white bg-transparent'
+              }`}
+            >
+              Page Section Builder
+            </button>
+
             <button
               type="button"
               onClick={() => handleTabChange('seo')}
