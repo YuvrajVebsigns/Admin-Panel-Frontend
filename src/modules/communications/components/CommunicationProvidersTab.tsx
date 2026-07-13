@@ -25,6 +25,7 @@ import {
   Globe,
   AlertCircle,
   UserPlus,
+  RefreshCw,
 } from 'lucide-react';
 
 type TestResult = 'idle' | 'testing' | 'success' | 'failure';
@@ -42,6 +43,7 @@ export const CommunicationProvidersTab: React.FC = () => {
     isUnregisteringWebhook,
     senders,
     isLoadingSenders,
+    refetchSenders,
     createBrevoSender,
     isCreatingSender,
     deleteBrevoSender,
@@ -502,6 +504,23 @@ export const CommunicationProvidersTab: React.FC = () => {
 
                       {isSendersExpanded && (
                         <div className="bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-100 dark:border-navy-800 space-y-4 animate-fadeIn">
+                          <div className="flex items-center justify-between border-b border-gray-150 dark:border-navy-800 pb-2">
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                              Active Senders
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => refetchSenders()}
+                              className="text-[10px] text-brand-500 hover:text-brand-655 font-bold flex items-center gap-1 cursor-pointer transition-all"
+                              title="Sync active senders from Brevo"
+                            >
+                              <RefreshCw
+                                size={11}
+                                className={isLoadingSenders ? 'animate-spin' : ''}
+                              />{' '}
+                              Sync Senders
+                            </button>
+                          </div>
                           {isLoadingSenders ? (
                             <div className="flex justify-center py-4">
                               <Loader2 size={16} className="animate-spin text-gray-400" />
