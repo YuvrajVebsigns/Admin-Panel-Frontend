@@ -66,6 +66,8 @@ export interface MessageTemplate {
   senderEmail?: string;
   senderName?: string;
   linkedEvent?: string;
+  baseSchema?: string;
+  relations?: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -158,6 +160,8 @@ export interface CreateMessageTemplateDto {
   senderEmail?: string;
   senderName?: string;
   linkedEvent?: string;
+  baseSchema?: string;
+  relations?: string[];
   isActive?: boolean;
 }
 
@@ -171,6 +175,8 @@ export interface UpdateMessageTemplateDto {
   senderEmail?: string;
   senderName?: string;
   linkedEvent?: string;
+  baseSchema?: string;
+  relations?: string[];
   isActive?: boolean;
 }
 
@@ -187,12 +193,27 @@ export interface SendTemplateMessageDto {
   params?: Record<string, unknown>;
 }
 
+export interface EventMappingTrigger {
+  channel: CommunicationChannel;
+  templateId: MessageTemplate | string;
+  to: string;
+  cc?: string;
+  bcc?: string;
+  senderEmail?: string;
+  senderName?: string;
+  isActive: boolean;
+}
+
 export interface EventTemplateMapping {
   id: string;
   event: string;
-  templateId: MessageTemplate;
+  templateId?: MessageTemplate;
+  to?: string;
+  cc?: string;
+  bcc?: string;
   senderEmail?: string;
   senderName?: string;
+  triggers?: EventMappingTrigger[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -200,17 +221,25 @@ export interface EventTemplateMapping {
 
 export interface CreateEventTemplateMappingDto {
   event: string;
-  templateId: string;
+  templateId?: string;
+  to?: string;
+  cc?: string;
+  bcc?: string;
   senderEmail?: string;
   senderName?: string;
+  triggers?: EventMappingTrigger[];
   isActive?: boolean;
 }
 
 export interface UpdateEventTemplateMappingDto {
   event?: string;
   templateId?: string;
+  to?: string;
+  cc?: string;
+  bcc?: string;
   senderEmail?: string;
   senderName?: string;
+  triggers?: EventMappingTrigger[];
   isActive?: boolean;
 }
 
@@ -219,4 +248,81 @@ export interface BrevoSender {
   name: string;
   email: string;
   active: boolean;
+}
+
+export interface FieldDiscovery {
+  path: string;
+  type: string;
+  isArray: boolean;
+  ref?: string;
+  subFields?: FieldDiscovery[];
+}
+
+export interface SchemaDiscoveryResult {
+  modelName: string;
+  fields: FieldDiscovery[];
+}
+
+export enum VariableCategoryGroup {
+  REGISTRATION = 'REGISTRATION',
+  NOMINATION = 'NOMINATION',
+  EVENT = 'EVENT',
+  BLOG = 'BLOG',
+  CONTACT = 'CONTACT',
+  SPONSOR = 'SPONSOR',
+  WEBSITE = 'WEBSITE',
+  SYSTEM = 'SYSTEM',
+  OTHER = 'OTHER',
+}
+
+export interface CommunicationVariable {
+  id: string;
+  name: string;
+  path: string;
+  type: string;
+  isArray: boolean;
+  modelName: string;
+  categoryGroup: VariableCategoryGroup;
+  description?: string;
+  ref?: string;
+  isSenderVariable: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVariableDto {
+  name: string;
+  path: string;
+  type: string;
+  isArray?: boolean;
+  modelName: string;
+  categoryGroup: VariableCategoryGroup;
+  description?: string;
+  ref?: string;
+  isSenderVariable?: boolean;
+  isActive?: boolean;
+}
+
+export interface UpdateVariableDto {
+  name?: string;
+  path?: string;
+  type?: string;
+  isArray?: boolean;
+  modelName?: string;
+  categoryGroup?: VariableCategoryGroup;
+  description?: string;
+  ref?: string;
+  isSenderVariable?: boolean;
+  isActive?: boolean;
+}
+
+export interface VariableQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  modelName?: string;
+  categoryGroup?: VariableCategoryGroup;
+  isActive?: boolean;
+  isSenderVariable?: boolean;
 }

@@ -20,6 +20,11 @@ import {
   CreateEventTemplateMappingDto,
   UpdateEventTemplateMappingDto,
   BrevoSender,
+  SchemaDiscoveryResult,
+  CommunicationVariable,
+  CreateVariableDto,
+  UpdateVariableDto,
+  VariableQueryParams,
 } from '@/modules/communications/types/communication.types';
 
 const BASE = '/admin/communications';
@@ -263,10 +268,20 @@ export const communicationService = {
     }>(`${BASE}/system-events`);
   },
 
+  // ── Schema Discovery ─────────────────────────────────────────────
+
+  getSchemaDiscovery: async (): Promise<SchemaDiscoveryResult[]> => {
+    return apiFetch<SchemaDiscoveryResult[]>(`${BASE}/schema-discovery`);
+  },
+
   // ── Event Mappings CRUD ──────────────────────────────────────────
 
   getEventMappings: async (): Promise<EventTemplateMapping[]> => {
     return apiFetch<EventTemplateMapping[]>(`${BASE}/event-mappings`);
+  },
+
+  getEventMapping: async (id: string): Promise<EventTemplateMapping> => {
+    return apiFetch<EventTemplateMapping>(`${BASE}/event-mappings/${id}`);
   },
 
   createEventMapping: async (
@@ -292,5 +307,47 @@ export const communicationService = {
     return apiFetch<{ success: boolean }>(`${BASE}/event-mappings/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  // ── Template Variables CRUD ─────────────────────────────────────
+
+  getVariables: async (
+    params: VariableQueryParams = {},
+  ): Promise<PaginatedResponse<CommunicationVariable>> => {
+    const qp = new URLSearchParams();
+    if (params.page) qp.append('page', params.page.toString());
+    if (params.limit) qp.append('limit', params.limit.toString());
+    if (params.search) qp.append('search', params.search);
+    if (params.modelName) qp.append('modelName', params.modelName);
+    if (params.categoryGroup) qp.append('categoryGroup', params.categoryGroup);
+    if (params.isActive !== undefined) qp.append('isActive', params.isActive.toString());
+    if (params.isSenderVariable !== undefined)
+      qp.append('isSenderVariable', params.isSenderVariable.toString());
+
+    return apiFetch<PaginatedResponse<CommunicationVariable>>(`${BASE}/variables?${qp.toString()}`);
+  },
+
+  createVariable: async (data: CreateVariableDto): Promise<CommunicationVariable> => {
+    return apiFetch<CommunicationVariable>(`${BASE}/variables`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateVariable: async (id: string, data: UpdateVariableDto): Promise<CommunicationVariable> => {
+    return apiFetch<CommunicationVariable>(`${BASE}/variables/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteVariable: async (id: string): Promise<void> => {
+    return apiFetch<void>(`${BASE}/variables/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  getRawMongooseSchema: async (): Promise<SchemaDiscoveryResult[]> => {
+    return apiFetch<SchemaDiscoveryResult[]>(`${BASE}/schema-discovery/raw-mongoose`);
   },
 };

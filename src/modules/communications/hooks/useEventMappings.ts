@@ -70,3 +70,12 @@ export const useEventMappings = () => {
     isDeleting: deleteMutation.isPending,
   };
 };
+
+export const useEventMapping = (id: string) => {
+  return useQuery({
+    queryKey: ['communication-event-mappings'],
+    queryFn: () => communicationService.getEventMappings(),
+    enabled: !!id,
+    select: (mappings) => mappings.find((m) => m.id === id),
+  });
+};
