@@ -7,13 +7,12 @@ import { EyeCloseIcon, EyeIcon } from '@/icons';
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
 import { ConnectionStatus } from '../common/ConnectionStatus';
 
 export default function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoggingIn } = useAuth();
 
@@ -74,7 +73,7 @@ export default function SignInForm() {
         localStorage.removeItem('rememberMe');
       }
 
-      router.push('/');
+      window.location.replace('/');
     } catch (error: unknown) {
       setErrors({
         general:

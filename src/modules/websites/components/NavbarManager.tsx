@@ -27,7 +27,7 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
   const [selectedItem, setSelectedItem] = useState<NavbarItem | null>(null);
 
   // Fetch hierarchical items
-  const { items, isLoading, deleteItem, reorderItems } = useNavbar({
+  const { items, isLoading, updateItem, deleteItem, reorderItems } = useNavbar({
     siteId,
     position,
     nested: true,
@@ -49,6 +49,15 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
         await deleteItem(id);
       } catch (e) {}
     }
+  };
+
+  const handleToggleVisibility = async (item: NavbarItem) => {
+    try {
+      await updateItem({
+        id: item.id,
+        data: { isVisible: !item.isVisible },
+      });
+    } catch (e) {}
   };
 
   // Reordering sibling nodes within their hierarchical lists
@@ -117,12 +126,16 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
       return (
         <React.Fragment key={item.id}>
           <div
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 rounded-2xl shadow-theme-sm transition-all hover:border-brand-200 dark:hover:border-navy-600"
+            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border rounded-2xl shadow-theme-sm transition-all hover:border-brand-200 dark:hover:border-navy-600 ${
+              item.isVisible
+                ? 'bg-white dark:bg-navy-800 border-gray-100 dark:border-navy-700'
+                : 'bg-gray-55/70 dark:bg-navy-800/40 border-gray-200/60 dark:border-navy-700/60 opacity-70'
+            }`}
             style={{ marginLeft: `${depth * 32}px` }}
           >
             <div className="flex items-center gap-3.5">
               {/* Type-specific Icon Indicator */}
-              <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-navy-900 text-gray-400">
+              <div className="p-2.5 rounded-xl bg-gray-55 dark:bg-navy-900 text-gray-400">
                 {item.menuType === MenuType.INTERNAL_PAGE ? (
                   <FileCode size={18} className="text-brand-500" />
                 ) : item.menuType === MenuType.EXTERNAL_LINK ? (
@@ -134,10 +147,19 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
 
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-gray-900 dark:text-white leading-tight">
+                  <h4
+                    className={`font-bold leading-tight ${
+                      item.isVisible ? 'text-gray-900 dark:text-white' : 'text-gray-500'
+                    }`}
+                  >
                     {item.title}
                   </h4>
                   {item.target === '_blank' && <ExternalLink size={12} className="text-gray-400" />}
+                  {!item.isVisible && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-gray-200/70 dark:bg-navy-700/70 text-[9px] text-gray-550 dark:text-navy-300 font-bold uppercase tracking-wider">
+                      Hidden
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-gray-400 font-medium mt-0.5">
                   {item.menuType === MenuType.CATEGORY ? 'Grouping Label' : item.slug}
@@ -145,7 +167,7 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
               </div>
             </div>
 
-            {/* Actions: Reorder up/down & Edit/Delete */}
+            {/* Actions: Reorder up/down, Toggle visibility, & Edit/Delete */}
             <div className="flex items-center justify-end gap-2 shrink-0">
               <div className="flex items-center border border-gray-100 dark:border-navy-700 rounded-lg overflow-hidden p-0.5 bg-gray-50/50 dark:bg-navy-900/30">
                 <button
@@ -166,6 +188,21 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
                   <ArrowDown size={14} />
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleToggleVisibility(item)}
+                className={`relative w-9 h-5 rounded-full transition-colors shrink-0 border-none outline-none ${
+                  item.isVisible ? 'bg-brand-500' : 'bg-gray-200 dark:bg-navy-700'
+                }`}
+                title={item.isVisible ? 'Hide navigation item' : 'Show navigation item'}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
+                    item.isVisible ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
 
               <button
                 type="button"

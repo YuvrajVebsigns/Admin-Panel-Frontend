@@ -20,6 +20,7 @@ const navbarItemSchema = z.object({
   parentId: z.string().nullable().optional(),
   pageId: z.string().nullable().optional(),
   order: z.number().default(0),
+  isVisible: z.boolean().default(true),
 });
 
 type NavbarItemFormData = z.infer<typeof navbarItemSchema>;
@@ -63,6 +64,7 @@ export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
       parentId: null,
       pageId: null,
       order: 0,
+      isVisible: true,
     },
   });
 
@@ -80,6 +82,7 @@ export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
       setValue('parentId', itemData.parentId || null);
       setValue('pageId', itemData.pageId || null);
       setValue('order', itemData.order || 0);
+      setValue('isVisible', itemData.isVisible);
     } else {
       setValue('title', '');
       setValue('slug', '');
@@ -89,6 +92,7 @@ export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
       setValue('parentId', null);
       setValue('pageId', null);
       setValue('order', siblingItems.length);
+      setValue('isVisible', true);
     }
   }, [itemData, position, setValue, siblingItems.length, isOpen]);
 
@@ -249,6 +253,19 @@ export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
               <option value={NavbarPosition.FOOTER}>Footer Navbar</option>
             </select>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-navy-900/30 rounded-xl border border-gray-100 dark:border-navy-800">
+          <div>
+            <p className="text-xs font-bold text-gray-800 dark:text-white">Visible on Website</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              Show or hide this navigation link on the public site.
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" {...register('isVisible')} className="sr-only peer" />
+            <div className="w-11 h-6 bg-gray-250 dark:bg-navy-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+          </label>
         </div>
 
         {/* Footer actions */}

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { ApiError } from '@/types/api.types';
 import { ConnectionStatus } from '@/components/common/ConnectionStatus';
 
@@ -16,7 +16,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSwitchToSignup,
   onSwitchToForgot: _onSwitchToForgot,
 }) => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoggingIn } = useAuth();
 
@@ -52,7 +51,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
     try {
       await login({ email, password });
-      router.push('/'); // Redirect to dashboard on success
+      window.location.replace('/'); // Redirect to dashboard on success
     } catch (error) {
       const apiError = error as ApiError;
       setErrors({

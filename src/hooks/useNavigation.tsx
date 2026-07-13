@@ -35,18 +35,26 @@ export function useNavigation() {
       const cPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
       const fullPath = `${pPath}${cPath}`;
 
+      // Sort children by order key
+      const sortedChildren = menu.children
+        ? [...menu.children].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        : [];
+
       return {
         name: menu.name,
         icon: menu.icon,
         path: fullPath,
         subItems:
-          menu.children && menu.children.length > 0
-            ? menu.children.map((child) => mapMenuItem(child, fullPath))
+          sortedChildren.length > 0
+            ? sortedChildren.map((child) => mapMenuItem(child, fullPath))
             : undefined,
       };
     };
 
-    sidebarMenus.forEach((menu: SidebarMenuItemResponse) => {
+    // Sort root level menus by order key
+    const sortedRootMenus = [...sidebarMenus].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    sortedRootMenus.forEach((menu: SidebarMenuItemResponse) => {
       const groupName = menu.group || 'MENU';
       if (!groups[groupName]) groups[groupName] = [];
       groups[groupName].push(mapMenuItem(menu));
