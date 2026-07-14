@@ -39,6 +39,23 @@ export interface EventSeo {
   ogImageId: string;
 }
 
+export enum ScheduleType {
+  BEFORE_EVENT = 'BEFORE_EVENT',
+  AFTER_EVENT = 'AFTER_EVENT',
+  EXACT_DATE = 'EXACT_DATE',
+}
+
+export interface EventScheduledEmail {
+  templateId: string | Record<string, unknown>;
+  scheduleType: ScheduleType;
+  daysOffset?: number;
+  hoursOffset?: number;
+  minutesOffset?: number;
+  exactDate?: string;
+  isActive: boolean;
+  isProcessed: boolean;
+}
+
 export interface EventManagement {
   id: string;
   title: string;
@@ -60,6 +77,7 @@ export interface EventManagement {
   isActive: boolean;
   totalRegistrations?: number;
   invitedEmails?: string[];
+  scheduledEmails?: EventScheduledEmail[];
   createdAt: string;
   updatedAt: string;
 }

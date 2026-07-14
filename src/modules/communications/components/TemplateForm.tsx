@@ -119,6 +119,28 @@ const SchemaCombobox: React.FC<SchemaComboboxProps> = ({ value, onChange, schema
   );
 };
 
+const getVariableColorClasses = (name: string) => {
+  const colors = [
+    'bg-blue-50/70 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/20 hover:border-blue-300',
+    'bg-purple-50/70 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/20 hover:border-purple-300',
+    'bg-emerald-50/70 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20 hover:border-emerald-300',
+    'bg-amber-50/70 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/20 hover:border-amber-300',
+    'bg-pink-50/70 dark:bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-500/20 hover:border-pink-300',
+    'bg-indigo-50/70 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/20 hover:border-indigo-300',
+    'bg-cyan-50/70 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/20 hover:border-cyan-300',
+    'bg-violet-50/70 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/20 hover:border-violet-300',
+    'bg-teal-50/70 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/20 hover:border-teal-300',
+    'bg-rose-50/70 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/20 hover:border-rose-300',
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
 interface TemplateFormProps {
   templateId?: string;
   defaultChannel?: CommunicationChannel;
@@ -400,6 +422,15 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
       newVars.push(fieldName);
       handleCopyVariable(fieldName);
     }
+    setVariablesRaw(newVars.join(', '));
+  };
+
+  const handleRemoveVariable = (fieldName: string) => {
+    const currentVars = variablesRaw
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+    const newVars = currentVars.filter((v) => v !== fieldName);
     setVariablesRaw(newVars.join(', '));
   };
 
@@ -726,6 +757,36 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                 placeholder="e.g. name, otp_code, verification_url"
                 className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900"
               />
+              {parsedVars.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50/50 dark:bg-navy-950/20 rounded-2xl border border-gray-100 dark:border-navy-850">
+                  {parsedVars.map((v) => (
+                    <div
+                      key={v}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono shadow-sm group transition-all ${getVariableColorClasses(v)}`}
+                    >
+                      <span className="font-bold">{v}</span>
+                      <div className="flex items-center gap-1 border-l border-current/20 pl-1.5 ml-1">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyVariable(v)}
+                          title={`Copy {{params.${v}}} to clipboard`}
+                          className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-current opacity-70 hover:opacity-100 transition-all"
+                        >
+                          <Copy size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVariable(v)}
+                          title={`Remove ${v}`}
+                          className="p-1 hover:bg-red-500/10 rounded-lg text-current opacity-70 hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Email specific subject */}
