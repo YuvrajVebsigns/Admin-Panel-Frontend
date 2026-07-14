@@ -24,20 +24,23 @@ import {
   useEvent,
   useEventMeetings,
   useDeleteEventMeeting,
+  useEvents,
 } from '@/modules/events/hooks/useEvents';
 import { useEventAttendees, useEventAttendeeCount } from '@/modules/attendees/hooks/useAttendees';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
-import { EventStatus, EventType, EventMeeting } from '../types/event.types';
+import { EventStatus, EventType, EventMeeting, EventScheduledEmail } from '../types/event.types';
 import { Attendee } from '@/modules/attendees/types/attendee.types';
 import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
 import { EventMeetingModal } from './EventMeetingModal';
+import { EventScheduledEmailModal } from './EventScheduledEmailModal';
 
 export const EventDetailsView: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
   const [attendeeSearch, setAttendeeSearch] = useState('');
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [isScheduledEmailModalOpen, setIsScheduledEmailModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<EventMeeting | null>(null);
 
   // Fetch event and attendee data
@@ -46,6 +49,17 @@ export const EventDetailsView: React.FC = () => {
   const { data: attendeeCountData } = useEventAttendeeCount(id as string);
   const { data: meetings = [], isLoading: isMeetingsLoading } = useEventMeetings(id as string);
   const deleteMeetingMutation = useDeleteEventMeeting();
+
+  const { updateEvent } = useEvents();
+
+  const handleSaveScheduledEmails = async (scheduledEmails: EventScheduledEmail[]) => {
+    try {
+      await updateEvent({ id: id as string, data: { scheduledEmails } });
+      setIsScheduledEmailModalOpen(false);
+    } catch (e) {
+      // Error is handled by hook
+    }
+  };
 
   const handleBookMeeting = () => {
     setMeetingToEdit(null);
@@ -682,6 +696,69 @@ export const EventDetailsView: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Scheduled Emails Card */}
+          <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Clock size={20} className="text-brand-500" />
+                Scheduled Email Reminders
+              </h3>
+              <Button
+                variant="outline"
+                onClick={() => setIsScheduledEmailModalOpen(true)}
+                className="text-xs px-3 py-1.5 bg-white dark:bg-navy-800"
+              >
+                Configure
+              </Button>
+            </div>
+
+            {event.scheduledEmails && event.scheduledEmails.length > 0 ? (
+              <div className="space-y-4">
+                {event.scheduledEmails.map((email, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl border border-gray-50 dark:border-navy-900 bg-gray-50/50 dark:bg-navy-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        {email.scheduleType.replace('_', ' ')}
+                      </p>
+                      <p className="text-sm font-bold text-gray-800 dark:text-white mt-1">
+                        {email.scheduleType === 'EXACT_DATE'
+                          ? email.exactDate
+                            ? new Date(email.exactDate).toLocaleString()
+                            : 'Unknown Date'
+                          : `${email.daysOffset || 0}d ${email.hoursOffset || 0}h ${email.minutesOffset || 0}m ${email.scheduleType === 'BEFORE_EVENT' ? 'before' : 'after'} event`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={cn(
+                          'text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md',
+                          email.isActive
+                            ? 'bg-success-50 dark:bg-success-500/10 text-success-600'
+                            : 'bg-gray-100 dark:bg-navy-850 text-gray-500',
+                        )}
+                      >
+                        {email.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      {email.isProcessed && (
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600">
+                          Processed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 border border-dashed border-gray-100 dark:border-navy-750 rounded-2xl">
+                <Clock className="mx-auto text-gray-300 mb-2" size={32} />
+                <p className="text-xs text-gray-400 italic">No automated emails scheduled.</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Sponsors & Registered Attendees */}
@@ -844,6 +921,12 @@ export const EventDetailsView: React.FC = () => {
         }}
         event={event}
         meetingToEdit={meetingToEdit}
+      />
+      <EventScheduledEmailModal
+        isOpen={isScheduledEmailModalOpen}
+        onClose={() => setIsScheduledEmailModalOpen(false)}
+        event={event}
+        onSave={handleSaveScheduledEmails}
       />
     </div>
   );

@@ -52,6 +52,13 @@ const CATEGORY_TABS = [
   { id: VariableCategoryGroup.SPONSOR, label: 'Sponsor', icon: Heart, defaultModel: 'Sponsor' },
   { id: VariableCategoryGroup.WEBSITE, label: 'Website', icon: Globe, defaultModel: 'Website' },
   { id: VariableCategoryGroup.SYSTEM, label: 'System', icon: Cpu, defaultModel: 'System' },
+  { id: VariableCategoryGroup.REPORT, label: 'Report', icon: FileText, defaultModel: 'Report' },
+  {
+    id: VariableCategoryGroup.ATTENDEE,
+    label: 'Attendee',
+    icon: UserCheck,
+    defaultModel: 'Attendee',
+  },
   { id: VariableCategoryGroup.OTHER, label: 'Other', icon: HelpCircle, defaultModel: 'Other' },
 ];
 
