@@ -15,6 +15,7 @@ interface SelectProps {
   defaultValue?: string;
   value?: string;
   disabled?: boolean;
+  error?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -27,6 +28,7 @@ const Select: React.FC<SelectProps> = ({
   defaultValue = '',
   value,
   disabled = false,
+  error,
 }) => {
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState<string>(defaultValue);
@@ -42,7 +44,7 @@ const Select: React.FC<SelectProps> = ({
   };
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-1">
       {label && (
         <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           {label}
@@ -50,9 +52,12 @@ const Select: React.FC<SelectProps> = ({
       )}
       <select
         id={id}
-        className={`h-11 w-full appearance-none rounded-lg border border-gray-300  px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-navy-400 dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-500 ${
-          disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-navy-900 opacity-60' : ''
-        } ${
+        aria-invalid={!!error}
+        className={`h-11 w-full appearance-none rounded-lg border px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 ${
+          error
+            ? 'border-error-500 focus:border-error-500 dark:border-error-500'
+            : 'border-gray-300 focus:border-brand-500 dark:border-navy-400 dark:focus:border-brand-500'
+        } ${disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-navy-900 opacity-60' : ''} ${
           currentValue ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
         } ${className}`}
         value={currentValue}
@@ -74,6 +79,7 @@ const Select: React.FC<SelectProps> = ({
           </option>
         ))}
       </select>
+      {error && <p className="text-xs text-error-500 font-medium mt-1">{error}</p>}
     </div>
   );
 };
