@@ -178,7 +178,6 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-
   *,
   ::after,
   ::before,
@@ -291,7 +290,6 @@
 }
 
 @utility no-scrollbar {
-
   /* Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
@@ -322,7 +320,6 @@
 }
 
 @layer utilities {
-
   /* For Remove Date Icon */
   input[type='date']::-webkit-inner-spin-button,
   input[type='time']::-webkit-inner-spin-button,
@@ -431,7 +428,7 @@
   @apply !text-gray-400;
 }
 
-.flatpickr-months>.flatpickr-month {
+.flatpickr-months > .flatpickr-month {
   background: none !important;
 }
 
@@ -530,9 +527,9 @@ span.flatpickr-weekday,
   @apply !border-brand-500 !bg-brand-500 hover: !border-brand-50 hover: !bg-brand-500;
 }
 
-.flatpickr-day.selected.startRange+.endRange:not(:nth-child(7n + 1)),
-.flatpickr-day.startRange.startRange+.endRange:not(:nth-child(7n + 1)),
-.flatpickr-day.endRange.startRange+.endRange:not(:nth-child(7n + 1)) {
+.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
+.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
+.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
   box-shadow: -10px 0 0 #e31e24;
 }
 
@@ -630,7 +627,7 @@ span.flatpickr-weekday,
   @apply min-w-[718px];
 }
 
-.fc .fc-scrollgrid-section>* {
+.fc .fc-scrollgrid-section > * {
   border-right-width: 0;
   border-bottom-width: 0;
 }
@@ -902,19 +899,19 @@ span.flatpickr-weekday,
   @apply !hidden;
 }
 
-.form-check-input:checked~span {
+.form-check-input:checked ~ span {
   @apply border-[6px] border-brand-500 bg-brand-500 dark:border-brand-500;
 }
 
-.taskCheckbox:checked~.box span {
+.taskCheckbox:checked ~ .box span {
   @apply opacity-100 bg-brand-500;
 }
 
-.taskCheckbox:checked~p {
+.taskCheckbox:checked ~ p {
   @apply text-gray-400 line-through;
 }
 
-.taskCheckbox:checked~.box {
+.taskCheckbox:checked ~ .box {
   @apply border-brand-500 bg-brand-500 dark:border-brand-500;
 }
 
