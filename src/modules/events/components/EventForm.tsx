@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, FieldErrors } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -72,50 +73,92 @@ const getFileId = (file: unknown): string => {
   return '';
 };
 
-const eventSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters'),
-  slug: z.string().min(3, 'Slug must be at least 3 characters'),
-  excerpt: z.string().optional(),
-  type: z.nativeEnum(EventType),
-  status: z.nativeEnum(EventStatus),
-  startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().min(1, 'End date is required'),
-  websites: z.array(z.string()).min(1, 'Select at least one website'),
-  meetingLink: z.string().url('Invalid URL').optional().or(z.literal('')),
-  location: z
-    .object({
-      address: z.string().optional(),
-      city: z.string().optional(),
-      mapLink: z.string().url('Invalid URL').optional().or(z.literal('')),
-      lat: z.number().optional(),
-      lng: z.number().optional(),
-    })
-    .optional(),
-  bannerImage: z.string().optional().or(z.literal('')),
-  bannerImageId: z.string().optional(),
-  agenda: z
-    .array(
-      z.object({
-        time: z.string().min(1, 'Time is required'),
-        title: z.string().min(1, 'Title is required'),
-        speaker: z.string().optional(),
-        description: z.string().optional(),
-      }),
-    )
-    .default([]),
-  seo: z
-    .object({
-      metaTitle: z.string().optional(),
-      metaDescription: z.string().optional(),
-      keywords: z.array(z.string()).default([]),
-      ogImage: z.string().optional().or(z.literal('')),
-      ogImageId: z.string().optional(),
-    })
-    .optional(),
-  invitedEmails: z.array(z.string().email('Invalid email address')).default([]),
-  sponsors: z.array(z.string()).default([]),
-  isActive: z.boolean().default(true),
-});
+const parseDate = (d: string | Date | undefined | null): number | null => {
+  if (!d) return null;
+  if (d instanceof Date) return isNaN(d.getTime()) ? null : d.getTime();
+  const time = new Date(d).getTime();
+  return isNaN(time) ? null : time;
+};
+
+const eventSchema = z
+  .object({
+    title: z.string().min(5, 'Title must be at least 5 characters'),
+    slug: z.string().min(3, 'Slug must be at least 3 characters'),
+    excerpt: z.string().optional(),
+    type: z.nativeEnum(EventType),
+    status: z.nativeEnum(EventStatus),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    websites: z.array(z.string()).min(1, 'Select at least one website'),
+    meetingLink: z.string().url('Invalid URL').optional().or(z.literal('')),
+    location: z
+      .object({
+        address: z.string().optional(),
+        city: z.string().optional(),
+        mapLink: z.string().url('Invalid URL').optional().or(z.literal('')),
+        lat: z.number().optional(),
+        lng: z.number().optional(),
+      })
+      .optional(),
+    bannerImage: z.string().optional().or(z.literal('')),
+    bannerImageId: z.string().optional(),
+    agenda: z
+      .array(
+        z.object({
+          time: z.string().min(1, 'Time is required'),
+          title: z.string().min(1, 'Title is required'),
+          speaker: z.string().optional(),
+          description: z.string().optional(),
+        }),
+      )
+      .default([]),
+    seo: z
+      .object({
+        metaTitle: z.string().optional(),
+        metaDescription: z.string().optional(),
+        keywords: z.array(z.string()).default([]),
+        ogImage: z.string().optional().or(z.literal('')),
+        ogImageId: z.string().optional(),
+      })
+      .optional(),
+    invitedEmails: z.array(z.string().email('Invalid email address')).default([]),
+    sponsors: z.array(z.string()).default([]),
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((data, ctx) => {
+    const startMs = parseDate(data.startDate);
+    const endMs = parseDate(data.endDate);
+
+    if (startMs && endMs && endMs < startMs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date & time cannot be earlier than start date & time',
+        path: ['endDate'],
+      });
+    }
+
+    if (data.agenda && data.agenda.length > 0) {
+      data.agenda.forEach((item, index) => {
+        const itemMs = parseDate(item.time);
+        if (itemMs) {
+          if (startMs && itemMs < startMs) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Agenda slot time must be on or after event start date & time',
+              path: ['agenda', index, 'time'],
+            });
+          }
+          if (endMs && itemMs > endMs) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Agenda slot time must be on or before event end date & time',
+              path: ['agenda', index, 'time'],
+            });
+          }
+        }
+      });
+    }
+  });
 
 type EventFormData = z.infer<typeof eventSchema>;
 
@@ -248,37 +291,114 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
     }
   }, [watchedTitle, isEdit, setValue]);
 
-  const handleNext = async () => {
-    const fieldsToValidate = getFieldsForStep(currentStep);
-    const isValid = await trigger(fieldsToValidate as unknown as Parameters<typeof trigger>[0]);
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+  const checkNestedError = (obj: unknown, path: string): boolean => {
+    if (!obj || typeof obj !== 'object') return false;
+    const parts = path.split('.');
+    let curr: unknown = obj;
+    for (const part of parts) {
+      if (curr === null || curr === undefined || typeof curr !== 'object') return false;
+      curr = (curr as Record<string, unknown>)[part];
     }
-  };
-
-  const handlePrev = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    return !!curr;
   };
 
   const getFieldsForStep = (step: number) => {
     switch (step) {
       case 0:
-        return ['title', 'slug', 'type', 'status', 'websites', 'bannerImage', 'bannerImageId'];
+        return [
+          'title',
+          'slug',
+          'excerpt',
+          'type',
+          'status',
+          'websites',
+          'bannerImage',
+          'bannerImageId',
+        ];
       case 1:
         return ['startDate', 'endDate'];
       case 2:
         return eventType === EventType.ONLINE
           ? ['meetingLink']
-          : ['location.address', 'location.city'];
+          : ['location', 'location.address', 'location.city', 'location.mapLink'];
       case 3:
         return ['agenda'];
       case 4:
         return ['invitedEmails', 'sponsors'];
       case 5:
-        return ['seo.metaTitle', 'seo.metaDescription'];
+        return ['seo', 'seo.metaTitle', 'seo.metaDescription', 'seo.keywords'];
       default:
         return [];
     }
+  };
+
+  const isStepInvalid = (
+    stepIndex: number,
+    formErrors: FieldErrors<EventFormData> = errors,
+  ): boolean => {
+    if (stepIndex === 1 && !content) return true;
+    const fields = getFieldsForStep(stepIndex);
+    return fields.some((field) => checkNestedError(formErrors, field));
+  };
+
+  const scrollToAndFocusError = () => {
+    setTimeout(() => {
+      const errorElement = document.querySelector<HTMLElement>(
+        '.border-error-500, [aria-invalid="true"], p.text-error-500',
+      );
+      if (errorElement) {
+        const target =
+          errorElement.tagName === 'P'
+            ? errorElement.previousElementSibling || errorElement.parentElement || errorElement
+            : errorElement;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement
+        ) {
+          target.focus();
+        } else {
+          const inputInside = target.querySelector<HTMLElement>('input, textarea, select');
+          if (inputInside) inputInside.focus();
+        }
+      }
+    }, 150);
+  };
+
+  const handleFormError = (formErrors: FieldErrors<EventFormData>) => {
+    const firstErrorStep = STEPS.findIndex((_, idx) => isStepInvalid(idx, formErrors));
+
+    if (firstErrorStep !== -1) {
+      setCurrentStep(firstErrorStep);
+      toast.error(
+        `Validation failed. Redirected to Step ${firstErrorStep + 1} (${STEPS[firstErrorStep]?.title || ''}) to fix errors.`,
+      );
+    } else if (!content) {
+      setCurrentStep(1);
+      toast.error('Event description content is required before publishing.');
+    } else {
+      toast.error('Form contains validation errors. Please check the inputs.');
+    }
+
+    scrollToAndFocusError();
+  };
+
+  const handleNext = async () => {
+    const fieldsToValidate = getFieldsForStep(currentStep);
+    const isValid = await trigger(fieldsToValidate as unknown as Parameters<typeof trigger>[0]);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+    } else {
+      toast.error(
+        `Please fix validation errors in Step ${currentStep + 1} (${STEPS[currentStep]?.title || ''}).`,
+      );
+      scrollToAndFocusError();
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
   const parseFlatpickrDate = (str: string) => {
@@ -310,6 +430,8 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
   const onSubmit = async (data: EventFormData) => {
     if (!content) {
       setCurrentStep(1);
+      toast.error('Event description content is required before publishing.');
+      scrollToAndFocusError();
       return;
     }
 
@@ -396,6 +518,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                 {...register('excerpt')}
                 placeholder="Brief summary for listing cards..."
                 rows={3}
+                error={errors.excerpt?.message}
               />
             </div>
 
@@ -434,6 +557,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                       ]}
                       value={field.value}
                       onChange={field.onChange}
+                      error={errors.type?.message}
                     />
                   )}
                 />
@@ -451,6 +575,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                       }))}
                       value={field.value}
                       onChange={field.onChange}
+                      error={errors.status?.message}
                     />
                   )}
                 />
@@ -555,7 +680,9 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                 placeholder="Provide detailed information about the event..."
               />
               {!content && (
-                <p className="text-xs text-warning-500">Content is required before publishing.</p>
+                <p className="text-xs text-error-500 font-medium">
+                  Content is required before publishing.
+                </p>
               )}
             </div>
           </div>
@@ -608,6 +735,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                       id="location.city"
                       {...register('location.city')}
                       placeholder="e.g. New York, London"
+                      error={errors.location?.city?.message}
                     />
                   </div>
                   <div className="space-y-2">
@@ -616,6 +744,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                       id="location.address"
                       {...register('location.address')}
                       placeholder="123 Conference Ave, Building B"
+                      error={errors.location?.address?.message}
                     />
                   </div>
                 </div>
@@ -664,24 +793,26 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                     <Trash2 size={16} />
                   </button>
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-6">
                       <Controller
                         name={`agenda.${index}.time`}
                         control={control}
                         render={({ field }) => (
                           <DateTimePicker
                             id={`agenda.${index}.time`}
-                            label="Time"
+                            label="Time & Date"
                             showTime
                             value={field.value}
                             onChange={(date) => field.onChange(date)}
                             error={errors.agenda?.[index]?.time?.message}
                             placeholder="Select date & time..."
+                            minDate={watch('startDate')}
+                            maxDate={watch('endDate')}
                           />
                         )}
                       />
                     </div>
-                    <div className="md:col-span-9 space-y-2">
+                    <div className="md:col-span-6 space-y-2">
                       <Label>Segment Title</Label>
                       <Input
                         {...register(`agenda.${index}.title`)}
@@ -691,7 +822,11 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                     </div>
                     <div className="md:col-span-4 space-y-2">
                       <Label>Speaker (Optional)</Label>
-                      <Input {...register(`agenda.${index}.speaker`)} placeholder="John Doe" />
+                      <Input
+                        {...register(`agenda.${index}.speaker`)}
+                        placeholder="John Doe"
+                        error={errors.agenda?.[index]?.speaker?.message}
+                      />
                     </div>
                     <div className="md:col-span-8 space-y-2">
                       <Label>Description (Optional)</Label>
@@ -699,6 +834,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                         {...register(`agenda.${index}.description`)}
                         placeholder="Quick brief about this segment..."
                         rows={2}
+                        error={errors.agenda?.[index]?.description?.message}
                       />
                     </div>
                   </div>
@@ -771,7 +907,12 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                         defaultValue={field.value}
                         onChange={field.onChange}
                         placeholder="Type email and press Enter..."
-                        error={!!errors.invitedEmails?.message}
+                        error={!!errors.invitedEmails}
+                        hint={
+                          typeof errors.invitedEmails?.message === 'string'
+                            ? errors.invitedEmails.message
+                            : undefined
+                        }
                       />
                     )}
                   />
@@ -925,6 +1066,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                         id="seo.metaTitle"
                         {...register('seo.metaTitle')}
                         placeholder="Google Search Title"
+                        error={errors.seo?.metaTitle?.message}
                       />
                     </div>
                     <div className="space-y-2">
@@ -934,6 +1076,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                         {...register('seo.metaDescription')}
                         placeholder="Brief summary for search results..."
                         rows={4}
+                        error={errors.seo?.metaDescription?.message}
                       />
                     </div>
                     <div className="space-y-2">
@@ -946,6 +1089,12 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
                             defaultValue={field.value}
                             onChange={field.onChange}
                             placeholder="Add keywords..."
+                            error={!!errors.seo?.keywords}
+                            hint={
+                              typeof errors.seo?.keywords?.message === 'string'
+                                ? errors.seo.keywords.message
+                                : undefined
+                            }
                           />
                         )}
                       />
@@ -1019,7 +1168,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
           {currentStep === STEPS.length - 1 && (
             <Button
               // @ts-ignore
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(onSubmit, handleFormError)}
               disabled={isCreating || isUpdating}
               className="px-8 shadow-lg shadow-brand-500/20"
             >
@@ -1042,28 +1191,39 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
           const Icon = step.icon;
           const isActive = currentStep === index;
           const isCompleted = currentStep > index;
+          const hasError = isStepInvalid(index);
 
           return (
             <div key={step.id} className="flex flex-col items-center gap-3">
               <button
                 type="button"
-                onClick={() => index < currentStep && setCurrentStep(index)}
-                disabled={index > currentStep}
+                onClick={() => setCurrentStep(index)}
                 className={cn(
-                  'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg',
+                  'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg relative',
                   isActive
                     ? 'bg-brand-500 text-white scale-110 shadow-brand-500/30'
-                    : isCompleted
-                      ? 'bg-success-500 text-white shadow-success-500/30'
-                      : 'bg-white dark:bg-navy-800 text-gray-400 border border-gray-100 dark:border-navy-700',
+                    : hasError
+                      ? 'bg-error-500 text-white shadow-error-500/30 ring-2 ring-error-500'
+                      : isCompleted
+                        ? 'bg-success-500 text-white shadow-success-500/30'
+                        : 'bg-white dark:bg-navy-800 text-gray-400 border border-gray-100 dark:border-navy-700',
                 )}
               >
-                {isCompleted ? <CheckCircle size={24} /> : <Icon size={24} />}
+                {isCompleted && !hasError ? <CheckCircle size={24} /> : <Icon size={24} />}
+                {hasError && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-error-500 border-2 border-white dark:border-navy-900 rounded-full" />
+                )}
               </button>
               <span
                 className={cn(
                   'text-[10px] font-bold uppercase tracking-widest hidden sm:block',
-                  isActive ? 'text-brand-500' : isCompleted ? 'text-success-500' : 'text-gray-400',
+                  isActive
+                    ? 'text-brand-500'
+                    : hasError
+                      ? 'text-error-500'
+                      : isCompleted
+                        ? 'text-success-500'
+                        : 'text-gray-400',
                 )}
               >
                 {step.title}
@@ -1112,7 +1272,7 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
           ) : (
             <Button
               // @ts-ignore
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(onSubmit, handleFormError)}
               disabled={isCreating || isUpdating}
               className="px-10 shadow-lg shadow-brand-500/20"
             >
