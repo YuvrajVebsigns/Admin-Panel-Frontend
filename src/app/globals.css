@@ -1131,3 +1131,37 @@ span.flatpickr-weekday,
 }
 
 /* 48px */
+
+/* Data Content & Security Layer Rules */
+@media print {
+  .protected-content {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+.protected-content {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.protected-content input,
+.protected-content textarea,
+.protected-content [contenteditable='true'],
+.protected-content select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.protected-content img,
+.protected-content video {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  pointer-events: none;
+}

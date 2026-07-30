@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/admin/auth/forgot-password',
     VERIFY_OTP: '/admin/auth/verify-otp',
     RESET_PASSWORD: '/admin/auth/reset-password',
+    REPORT_SCREENSHOT: '/admin/auth/report-screenshot',
   },
   USERS: {
     BASE: '/users',
