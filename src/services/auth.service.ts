@@ -84,4 +84,13 @@ export const authService = {
       requireAuth: false,
     });
   },
+
+  /**
+   * Reports screenshot violation to server, disables user access & notifies admin
+   */
+  async reportScreenshotViolation(): Promise<void> {
+    return apiFetch<void>(API_ENDPOINTS.AUTH.REPORT_SCREENSHOT, {
+      method: 'POST',
+    });
+  },
 };
