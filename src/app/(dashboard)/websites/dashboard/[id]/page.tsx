@@ -15,6 +15,7 @@ import {
   Globe,
   FileSpreadsheet,
   BarChart3,
+  Users,
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
@@ -31,6 +32,7 @@ import { NavbarManager } from '@/modules/websites/components/NavbarManager';
 import { WebsiteSeoManager } from '@/modules/websites/components/WebsiteSeoManager';
 import { ReportManager } from '@/modules/websites/components/ReportManager';
 import { AnalyticsDashboard } from '@/modules/websites/components/AnalyticsDashboard';
+import { CxoNetworkManager } from '@/modules/websites/components/CxoNetworkManager';
 import { useWebsitePages } from '@/modules/websites/hooks/useWebsitePages';
 import { getImageUrl } from '@/lib/utils';
 
@@ -42,6 +44,7 @@ const TABS = [
   { id: 'seo', label: 'Website SEO', icon: <Globe size={18} /> },
   { id: 'reports', label: 'Reports', icon: <FileSpreadsheet size={18} /> },
   { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
+  { id: 'cxo_network', label: 'CXO Capital Network', icon: <Users size={18} /> },
 ];
 
 export default function WebsiteDashboardPage() {
@@ -290,6 +293,8 @@ export default function WebsiteDashboardPage() {
             <ReportManager siteId={websiteId} />
           ) : activeTab === 'analytics' ? (
             <AnalyticsDashboard siteId={websiteId} />
+          ) : activeTab === 'cxo_network' ? (
+            <CxoNetworkManager siteId={websiteId} />
           ) : (
             <EventTable websiteId={websiteId} />
           )}
