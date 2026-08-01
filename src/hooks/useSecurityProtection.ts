@@ -9,13 +9,92 @@ interface SecurityState {
   isDevToolsOpen: boolean;
   isBlurred: boolean;
   screenshotWarning: boolean;
+  dismissBlurOverlay: () => void;
 }
+
+/**
+ * Checks whether the current page is a creation/add page.
+ */
+const isCreationPage = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const pathname = window.location.pathname.toLowerCase();
+
+  const creationKeywords = ['/create', '/new', '/add'];
+  if (creationKeywords.some((keyword) => pathname.includes(keyword))) {
+    return true;
+  }
+
+  if (typeof document !== 'undefined') {
+    const hasCreateForm = !!document.querySelector(
+      '[data-create-page], .create-page, .creation-form, form[data-type="create"]',
+    );
+    if (hasCreateForm) return true;
+  }
+
+  return false;
+};
+
+/**
+ * Checks whether the current active page contains a data table or is a view/details page.
+ * Returns false for creation pages so that the overlay is never displayed on creation routes.
+ */
+const checkIsDataTableOrViewPage = (): boolean => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+
+  // STRICT RULE: Never trigger security overlay on creation/add pages
+  if (isCreationPage()) return false;
+
+  // 1. Check URL pathname for view sub-routes
+  const pathname = window.location.pathname.toLowerCase();
+
+  const viewKeywords = ['/view', '/details', '/preview'];
+  if (viewKeywords.some((keyword) => pathname.includes(keyword))) return true;
+
+  // 2. Check DOM for tables, datatable wrappers, or view container elements
+  const hasTableElement = !!document.querySelector(
+    'table, [role="table"], .data-table, [data-datatable], .table-container, .table-responsive',
+  );
+  if (hasTableElement) return true;
+
+  const hasViewElement = !!document.querySelector(
+    '[data-view-page], [class*="View"], [class*="view"], [class*="Details"], [class*="details"], [class*="Preview"], [class*="preview"]',
+  );
+  if (hasViewElement) return true;
+
+  // 3. Check exact module list page routes
+  const datatableRoutes = [
+    '/events',
+    '/blogs',
+    '/contacts',
+    '/sponsors',
+    '/nominators',
+    '/nominees',
+    '/registrations',
+    '/media',
+    '/attendance',
+    '/reports',
+    '/roles-permission',
+    '/sidebar-menu',
+    '/system-user',
+    '/websites',
+    '/deployments',
+    '/communications',
+  ];
+
+  if (datatableRoutes.some((route) => pathname === route || pathname === `${route}/`)) return true;
+
+  return false;
+};
 
 export function useSecurityProtection(): SecurityState {
   const [isDevToolsOpen, setIsDevToolsOpen] = useState<boolean>(false);
   const [isBlurred, setIsBlurred] = useState<boolean>(false);
   const [screenshotWarning, setScreenshotWarning] = useState<boolean>(false);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const dismissBlurOverlay = useCallback(() => {
+    setIsBlurred(false);
+  }, []);
 
   // Helper to clear system clipboard
   const clearClipboard = useCallback(() => {
@@ -195,11 +274,13 @@ export function useSecurityProtection(): SecurityState {
     };
   }, [triggerScreenshotWarning, clearClipboard]);
 
-  // 3. Window blur / focus / visibility change detection (Blackout UI when focus lost to snip/screenshot tool)
+  // 3. Window blur / focus / visibility change detection (Targeted ONLY to DataTables and View pages)
   useEffect(() => {
     const handleBlur = () => {
-      setIsBlurred(true);
-      clearClipboard();
+      if (checkIsDataTableOrViewPage()) {
+        setIsBlurred(true);
+        clearClipboard();
+      }
     };
 
     const handleFocus = () => {
@@ -208,8 +289,10 @@ export function useSecurityProtection(): SecurityState {
 
     const handleVisibilityChange = () => {
       if (document.hidden || document.visibilityState === 'hidden') {
-        setIsBlurred(true);
-        clearClipboard();
+        if (checkIsDataTableOrViewPage()) {
+          setIsBlurred(true);
+          clearClipboard();
+        }
       } else {
         setIsBlurred(false);
       }
@@ -226,7 +309,24 @@ export function useSecurityProtection(): SecurityState {
     };
   }, [clearClipboard]);
 
-  // 4. DevTools detection logic
+  // 4. Hide blur overlay on mouse click anywhere on the page or overlay
+  useEffect(() => {
+    if (!isBlurred) return;
+
+    const handleMouseClick = () => {
+      setIsBlurred(false);
+    };
+
+    window.addEventListener('click', handleMouseClick, true);
+    window.addEventListener('mousedown', handleMouseClick, true);
+
+    return () => {
+      window.removeEventListener('click', handleMouseClick, true);
+      window.removeEventListener('mousedown', handleMouseClick, true);
+    };
+  }, [isBlurred]);
+
+  // 5. DevTools detection logic
   useEffect(() => {
     const threshold = 160;
 
@@ -260,7 +360,7 @@ export function useSecurityProtection(): SecurityState {
     };
   }, []);
 
-  // 5. Continuous Debugger Trap loop when DevTools is open
+  // 6. Continuous Debugger Trap loop when DevTools is open
   useEffect(() => {
     if (!isDevToolsOpen) return;
 
@@ -282,5 +382,6 @@ export function useSecurityProtection(): SecurityState {
     isDevToolsOpen,
     isBlurred,
     screenshotWarning,
+    dismissBlurOverlay,
   };
 }
