@@ -111,3 +111,27 @@ export interface ReportDownloader {
   countryCode: string;
   downloadedAt: string;
 }
+
+export interface CxoNetworkMember {
+  id: string;
+  registreeId?: string | Record<string, unknown>;
+  websiteId?: string | { id?: string; name?: string; domain?: string; logo?: string };
+  firstName: string;
+  lastName: string;
+  title?: string;
+  currentDesignation: string;
+  email: string;
+  telephoneNo?: string;
+  cioMobilePhone?: string;
+  linkedInLink?: string;
+  companyName: string;
+  companyAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  companyCategory?: 'Enterprise' | 'Startup' | 'Government' | 'Education' | 'Other' | string;
+  businessVertical?: string;
+  createdAt: string;
+  updatedAt: string;
+}

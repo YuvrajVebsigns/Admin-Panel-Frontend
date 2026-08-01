@@ -6,11 +6,13 @@ import { EyeOff, AlertTriangle } from 'lucide-react';
 interface ScreenshotWarningOverlayProps {
   isBlurred: boolean;
   screenshotWarning: boolean;
+  onDismiss?: () => void;
 }
 
 export const ScreenshotWarningOverlay: React.FC<ScreenshotWarningOverlayProps> = ({
   isBlurred,
   screenshotWarning,
+  onDismiss,
 }) => {
   if (!isBlurred && !screenshotWarning) return null;
 
@@ -18,7 +20,10 @@ export const ScreenshotWarningOverlay: React.FC<ScreenshotWarningOverlayProps> =
     <>
       {/* 1. Window Unfocused / Screen-capture opaque protective curtain */}
       {isBlurred && !screenshotWarning && (
-        <div className="fixed inset-0 z-[9999999] flex items-center justify-center bg-gray-950 text-white select-none transition-none">
+        <div
+          onClick={onDismiss}
+          className="fixed inset-0 z-[9999999] flex items-center justify-center bg-gray-950 text-white select-none transition-none cursor-pointer"
+        >
           <div className="flex flex-col items-center gap-3 text-center p-6 max-w-sm">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 border border-gray-800 text-brand-400 shadow-xl">
               <EyeOff size={36} />
@@ -27,6 +32,9 @@ export const ScreenshotWarningOverlay: React.FC<ScreenshotWarningOverlayProps> =
             <p className="text-sm text-gray-400 leading-relaxed">
               Screen content is hidden while window focus is lost to prevent background screenshot
               captures.
+            </p>
+            <p className="mt-1 text-xs text-brand-400 font-medium opacity-80">
+              Click anywhere to dismiss
             </p>
           </div>
         </div>
