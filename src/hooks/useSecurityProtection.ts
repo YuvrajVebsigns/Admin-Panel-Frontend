@@ -61,8 +61,10 @@ const checkIsDataTableOrViewPage = (): boolean => {
   );
   if (hasViewElement) return true;
 
-  // 3. Check exact module list page routes
+  // 3. Check exact module list page routes & main dashboard home routes
   const datatableRoutes = [
+    '/',
+    '/dashboard',
     '/events',
     '/blogs',
     '/contacts',
@@ -325,6 +327,49 @@ export function useSecurityProtection(): SecurityState {
       window.removeEventListener('mousedown', handleMouseClick, true);
     };
   }, [isBlurred]);
+
+  // 5. Mouse leave (cursor exits window) and mouse enter (cursor returns into window) detection
+  useEffect(() => {
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (
+        !e.relatedTarget ||
+        e.clientY <= 0 ||
+        e.clientX <= 0 ||
+        e.clientX >= window.innerWidth ||
+        e.clientY >= window.innerHeight
+      ) {
+        if (checkIsDataTableOrViewPage()) {
+          setIsBlurred(true);
+          clearClipboard();
+        }
+      }
+    };
+
+    const handleMouseEnter = () => {
+      setIsBlurred(false);
+    };
+
+    const handleMouseMove = () => {
+      setIsBlurred((prev) => {
+        if (prev) return false;
+        return prev;
+      });
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave, true);
+    document.addEventListener('mouseenter', handleMouseEnter, true);
+    window.addEventListener('mouseout', handleMouseLeave, true);
+    window.addEventListener('mouseover', handleMouseEnter, true);
+    window.addEventListener('mousemove', handleMouseMove, true);
+
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave, true);
+      document.removeEventListener('mouseenter', handleMouseEnter, true);
+      window.removeEventListener('mouseout', handleMouseLeave, true);
+      window.removeEventListener('mouseover', handleMouseEnter, true);
+      window.removeEventListener('mousemove', handleMouseMove, true);
+    };
+  }, [clearClipboard]);
 
   // 5. DevTools detection logic
   useEffect(() => {
