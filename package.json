@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
-    "build": "yarn lint && yarn type-check && yarn format:check && NODE_ENV=production next build",
+    "build": "yarn lint && yarn type-check && yarn format:check && cross-env NODE_ENV=production next build",
     "prepare": "husky",
     "postinstall": "npx patch-package"
   },
@@ -49,6 +49,7 @@
     "apexcharts": "^4.7.0",
     "autoprefixer": "^10.4.22",
     "clsx": "^2.1.1",
+    "cross-env": "^10.1.0",
     "data-fns": "^1.1.0",
     "dnd-kit": "^0.0.2",
     "editorjs-text-alignment-blocktune": "^1.0.3",

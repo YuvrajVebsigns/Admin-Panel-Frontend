@@ -60,6 +60,20 @@ export function useNavigation() {
       groups[groupName].push(mapMenuItem(menu));
     });
 
+    // Add a fallback Subscribes menu item if the backend menu data does not include it.
+    Object.values(groups).forEach((items) => {
+      const contactIndex = items.findIndex((item) => item.path === '/contacts');
+      const hasSubscribes = items.some((item) => item.path === '/subscribes');
+
+      if (contactIndex !== -1 && !hasSubscribes) {
+        items.splice(contactIndex + 1, 0, {
+          name: 'Subscribes',
+          icon: 'Mail',
+          path: '/subscribes',
+        });
+      }
+    });
+
     return Object.entries(groups).map(([groupName, items]) => ({
       groupName,
       items,

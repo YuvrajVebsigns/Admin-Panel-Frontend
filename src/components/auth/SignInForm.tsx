@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-import { ConnectionStatus } from '../common/ConnectionStatus';
+// import { ConnectionStatus } from '../common/ConnectionStatus';
 
 export default function SignInForm() {
   const searchParams = useSearchParams();
@@ -181,9 +181,9 @@ export default function SignInForm() {
           </Link>
         </p>
       </div> */}
-      <div className="mt-8 flex justify-center">
+      {/* <div className="mt-8 flex justify-center">
         <ConnectionStatus />
-      </div>
+      </div> */}
     </AuthLayout>
   );
 }

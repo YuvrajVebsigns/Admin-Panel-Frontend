@@ -81,6 +81,7 @@ const checkIsDataTableOrViewPage = (): boolean => {
     '/websites',
     '/deployments',
     '/communications',
+    '/subscribes',
   ];
 
   if (datatableRoutes.some((route) => pathname === route || pathname === `${route}/`)) return true;
@@ -100,14 +101,24 @@ export function useSecurityProtection(): SecurityState {
 
   // Helper to clear system clipboard
   const clearClipboard = useCallback(() => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+    if (
+      typeof navigator === 'undefined' ||
+      !navigator.clipboard ||
+      !navigator.clipboard.writeText
+    ) {
+      return;
+    }
+
+    try {
       navigator.clipboard
         .writeText(
           'Security Policy: Screenshot and clipboard exports are restricted on Admin Panel.',
         )
         .catch(() => {
-          // Ignore permission denial silently
+          // Ignore permission denial or insecure context silently
         });
+    } catch {
+      // Some browsers throw synchronously when clipboard access is blocked
     }
   }, []);
 

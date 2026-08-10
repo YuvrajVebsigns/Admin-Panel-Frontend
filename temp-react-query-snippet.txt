@@ -1,0 +1,51 @@
+export { useQuery as useQuery_alias_1 }
+
+declare const useQueryClient: (queryClient?: QueryClient) => QueryClient;
+export { useQueryClient }
+export { useQueryClient as useQueryClient_alias_1 }
+
+declare const useQueryErrorResetBoundary: () => QueryErrorResetBoundaryValue;
+export { useQueryErrorResetBoundary }
+export { useQueryErrorResetBoundary as useQueryErrorResetBoundary_alias_1 }
+
+declare interface UseQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> extends OmitKeyof<UseBaseQueryOptions<TQueryFnData, TError, TData, TQueryFnData, TQueryKey>, 'suspense'> {
+}
+export { UseQueryOptions }
+export { UseQueryOptions as UseQueryOptions_alias_1 }
+
+declare type UseQueryOptionsForUseQueries<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = OmitKeyof<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'placeholderData' | 'subscribed'> & {
+    placeholderData?: TQueryFnData | QueriesPlaceholderDataFunction<TQueryFnData>;
+};
+
+declare type UseQueryResult<TData = unknown, TError = DefaultError> = UseBaseQueryResult<TData, TError>;
+export { UseQueryResult }
+export { UseQueryResult as UseQueryResult_alias_1 }
+
+declare function useSuspenseInfiniteQuery<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: UseSuspenseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, queryClient?: QueryClient): UseSuspenseInfiniteQueryResult<TData, TError>;
+export { useSuspenseInfiniteQuery }
+export { useSuspenseInfiniteQuery as useSuspenseInfiniteQuery_alias_1 }
+
+declare interface UseSuspenseInfiniteQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> extends OmitKeyof<UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, 'queryFn' | 'enabled' | 'throwOnError' | 'placeholderData'> {
+    queryFn?: Exclude<UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>['queryFn'], SkipToken>;
+}
+export { UseSuspenseInfiniteQueryOptions }
+export { UseSuspenseInfiniteQueryOptions as UseSuspenseInfiniteQueryOptions_alias_1 }
+
+declare type UseSuspenseInfiniteQueryResult<TData = unknown, TError = DefaultError> = OmitKeyof<DefinedInfiniteQueryObserverResult<TData, TError>, 'isPlaceholderData' | 'promise'>;
+export { UseSuspenseInfiniteQueryResult }
+export { UseSuspenseInfiniteQueryResult as UseSuspenseInfiniteQueryResult_alias_1 }
+
+declare function useSuspenseQueries<T extends Array<any>, TCombinedResult = SuspenseQueriesResults<T>>(options: {
+    queries: readonly [...SuspenseQueriesOptions<T>] | readonly [...{
+        [K in keyof T]: GetUseSuspenseQueryOptions<T[K]>;
+    }];
+    combine?: (result: SuspenseQueriesResults<T>) => TCombinedResult;
+}, queryClient?: QueryClient): TCombinedResult;
+
+declare function useSuspenseQueries<T extends Array<any>, TCombinedResult = SuspenseQueriesResults<T>>(options: {
+    queries: readonly [...SuspenseQueriesOptions<T>];
+    combine?: (result: SuspenseQueriesResults<T>) => TCombinedResult;
+}, queryClient?: QueryClient): TCombinedResult;
+export { useSuspenseQueries }
+export { useSuspenseQueries as useSuspenseQueries_alias_1 }
+

@@ -65,17 +65,41 @@ export interface GroupedNominee {
   websiteId: string;
   nominee: RegistreeRef;
   website?: WebsiteRef;
-  categoryDocs?: NominationCategory[];
+  categoryDocs?: Array<NominationCategory | NominationSubCategory>;
 }
 
 export interface NominationCategory {
   id: string;
+  _id?: string;
   name: string;
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  parentId?: string | null;
+  parent?: NominationCategory;
+  children?: NominationCategory[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface NominationSubCategory {
+  id?: string;
+  _id?: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  sortOrder?: number;
+  categoryId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NominationSubCategoryQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  categoryId?: string;
 }
 
 // Queries

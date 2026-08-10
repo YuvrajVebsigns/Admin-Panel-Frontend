@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
       WEBHOOKS: '/admin/communications/webhooks',
       WEBHOOK_BY_ID: (id: string) => `/admin/communications/webhooks/${id}`,
     },
+    SUBSCRIBES: '/admin/subscribes',
   },
   SYSTEM: {
     TEST_CONNECTION: '/test-connection',

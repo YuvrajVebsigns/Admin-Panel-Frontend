@@ -1,9 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
-import { GroupedNominee, NominationStatus } from '../types/nomination.types';
+import {
+  GroupedNominee,
+  NominationCategory,
+  NominationSubCategory,
+  NominationStatus,
+} from '../types/nomination.types';
 import { useGroupedNominees } from '../hooks/useNominations';
+import {
+  useNominationCategories,
+  useNominationSubCategories,
+  useNominationSubCategoriesByIds,
+  useNominationCategoriesByIds,
+} from '../hooks/useNominationCategories';
 import { Mail, Briefcase, Award } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 
@@ -22,6 +33,118 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
   });
 
   const { nominees, meta, isLoading } = useGroupedNominees(params);
+  const { categories } = useNominationCategories({ limit: 1000, isActive: true });
+  const {
+    data: subCategoryData,
+    isLoading: isSubCategoriesLoading,
+    error: subCategoryError,
+  } = useNominationSubCategories({ limit: 1000, isActive: true });
+
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, NominationCategory>();
+    categories.forEach((cat) => {
+      const id = cat.id || cat._id;
+      if (id) {
+        map.set(id, cat);
+      }
+    });
+    return map;
+  }, [categories]);
+
+  const subCategoryMap = useMemo(() => {
+    const map = new Map<string, NominationSubCategory>();
+    subCategoryData?.data.forEach((subCategory) => {
+      const id = subCategory.id || subCategory._id;
+      if (id) {
+        map.set(id, subCategory);
+      }
+    });
+    return map;
+  }, [subCategoryData]);
+
+  const missingSubCategoryIds = useMemo(() => {
+    if (!nominees) return [];
+
+    const ids = new Set<string>();
+    nominees.forEach((grouped) => {
+      grouped.categories.forEach((id) => {
+        if (!categoryMap.has(id) && !subCategoryMap.has(id)) {
+          ids.add(id);
+        }
+      });
+    });
+
+    return Array.from(ids);
+  }, [nominees, categoryMap, subCategoryMap]);
+
+  const { subCategories: missingSubCategories, isLoading: isMissingSubCategoriesLoading } =
+    useNominationSubCategoriesByIds(missingSubCategoryIds);
+
+  const missingParentCategoryIds = useMemo(() => {
+    const ids = new Set<string>();
+    missingSubCategories?.forEach((subCategory) => {
+      if (subCategory.categoryId && !categoryMap.has(subCategory.categoryId)) {
+        ids.add(subCategory.categoryId);
+      }
+    });
+    return Array.from(ids);
+  }, [missingSubCategories, categoryMap]);
+
+  const { categories: missingParentCategories } =
+    useNominationCategoriesByIds(missingParentCategoryIds);
+
+  const combinedSubCategoryMap = useMemo(() => {
+    const map = new Map<string, NominationSubCategory>();
+    subCategoryData?.data.forEach((subCategory) => {
+      const id = subCategory.id || subCategory._id;
+      if (id) {
+        map.set(id, subCategory);
+      }
+    });
+
+    missingSubCategories?.forEach((subCategory) => {
+      const id = subCategory.id || subCategory._id;
+      if (id && !map.has(id)) {
+        map.set(id, subCategory);
+      }
+    });
+
+    return map;
+  }, [subCategoryData, missingSubCategories]);
+
+  const combinedCategoryMap = useMemo(() => {
+    const map = new Map<string, NominationCategory>();
+    categories.forEach((cat) => {
+      const id = cat.id || cat._id;
+      if (id) {
+        map.set(id, cat);
+      }
+    });
+    missingParentCategories?.forEach((cat) => {
+      const id = cat.id || cat._id;
+      if (id && !map.has(id)) {
+        map.set(id, cat);
+      }
+    });
+    return map;
+  }, [categories, missingParentCategories]);
+
+  const getCategoryLabel = (catId: string) => {
+    const category = combinedCategoryMap.get(catId);
+    if (category) {
+      return category.name;
+    }
+
+    const subCategory = combinedSubCategoryMap.get(catId);
+    if (subCategory) {
+      const parentCategory = combinedCategoryMap.get(subCategory.categoryId);
+      return parentCategory ? `${parentCategory.name} > ${subCategory.name}` : subCategory.name;
+    }
+
+    return catId.substring(0, 8);
+  };
+
+  const localIsLoading = isLoading || isSubCategoriesLoading || isMissingSubCategoriesLoading;
 
   const getStatusColor = (
     status: NominationStatus,
@@ -91,34 +214,93 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
       },
     },
     {
-      header: 'Categories',
-      accessor: (grouped) => (
-        <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
-          {grouped.categoryDocs && grouped.categoryDocs.length > 0
-            ? grouped.categoryDocs.map((cat, i) => (
+      header: 'Category',
+      accessor: (grouped) => {
+        const categoryNames = grouped.categoryDocs
+          ? grouped.categoryDocs.filter((doc) => !('categoryId' in doc)).map((cat) => cat.name)
+          : grouped.categories
+              .map((catId) => {
+                const category = categoryMap.get(catId);
+                if (category) {
+                  return category.name;
+                }
+
+                const subCategory = combinedSubCategoryMap.get(catId);
+                if (subCategory) {
+                  const parentCategory = categoryMap.get(subCategory.categoryId);
+                  return parentCategory ? parentCategory.name : undefined;
+                }
+
+                return undefined;
+              })
+              .filter((name): name is string => Boolean(name));
+
+        const uniqueCategoryNames = Array.from(new Set(categoryNames));
+
+        return (
+          <div className="flex flex-wrap gap-2 max-w-[260px]">
+            {uniqueCategoryNames.length > 0
+              ? uniqueCategoryNames.map((name) => (
+                  <Badge
+                    key={name}
+                    color="info"
+                    variant="light"
+                    startIcon={<Award size={12} />}
+                    className="font-medium text-xs rounded-lg px-2 py-1"
+                  >
+                    {name}
+                  </Badge>
+                ))
+              : grouped.categories.map((catId, i) => (
+                  <Badge
+                    key={i}
+                    color="info"
+                    variant="light"
+                    startIcon={<Award size={12} />}
+                    className="font-medium text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
+                  >
+                    {getCategoryLabel(catId)}
+                  </Badge>
+                ))}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Sub Category',
+      accessor: (grouped) => {
+        const resolvedCategoryDocs: Array<NominationCategory | NominationSubCategory> = [
+          ...(grouped.categoryDocs ?? []),
+          ...grouped.categories
+            .map((catId) => categoryMap.get(catId) ?? combinedSubCategoryMap.get(catId))
+            .filter((doc): doc is NominationCategory | NominationSubCategory => !!doc),
+        ].filter(
+          (doc, index, self) =>
+            self.findIndex((item) => item.id === doc.id || item._id === doc._id) === index,
+        );
+
+        const subCategoryNames = resolvedCategoryDocs
+          .filter((doc) => 'categoryId' in doc && doc.categoryId)
+          .map((doc) => doc.name);
+
+        return (
+          <div className="flex flex-wrap gap-2 max-w-[260px]">
+            {subCategoryNames.length > 0 ? (
+              subCategoryNames.map((name, idx) => (
                 <Badge
-                  key={i}
-                  color="info"
-                  variant="light"
-                  startIcon={<Award size={12} />}
-                  className="font-medium text-xs rounded-lg px-2 py-1"
+                  key={`${name}-${idx}`}
+                  color="light"
+                  className="text-[10px] font-semibold uppercase px-2 py-1 rounded-lg border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900"
                 >
-                  {cat.name}
+                  {name}
                 </Badge>
               ))
-            : grouped.categories.map((catId, i) => (
-                <Badge
-                  key={i}
-                  color="info"
-                  variant="light"
-                  startIcon={<Award size={12} />}
-                  className="font-medium text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
-                >
-                  ID: {catId.substring(0, 8)}
-                </Badge>
-              ))}
-        </div>
-      ),
+            ) : (
+              <span className="text-xs text-gray-400">None</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Nominators',
@@ -191,10 +373,15 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
         </div>
       </div>
 
+      {subCategoryError && (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Failed to load sub categories. Please refresh the page.
+        </div>
+      )}
       <DataTable
         data={nominees}
         columns={columns}
-        isLoading={isLoading}
+        isLoading={localIsLoading}
         serverSide={true}
         totalItems={meta?.total}
         page={params.page}

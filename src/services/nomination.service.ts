@@ -3,8 +3,10 @@ import { PaginatedResponse } from '@/types/api.types';
 import {
   Nomination,
   NominationCategory,
+  NominationSubCategory,
   NominationQueryParams,
   NominationCategoryQueryParams,
+  NominationSubCategoryQueryParams,
   CreateNominationDto,
   UpdateNominationStatusDto,
   CreateNominationCategoryDto,
@@ -106,6 +108,25 @@ export const nominationService = {
 
   getCategory: async (id: string): Promise<NominationCategory> => {
     return apiFetch<NominationCategory>(`/admin/nomination-categories/${id}`);
+  },
+
+  getSubCategories: async (
+    params: NominationSubCategoryQueryParams = {},
+  ): Promise<PaginatedResponse<NominationSubCategory>> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+
+    return apiFetch<PaginatedResponse<NominationSubCategory>>(
+      `/admin/nomination-sub-categories?${queryParams.toString()}`,
+    );
+  },
+
+  getSubCategory: async (id: string): Promise<NominationSubCategory> => {
+    return apiFetch<NominationSubCategory>(`/admin/nomination-sub-categories/${id}`);
   },
 
   createCategory: async (data: CreateNominationCategoryDto): Promise<NominationCategory> => {

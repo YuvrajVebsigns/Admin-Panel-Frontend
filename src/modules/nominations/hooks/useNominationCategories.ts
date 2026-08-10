@@ -1,7 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query';
 import { nominationService } from '@/services/nomination.service';
+import { PaginatedResponse } from '@/types/api.types';
 import {
   NominationCategoryQueryParams,
+  NominationCategory,
+  NominationSubCategory,
+  NominationSubCategoryQueryParams,
   CreateNominationCategoryDto,
   UpdateNominationCategoryDto,
 } from '../types/nomination.types';
@@ -10,7 +14,10 @@ import toast from 'react-hot-toast';
 export const useNominationCategories = (params: NominationCategoryQueryParams = {}) => {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<
+    PaginatedResponse<NominationCategory>,
+    Error
+  >({
     queryKey: ['nominationCategories', params],
     queryFn: () => nominationService.getCategories(params),
   });
@@ -64,8 +71,63 @@ export const useNominationCategories = (params: NominationCategoryQueryParams = 
   };
 };
 
+export const useNominationSubCategories = (params: NominationSubCategoryQueryParams = {}) => {
+  return useQuery<PaginatedResponse<NominationSubCategory>, Error>({
+    queryKey: ['nominationSubCategories', params],
+    queryFn: () => nominationService.getSubCategories(params),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useNominationSubCategory = (id: string) => {
+  return useQuery<NominationSubCategory, Error>({
+    queryKey: ['nominationSubCategory', id],
+    queryFn: () => nominationService.getSubCategory(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useNominationSubCategoriesByIds = (ids: string[]) => {
+  const queries = useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ['nominationSubCategory', id],
+      queryFn: () => nominationService.getSubCategory(id),
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const subCategories = queries
+    .map((query) => query.data)
+    .filter((item): item is NominationSubCategory => Boolean(item));
+  const isLoading = queries.some((query) => query.isLoading);
+  const error = queries.find((query) => query.error)?.error;
+
+  return { subCategories, isLoading, error };
+};
+
+export const useNominationCategoriesByIds = (ids: string[]) => {
+  const queries = useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ['nominationCategory', id],
+      queryFn: () => nominationService.getCategory(id),
+      enabled: !!id,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const categories = queries
+    .map((query) => query.data)
+    .filter((item): item is NominationCategory => Boolean(item));
+  const isLoading = queries.some((query) => query.isLoading);
+  const error = queries.find((query) => query.error)?.error;
+
+  return { categories, isLoading, error };
+};
+
 export const useNominationCategory = (id: string) => {
-  return useQuery({
+  return useQuery<NominationCategory, Error>({
     queryKey: ['nominationCategory', id],
     queryFn: () => nominationService.getCategory(id),
     enabled: !!id,
