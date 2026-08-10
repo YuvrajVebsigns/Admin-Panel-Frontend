@@ -21,6 +21,7 @@ export interface Website {
   logo?: string | ImageLinks;
   description?: string;
   isActive: boolean;
+  nominationActive?: boolean;
   settings: Record<string, unknown>;
   seo: SeoMetadata;
   createdAt: string;

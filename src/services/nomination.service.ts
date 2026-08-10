@@ -13,6 +13,8 @@ import {
   UpdateNominationCategoryDto,
   GroupedNominator,
   GroupedNominee,
+  WebsiteNominationStatusPayload,
+  WebsiteNominationStatusResponse,
 } from '@/modules/nominations/types/nomination.types';
 
 export const nominationService = {
@@ -82,6 +84,19 @@ export const nominationService = {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  },
+
+  updateWebsiteNominationStatus: async (
+    websiteId: string,
+    data: WebsiteNominationStatusPayload,
+  ): Promise<WebsiteNominationStatusResponse> => {
+    return apiFetch<WebsiteNominationStatusResponse>(
+      `/admin/nominations/websites/${websiteId}/nomination-status`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      },
+    );
   },
 
   deleteNomination: async (id: string): Promise<void> => {

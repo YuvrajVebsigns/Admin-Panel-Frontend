@@ -32,9 +32,13 @@ import { NavbarManager } from '@/modules/websites/components/NavbarManager';
 import { WebsiteSeoManager } from '@/modules/websites/components/WebsiteSeoManager';
 import { ReportManager } from '@/modules/websites/components/ReportManager';
 import { AnalyticsDashboard } from '@/modules/websites/components/AnalyticsDashboard';
-import { CxoNetworkManager } from '@/modules/websites/components/CxoNetworkManager';
 import { useWebsitePages } from '@/modules/websites/hooks/useWebsitePages';
 import { getImageUrl } from '@/lib/utils';
+import { nominationService } from '@/services/nomination.service';
+import { WebsiteNominationStatusResponse } from '@/modules/nominations/types/nomination.types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const TABS = [
   { id: 'blogs', label: 'Blogs', icon: <FileText size={18} /> },
@@ -44,7 +48,7 @@ const TABS = [
   { id: 'seo', label: 'Website SEO', icon: <Globe size={18} /> },
   { id: 'reports', label: 'Reports', icon: <FileSpreadsheet size={18} /> },
   { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
-  { id: 'cxo_network', label: 'CXO Capital Network', icon: <Users size={18} /> },
+  { id: 'nomination_status', label: 'Nomination Status', icon: <Users size={18} /> },
 ];
 
 export default function WebsiteDashboardPage() {
@@ -63,6 +67,43 @@ export default function WebsiteDashboardPage() {
     limit: 1,
   });
   const [activeTab, setActiveTab] = useState('blogs');
+  const [nominationActive, setNominationActive] = useState<boolean>(false);
+  const queryClient = useQueryClient();
+
+  const nominationMutation = useMutation<
+    WebsiteNominationStatusResponse,
+    Error,
+    boolean,
+    { previousValue: boolean | undefined }
+  >({
+    mutationFn: (active: boolean) =>
+      nominationService.updateWebsiteNominationStatus(websiteId, { isActive: active }),
+    onMutate: async (active: boolean) => {
+      await queryClient.cancelQueries({ queryKey: ['website', websiteId] });
+      const previousValue = website?.nominationActive;
+      setNominationActive(active);
+      return { previousValue };
+    },
+    onError: (_error: Error, _variables, context) => {
+      if (context?.previousValue !== undefined) {
+        setNominationActive(context.previousValue);
+      }
+      toast.error('Failed to update nomination status');
+    },
+    onSuccess: (data) => {
+      setNominationActive(data.isActive);
+      toast.success('Nomination status updated successfully');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['website', websiteId] });
+    },
+  });
+
+  useEffect(() => {
+    if (website?.nominationActive !== undefined) {
+      setNominationActive(website.nominationActive);
+    }
+  }, [website?.nominationActive]);
 
   if (isLoading || isEventsLoading || isPagesLoading || isReportsLoading) {
     return (
@@ -256,7 +297,9 @@ export default function WebsiteDashboardPage() {
                     ? 'Global Website SEO'
                     : activeTab === 'analytics'
                       ? 'Visitor Analytics & Cookie Tracker'
-                      : activeTab}{' '}
+                      : activeTab === 'nomination_status'
+                        ? ''
+                        : activeTab}{' '}
                 <span className="ml-2 text-sm font-medium text-gray-400">
                   {activeTab === 'pages'
                     ? websitePages?.length || 0
@@ -270,14 +313,15 @@ export default function WebsiteDashboardPage() {
                   {activeTab !== 'seo' &&
                     activeTab !== 'navbar' &&
                     activeTab !== 'analytics' &&
+                    activeTab !== 'nomination_status' &&
                     'Total'}
                 </span>
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              {/* <p className="text-sm text-gray-500 dark:text-gray-400">
                 {activeTab === 'analytics'
                   ? 'Monitor visitor traffic, unique pageviews, sessions, and cookie consent conversions'
                   : `Manage and monitor your website's ${activeTab} content`}
-              </p>
+              </p> */}
             </div>
           </div>
 
@@ -293,8 +337,64 @@ export default function WebsiteDashboardPage() {
             <ReportManager siteId={websiteId} />
           ) : activeTab === 'analytics' ? (
             <AnalyticsDashboard siteId={websiteId} />
-          ) : activeTab === 'cxo_network' ? (
-            <CxoNetworkManager siteId={websiteId} />
+          ) : activeTab === 'nomination_status' ? (
+            <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 text-left dark:border-navy-700 dark:bg-navy-900">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Nomination Status
+                  </h3>
+                  {/* <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400">
+                    Control whether the nomination form is enabled for this website.
+                  </p> */}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                    Current state
+                  </p>
+                  <p
+                    className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                  >
+                    {nominationActive ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Toggle the switch to {nominationActive ? 'disable' : 'enable'} nomination
+                    submissions for this website.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* <span className={`text-sm font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {nominationActive ? 'Active' : 'Inactive'}
+                  </span> */}
+                  <button
+                    type="button"
+                    disabled={nominationMutation.status === 'pending'}
+                    onClick={() => nominationMutation.mutate(!nominationActive)}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                      nominationActive ? 'bg-emerald-500' : 'bg-rose-500'
+                    } ${nominationMutation.status === 'pending' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                    aria-label={
+                      nominationActive ? 'Disable nomination form' : 'Enable nomination form'
+                    }
+                    aria-pressed={nominationActive}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                        nominationActive ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             <EventTable websiteId={websiteId} />
           )}

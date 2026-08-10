@@ -142,6 +142,15 @@ export interface UpdateNominationStatusDto {
   status: NominationStatus;
 }
 
+export interface WebsiteNominationStatusPayload {
+  isActive: boolean;
+}
+
+export interface WebsiteNominationStatusResponse {
+  isActive: boolean;
+  nominationActive?: boolean;
+}
+
 export interface CreateNominationCategoryDto {
   name: string;
   slug: string;
