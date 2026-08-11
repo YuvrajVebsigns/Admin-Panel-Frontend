@@ -90,6 +90,8 @@ export interface NominationSubCategory {
   isActive: boolean;
   sortOrder?: number;
   categoryId: string;
+  category?: NominationCategory | { id?: string; _id?: string; name?: string };
+  parentCategoryName?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -129,19 +129,68 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     return map;
   }, [categories, missingParentCategories]);
 
-  const getCategoryLabel = (catId: string) => {
-    const category = combinedCategoryMap.get(catId);
-    if (category) {
-      return category.name;
-    }
+  const getSubCategoryLabel = (doc: NominationSubCategory) => {
+    const parentCategory = combinedCategoryMap.get(doc.categoryId);
+    return parentCategory ? `${parentCategory.name} > ${doc.name}` : doc.name;
+  };
 
-    const subCategory = combinedSubCategoryMap.get(catId);
-    if (subCategory) {
-      const parentCategory = combinedCategoryMap.get(subCategory.categoryId);
-      return parentCategory ? `${parentCategory.name} > ${subCategory.name}` : subCategory.name;
-    }
+  const getNomineeCategoryNames = (grouped: GroupedNominee) => {
+    const names = new Map<string, string>();
 
-    return catId.substring(0, 8);
+    const addName = (name?: string) => {
+      if (!name) return;
+      names.set(name, name);
+    };
+
+    (grouped.categoryDocs ?? []).forEach((doc) => {
+      if (!doc) return;
+      if ('categoryId' in doc && doc.categoryId) {
+        addName(getSubCategoryLabel(doc as NominationSubCategory));
+        return;
+      }
+      addName(doc.name);
+    });
+
+    grouped.categories.forEach((catId) => {
+      const category = combinedCategoryMap.get(catId);
+      if (category) {
+        addName(category.name);
+        return;
+      }
+
+      const subCategory = combinedSubCategoryMap.get(catId);
+      if (subCategory) {
+        addName(getSubCategoryLabel(subCategory));
+      }
+    });
+
+    return Array.from(names.values());
+  };
+
+  const getNomineeSubCategoryNames = (grouped: GroupedNominee) => {
+    const names = new Map<string, string>();
+
+    const addName = (name?: string) => {
+      if (!name) return;
+      names.set(name, name);
+    };
+
+    (grouped.categoryDocs ?? []).forEach((doc) => {
+      if (!doc || !('categoryId' in doc) || !doc.categoryId) return;
+      addName(getSubCategoryLabel(doc as NominationSubCategory));
+    });
+
+    grouped.categories.forEach((catId) => {
+      const category = combinedCategoryMap.get(catId);
+      if (category) return;
+
+      const subCategory = combinedSubCategoryMap.get(catId);
+      if (subCategory) {
+        addName(getSubCategoryLabel(subCategory));
+      }
+    });
+
+    return Array.from(names.values());
   };
 
   const localIsLoading = isLoading || isSubCategoriesLoading || isMissingSubCategoriesLoading;
@@ -216,52 +265,30 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     {
       header: 'Category',
       accessor: (grouped) => {
-        const categoryNames = grouped.categoryDocs
-          ? grouped.categoryDocs.filter((doc) => !('categoryId' in doc)).map((cat) => cat.name)
-          : grouped.categories
-              .map((catId) => {
-                const category = categoryMap.get(catId);
-                if (category) {
-                  return category.name;
-                }
-
-                const subCategory = combinedSubCategoryMap.get(catId);
-                if (subCategory) {
-                  const parentCategory = categoryMap.get(subCategory.categoryId);
-                  return parentCategory ? parentCategory.name : undefined;
-                }
-
-                return undefined;
-              })
-              .filter((name): name is string => Boolean(name));
-
-        const uniqueCategoryNames = Array.from(new Set(categoryNames));
+        const uniqueCategoryNames = getNomineeCategoryNames(grouped).filter((name) => {
+          const subCategoryName = getNomineeSubCategoryNames(grouped).find(
+            (subName) => subName === name || name.includes(`> ${subName}`),
+          );
+          return !subCategoryName;
+        });
 
         return (
           <div className="flex flex-wrap gap-2 max-w-[260px]">
-            {uniqueCategoryNames.length > 0
-              ? uniqueCategoryNames.map((name) => (
-                  <Badge
-                    key={name}
-                    color="info"
-                    variant="light"
-                    startIcon={<Award size={12} />}
-                    className="font-medium text-xs rounded-lg px-2 py-1"
-                  >
-                    {name}
-                  </Badge>
-                ))
-              : grouped.categories.map((catId, i) => (
-                  <Badge
-                    key={i}
-                    color="info"
-                    variant="light"
-                    startIcon={<Award size={12} />}
-                    className="font-medium text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
-                  >
-                    {getCategoryLabel(catId)}
-                  </Badge>
-                ))}
+            {uniqueCategoryNames.length > 0 ? (
+              uniqueCategoryNames.map((name) => (
+                <Badge
+                  key={name}
+                  color="info"
+                  variant="light"
+                  startIcon={<Award size={12} />}
+                  className="font-medium text-xs rounded-lg px-2 py-1"
+                >
+                  {name}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-xs text-gray-400">None</span>
+            )}
           </div>
         );
       },
@@ -269,19 +296,7 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     {
       header: 'Sub Category',
       accessor: (grouped) => {
-        const resolvedCategoryDocs: Array<NominationCategory | NominationSubCategory> = [
-          ...(grouped.categoryDocs ?? []),
-          ...grouped.categories
-            .map((catId) => categoryMap.get(catId) ?? combinedSubCategoryMap.get(catId))
-            .filter((doc): doc is NominationCategory | NominationSubCategory => !!doc),
-        ].filter(
-          (doc, index, self) =>
-            self.findIndex((item) => item.id === doc.id || item._id === doc._id) === index,
-        );
-
-        const subCategoryNames = resolvedCategoryDocs
-          .filter((doc) => 'categoryId' in doc && doc.categoryId)
-          .map((doc) => doc.name);
+        const subCategoryNames = getNomineeSubCategoryNames(grouped);
 
         return (
           <div className="flex flex-wrap gap-2 max-w-[260px]">

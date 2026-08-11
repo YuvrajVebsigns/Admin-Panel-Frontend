@@ -16,19 +16,21 @@ interface PageManagerProps {
 export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WebsitePage | null>(null);
 
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
-  const { pages, isLoading, deletePage, publishPage, unpublishPage, duplicatePage } =
+  const { pages, meta, isLoading, deletePage, publishPage, unpublishPage, duplicatePage } =
     useWebsitePages({
       siteId,
       search,
       status: status || undefined,
-      page: 1,
-      limit: 10,
+      page,
+      limit,
     });
 
   const handleEdit = (pageItem: WebsitePage) => {
@@ -195,7 +197,10 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
 
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
             className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm dark:bg-navy-900 dark:border-navy-700 dark:text-white"
           >
             <option value="">All Statuses</option>
@@ -227,7 +232,24 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
           </p>
         </div>
       ) : (
-        <DataTable<WebsitePage> data={pages} columns={columns} />
+        <DataTable<WebsitePage>
+          data={pages}
+          columns={columns}
+          serverSide
+          totalItems={meta?.total || 0}
+          page={page}
+          limit={limit}
+          search={search}
+          onPageChange={(newPage) => setPage(newPage)}
+          onPageSizeChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          onSearchChange={(newSearch) => {
+            setSearch(newSearch);
+            setPage(1);
+          }}
+        />
       )}
 
       {/* Page Form Modal */}
