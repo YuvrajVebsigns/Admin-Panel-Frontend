@@ -22,8 +22,10 @@ export const useCxoNetwork = (params: QueryCxoNetworkParams) => {
     },
   });
 
+  const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+
   return {
-    members: (data?.data || []).map(
+    members: list.map(
       (m: CxoNetworkMember & { _id?: string }): CxoNetworkMember => ({
         ...m,
         id: m.id || m._id || '',

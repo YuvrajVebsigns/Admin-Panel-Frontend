@@ -32,11 +32,11 @@ export const cxoNetworkService = {
       if (params.companyCategory) searchParams.append('companyCategory', params.companyCategory);
     }
     const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
-    return apiFetch<PaginatedCxoNetworkResponse>(`/admin/registrees/cxo-network/list${queryStr}`);
+    return apiFetch<PaginatedCxoNetworkResponse>(`/admin/cxo-network${queryStr}`);
   },
 
   deleteCxoNetworkMember: async (id: string): Promise<void> => {
-    return apiFetch<void>(`/admin/registrees/cxo-network/${id}`, {
+    return apiFetch<void>(`/admin/cxo-network/${id}`, {
       method: 'DELETE',
     });
   },

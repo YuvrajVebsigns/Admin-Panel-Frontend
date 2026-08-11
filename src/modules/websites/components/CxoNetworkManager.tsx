@@ -40,7 +40,7 @@ const LinkedInIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => 
   </svg>
 );
 
-export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = ({ siteId }) => {
+export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [page, setPage] = useState(1);
@@ -51,7 +51,6 @@ export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = ({ siteId }) 
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
   const { members, meta, isLoading, deleteMember } = useCxoNetwork({
-    websiteId: siteId,
     search: search || undefined,
     companyCategory: categoryFilter !== 'All Categories' ? categoryFilter : undefined,
     page,

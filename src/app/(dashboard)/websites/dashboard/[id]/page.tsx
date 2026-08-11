@@ -6,7 +6,6 @@ import {
   FileText,
   Calendar,
   Plus,
-  Search,
   Loader2,
   ExternalLink,
   ChevronRight,
@@ -16,6 +15,7 @@ import {
   FileSpreadsheet,
   BarChart3,
   Users,
+  UserCheck,
 } from 'lucide-react';
 import { useWebsite } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
@@ -104,6 +104,12 @@ export default function WebsiteDashboardPage() {
       setNominationActive(website.nominationActive);
     }
   }, [website?.nominationActive]);
+
+  const isCxoCapitalDashboard =
+    websiteId === '6a0e1fb4957cec506662dd6b' &&
+    !!website?.domain &&
+    (website.domain.toLowerCase().includes('cxocapital.com') ||
+      website.domain.toLowerCase().includes('localhost:3223'));
 
   if (isLoading || isEventsLoading || isPagesLoading || isReportsLoading) {
     return (
@@ -234,56 +240,70 @@ export default function WebsiteDashboardPage() {
       {/* Content Area */}
       <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-theme-sm dark:bg-navy-800 dark:border-navy-700">
         {/* Tabs Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-50 dark:border-navy-700 p-6 gap-4">
-          <div className="flex items-center p-1 bg-gray-50 dark:bg-navy-900 rounded-xl w-fit">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-800 dark:text-white'
-                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        <div className="border-b border-gray-50 dark:border-navy-700 p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center p-1 bg-gray-50 dark:bg-navy-900 rounded-xl w-fit overflow-x-auto">
+                {TABS.map((tab) => {
+                  const isAnalyticsTab = tab.id === 'analytics';
+                  const isNominationTab = tab.id === 'nomination_status';
 
-          {(activeTab === 'blogs' || activeTab === 'events') && (
-            <div className="flex items-center gap-3">
-              <div className="relative group">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-500 transition-colors"
-                  size={18}
-                />
-                <input
-                  type="text"
-                  placeholder={`Search ${activeTab}...`}
-                  className="pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 transition-all dark:bg-navy-900 dark:text-white w-full sm:w-64"
-                />
+                  return (
+                    <React.Fragment key={tab.id}>
+                      <button
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                          activeTab === tab.id
+                            ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-800 dark:text-white'
+                            : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                        }`}
+                      >
+                        {tab.icon}
+                        {tab.label}
+                      </button>
+
+                      {isAnalyticsTab && isCxoCapitalDashboard && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/websites/dashboard/${websiteId}/cxo-network`)
+                          }
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ml-1"
+                        >
+                          <UserCheck size={16} />
+                          CXO Network Members
+                        </button>
+                      )}
+
+                      {isNominationTab && <div className="ml-1" />}
+                    </React.Fragment>
+                  );
+                })}
               </div>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  if (activeTab === 'blogs') {
-                    router.push(
-                      `/blogs/create?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
-                    );
-                  } else if (activeTab === 'events') {
-                    router.push(
-                      `/events/new?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
-                    );
-                  }
-                }}
-              >
-                <Plus size={18} className="mr-2" />
-                New {activeTab === 'blogs' ? 'Blog' : 'Event'}
-              </Button>
+
+              {(activeTab === 'blogs' || activeTab === 'events') && (
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      if (activeTab === 'blogs') {
+                        router.push(
+                          `/blogs/create?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                        );
+                      } else if (activeTab === 'events') {
+                        router.push(
+                          `/events/new?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                        );
+                      }
+                    }}
+                  >
+                    <Plus size={18} className="mr-2" />
+                    New {activeTab === 'blogs' ? 'Blog' : 'Event'}
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Content Table */}
@@ -339,28 +359,28 @@ export default function WebsiteDashboardPage() {
             <AnalyticsDashboard siteId={websiteId} />
           ) : activeTab === 'nomination_status' ? (
             <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 text-left dark:border-navy-700 dark:bg-navy-900">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                     Nomination Status
                   </h3>
-                  {/* <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400">
-                    Control whether the nomination form is enabled for this website.
-                  </p> */}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-                    Current state
-                  </p>
-                  <p
-                    className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
-                  >
-                    {nominationActive ? 'Active' : 'Inactive'}
-                  </p>
+
+                <div className="flex flex-col items-end gap-3 md:min-w-[220px]">
+                  <div className="text-right">
+                    <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                      Current state
+                    </p>
+                    <p
+                      className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                    >
+                      {nominationActive ? 'Active' : 'Inactive'}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
                     {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
@@ -370,10 +390,8 @@ export default function WebsiteDashboardPage() {
                     submissions for this website.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  {/* <span className={`text-sm font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {nominationActive ? 'Active' : 'Inactive'}
-                  </span> */}
+
+                <div className="flex items-center justify-end gap-3 flex-wrap">
                   <button
                     type="button"
                     disabled={nominationMutation.status === 'pending'}
