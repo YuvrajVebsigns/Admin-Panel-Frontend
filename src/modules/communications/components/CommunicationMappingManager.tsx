@@ -221,7 +221,8 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
         bcc: t.bcc.trim() || undefined,
         senderEmail:
           t.channel === CommunicationChannel.EMAIL ? t.senderEmail.trim() || undefined : undefined,
-        senderName: undefined,
+        senderName:
+          t.channel === CommunicationChannel.EMAIL ? t.senderName.trim() || undefined : undefined,
         isActive: t.isActive,
       })),
     };
@@ -592,9 +593,12 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                                 onChange={(e) =>
                                   handleTriggerChange(trigger.id, { senderName: e.target.value })
                                 }
-                                placeholder="Custom sender display name"
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                                placeholder="e.g. Core Media Support"
+                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-mono"
                               />
+                              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
+                                Optional. Leave empty to use provider default.
+                              </p>
                             </div>
                           </div>
                         )}

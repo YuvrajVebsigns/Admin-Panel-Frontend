@@ -869,26 +869,44 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
                           </div>
                         )}
 
-                        {/* Custom Sender overrides (Email only) */}
+                        {/* Provider sender configuration (Email only) */}
                         {trigger.channel === CommunicationChannel.EMAIL && (
-                          <div className="pt-1">
-                            <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                              Custom Sender Email
-                            </label>
-                            <select
-                              value={trigger.senderEmail}
-                              onChange={(e) =>
-                                handleTriggerChange(trigger.id, { senderEmail: e.target.value })
-                              }
-                              className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                            >
-                              <option value="">Default Provider Email</option>
-                              {verifiedSenders.map((s) => (
-                                <option key={s.id} value={s.email}>
-                                  {s.name} ({s.email})
-                                </option>
-                              ))}
-                            </select>
+                          <div className="pt-1 space-y-2">
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                Sender Email
+                              </label>
+                              <select
+                                value={trigger.senderEmail}
+                                onChange={(e) =>
+                                  handleTriggerChange(trigger.id, { senderEmail: e.target.value })
+                                }
+                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                              >
+                                <option value="">Default Provider Email</option>
+                                {verifiedSenders.map((s) => (
+                                  <option key={s.id} value={s.email}>
+                                    {s.name} ({s.email})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                Brand Sender Name
+                              </label>
+                              <input
+                                type="text"
+                                value="Provider default"
+                                readOnly
+                                disabled
+                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                              />
+                              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
+                                The From name stays fixed to the brand identity and not the contact
+                                name.
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
