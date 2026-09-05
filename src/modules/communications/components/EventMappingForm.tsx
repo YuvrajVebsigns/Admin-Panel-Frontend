@@ -7,6 +7,7 @@ import {
   CreateEventTemplateMappingDto,
   UpdateEventTemplateMappingDto,
   CommunicationChannel,
+  CommunicationProvider,
   MessageTemplate,
   BrevoSender,
   SchemaDiscoveryResult,
