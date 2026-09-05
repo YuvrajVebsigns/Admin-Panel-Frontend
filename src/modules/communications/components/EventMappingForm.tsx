@@ -205,7 +205,13 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
   const { data: editData, isLoading: isLoadingMapping } = useEventMapping(mappingId || '');
   const { templates } = useMessageTemplates({ limit: 150 });
   const { categories, isLoading: isLoadingEvents } = useSystemEvents();
-  const { senders } = useCommunicationProviders();
+  const { providers, senders } = useCommunicationProviders();
+
+  const adminEmail = useMemo(() => {
+    if (!providers) return '';
+    const brevo = providers.find((p: CommunicationProvider) => p.name === 'brevo');
+    return (brevo?.config?.adminEmail as string) || '';
+  }, [providers]);
 
   const [schemaDiscovery, setSchemaDiscovery] = useState<SchemaDiscoveryResult[]>([]);
   const [event, setEvent] = useState('');
@@ -751,7 +757,7 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
                                   >
                                     <option value="">— Select Recipient —</option>
                                     <option value="admin">
-                                      System Administrator / Backup Email (admin)
+                                      System Administrator ({adminEmail || 'Not Configured'})
                                     </option>
                                     {(() => {
                                       const options: { value: string; label: string }[] = [];
@@ -813,8 +819,18 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
                                 placeholder="Backup email address or field path"
                                 className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
                               />
-                              {trgPaths.length > 0 && (
+                              {true && (
                                 <div className="mt-1 flex flex-wrap gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const current = trigger.cc ? `${trigger.cc}, admin` : 'admin';
+                                      handleTriggerChange(trigger.id, { cc: current });
+                                    }}
+                                    className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
+                                  >
+                                    + admin ({adminEmail || 'Not Configured'})
+                                  </button>
                                   {trgPaths
                                     .filter((p) => p.toLowerCase().includes('email'))
                                     .map((p) => (
@@ -846,8 +862,20 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
                                 placeholder="Static archive or backup address"
                                 className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
                               />
-                              {trgPaths.length > 0 && (
+                              {true && (
                                 <div className="mt-1 flex flex-wrap gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const current = trigger.bcc
+                                        ? `${trigger.bcc}, admin`
+                                        : 'admin';
+                                      handleTriggerChange(trigger.id, { bcc: current });
+                                    }}
+                                    className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
+                                  >
+                                    + admin ({adminEmail || 'Not Configured'})
+                                  </button>
                                   {trgPaths
                                     .filter((p) => p.toLowerCase().includes('email'))
                                     .map((p) => (

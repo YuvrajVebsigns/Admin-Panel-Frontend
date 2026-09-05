@@ -288,7 +288,7 @@ export const CommunicationProvidersTab: React.FC = () => {
                   </div>
 
                   {/* Priority and Config info */}
-                  <div className="grid grid-cols-2 gap-4 py-3 border-y border-gray-50 dark:border-navy-950 text-xs">
+                  <div className="grid grid-cols-3 gap-4 py-3 border-y border-gray-50 dark:border-navy-950 text-xs">
                     <div>
                       <p className="text-gray-400 font-semibold mb-0.5">Priority</p>
                       <span className="font-bold text-gray-800 dark:text-white flex items-center gap-1">
@@ -303,6 +303,13 @@ export const CommunicationProvidersTab: React.FC = () => {
                         {isBrevo
                           ? `${provider.config?.senderName || 'Not Set'} (${provider.config?.senderEmail || 'Not Set'})`
                           : 'Default settings'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-400 font-semibold mb-0.5">Admin Email</p>
+                      <span className="font-bold text-gray-700 dark:text-gray-300 truncate block max-w-full">
+                        {(provider.config?.adminEmail as string) || 'Not Set'}
                       </span>
                     </div>
                   </div>
