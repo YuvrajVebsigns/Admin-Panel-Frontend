@@ -20,6 +20,10 @@ export interface RegistreeRef {
 export interface NomineeEntry {
   nomineeId: RegistreeRef | string;
   category: string;
+  contactName?: string;
+  companyName?: string;
+  contactEmail?: string;
+  mobileNo?: string;
 }
 
 export interface WebsiteRef {

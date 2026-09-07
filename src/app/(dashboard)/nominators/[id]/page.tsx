@@ -244,22 +244,23 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                       >
                         <div className="flex items-start gap-4">
                           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm">
-                            {(nominee?.name || '?').charAt(0).toUpperCase()}
+                            {(entry.contactName || nominee?.name || '?').charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="text-sm font-bold text-gray-900 dark:text-white">
-                              {nominee?.name || 'Unknown'}
+                              {entry.contactName || nominee?.name || 'Unknown'}
                             </p>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
                               <span className="flex items-center gap-1">
-                                <Briefcase size={12} /> {nominee?.organization || 'No Company'}
+                                <Briefcase size={12} />{' '}
+                                {entry.companyName || nominee?.organization || 'No Company'}
                               </span>
                               <span className="flex items-center gap-1">
-                                <Mail size={12} /> {nominee?.email || 'N/A'}
+                                <Mail size={12} /> {entry.contactEmail || nominee?.email || 'N/A'}
                               </span>
-                              {nominee?.phoneNumber && (
+                              {(entry.mobileNo || nominee?.phoneNumber) && (
                                 <span className="flex items-center gap-1">
-                                  <Phone size={12} /> {nominee.phoneNumber}
+                                  <Phone size={12} /> {entry.mobileNo || nominee?.phoneNumber}
                                 </span>
                               )}
                             </div>
