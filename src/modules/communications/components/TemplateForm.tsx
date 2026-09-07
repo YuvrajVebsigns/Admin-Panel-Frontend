@@ -12,8 +12,19 @@ import {
 import { useMessageTemplates, useMessageTemplate } from '../hooks/useMessageTemplates';
 import { useSystemEvents } from '../hooks/useSystemEvents';
 import { communicationService } from '@/services/communication.service';
-import { ShieldQuestion, Copy, Zap, ArrowLeft, Info, Eye, X, ChevronDown } from 'lucide-react';
+import {
+  ShieldQuestion,
+  Zap,
+  ArrowLeft,
+  Info,
+  Eye,
+  X,
+  ChevronDown,
+  Sparkles,
+  RefreshCw,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import { VariableChipWithTooltip, getVariableMetadata } from './VariableTooltip';
 
 interface SchemaComboboxProps {
   value: string;
@@ -198,6 +209,7 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [testValues, setTestValues] = useState<Record<string, string>>({});
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const htmlTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Parse variablesRaw into string array
   const parsedVars = useMemo(() => {
@@ -210,6 +222,49 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
   // Helper to generate sample mock values
   const getSampleValue = (name: string) => {
     const key = name.toLowerCase();
+    if (key.includes('nomineestable') || key === 'nomineestable') {
+      return `
+      <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: collapse; margin: 16px 0; font-family: sans-serif; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <thead>
+          <tr style="background-color: #0f172a; color: #ffffff; text-align: left;">
+            <th style="padding: 10px 12px; width: 30px; text-align: center;">#</th>
+            <th style="padding: 10px 12px;">Nominee Name</th>
+            <th style="padding: 10px 12px;">Company / Organization</th>
+            <th style="padding: 10px 12px;">Email</th>
+            <th style="padding: 10px 12px;">Phone</th>
+            <th style="padding: 10px 12px;">Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; text-align: center; color: #64748b;">1</td>
+            <td style="padding: 10px 12px; font-weight: 600;">Jane Smith</td>
+            <td style="padding: 10px 12px;">Infosys</td>
+            <td style="padding: 10px 12px; color: #2563eb;">jane@infosys.com</td>
+            <td style="padding: 10px 12px;">9876543210</td>
+            <td style="padding: 10px 12px;">CIO of the Year</td>
+          </tr>
+          <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; text-align: center; color: #64748b;">2</td>
+            <td style="padding: 10px 12px; font-weight: 600;">Robert Chen</td>
+            <td style="padding: 10px 12px;">Tata Consultancy</td>
+            <td style="padding: 10px 12px; color: #2563eb;">robert@tcs.com</td>
+            <td style="padding: 10px 12px;">9876543211</td>
+            <td style="padding: 10px 12px;">Cloud Innovation</td>
+          </tr>
+        </tbody>
+      </table>`;
+    }
+    if (key.includes('nomineeslist') || key === 'nomineeslist') {
+      return `
+      <ul style="margin: 14px 0; padding-left: 20px; font-family: sans-serif; font-size: 14px; line-height: 1.6; color: #334155;">
+        <li style="margin-bottom: 8px;"><strong>#1: Jane Smith</strong> (Infosys) &mdash; Category: CIO of the Year &bull; jane@infosys.com</li>
+        <li style="margin-bottom: 8px;"><strong>#2: Robert Chen</strong> (Tata Consultancy) &mdash; Category: Cloud Innovation &bull; robert@tcs.com</li>
+      </ul>`;
+    }
+    if (key === 'nominees' || (key.includes('nominee') && key.includes('list'))) {
+      return 'Jane Smith (Infosys), Robert Chen (Tata Consultancy)';
+    }
     if (key.includes('name') || key.includes('user')) return 'John Doe';
     if (key.includes('email')) return 'john.doe@example.com';
     if (key.includes('otp') || key.includes('code')) return '489201';
@@ -225,6 +280,38 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
     if (key.includes('date') || key.includes('time')) return new Date().toLocaleDateString();
     return `[${name}]`;
   };
+
+  const mockNomineesList = useMemo(
+    () => [
+      {
+        index: 1,
+        name: 'Jane Smith',
+        contactName: 'Jane Smith',
+        company: 'Infosys',
+        companyName: 'Infosys',
+        organization: 'Infosys',
+        email: 'jane@infosys.com',
+        phone: '9876543210',
+        mobileNo: '9876543210',
+        category: 'CIO of the Year',
+        categoryName: 'CIO of the Year',
+      },
+      {
+        index: 2,
+        name: 'Robert Chen',
+        contactName: 'Robert Chen',
+        company: 'Tata Consultancy',
+        companyName: 'Tata Consultancy',
+        organization: 'Tata Consultancy',
+        email: 'robert@tcs.com',
+        phone: '9876543211',
+        mobileNo: '9876543211',
+        category: 'Cloud Innovation',
+        categoryName: 'Cloud Innovation',
+      },
+    ],
+    [],
+  );
 
   // Keep testValues keys in sync with parsedVars
   useEffect(() => {
@@ -251,14 +338,35 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
   // Compute rendered HTML content replacing variables with testValues
   const renderedHtml = useMemo(() => {
     let result = htmlContent;
+
+    // Simulate {{#each nominees}}...{{/each}} or {{#each params.nominees}}...{{/each}}
+    result = result.replace(
+      /{{\s*#each\s+(?:params\.)?nominees\s*}}([\s\S]*?){{\s*\/each\s*}}/g,
+      (_match, blockContent) => {
+        return mockNomineesList
+          .map((item) => {
+            let row = blockContent;
+            Object.entries(item).forEach(([k, v]) => {
+              row = row.replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), String(v));
+              row = row.replace(new RegExp(`{{\\s*params\\.${k}\\s*}}`, 'g'), String(v));
+            });
+            return row;
+          })
+          .join('');
+      },
+    );
+
     parsedVars.forEach((v) => {
       const mockVal = testValues[v] || '';
       // Replace all occurrences of {{params.variableName}} with mockVal
       const regex = new RegExp(`{{\\s*params\\.${v}\\s*}}`, 'g');
       result = result.replace(regex, mockVal);
+      // Also replace {{variableName}} without params.
+      const regexBare = new RegExp(`{{\\s*${v}\\s*}}`, 'g');
+      result = result.replace(regexBare, mockVal);
     });
     return result;
-  }, [htmlContent, parsedVars, testValues]);
+  }, [htmlContent, parsedVars, testValues, mockNomineesList]);
 
   // Update iframe body with rendered html reactively
   useEffect(() => {
@@ -433,6 +541,100 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
     const newVars = currentVars.filter((v) => v !== fieldName);
     setVariablesRaw(newVars.join(', '));
   };
+
+  const handleInsertVariableIntoHtml = (varName: string) => {
+    const meta = getVariableMetadata(varName, schemaVariables);
+    const textToInsert = meta.isLoop && meta.loopSnippet ? meta.loopSnippet : meta.syntax;
+
+    const textarea = htmlTextareaRef.current;
+    if (!textarea) {
+      setHtmlContent((prev) => (prev ? `${prev}\n${textToInsert}` : textToInsert));
+      toast.success(`Inserted ${meta.syntax}`);
+      return;
+    }
+
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const before = htmlContent.substring(0, startPos);
+    const after = htmlContent.substring(endPos);
+    const newContent = before + textToInsert + after;
+
+    setHtmlContent(newContent);
+    if (!parsedVars.includes(meta.name)) {
+      const updated = [...parsedVars, meta.name];
+      setVariablesRaw(updated.join(', '));
+    }
+
+    toast.success(`Inserted ${meta.syntax} into template!`);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = startPos + textToInsert.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 50);
+  };
+
+  const handleAutoDetectVariables = () => {
+    const allText = `${subject} ${htmlContent} ${textContent}`;
+    const found = new Set<string>();
+
+    const varRegex = /{{\s*(?:params\.)?([a-zA-Z0-9_.-]+)\s*}}/g;
+    let match;
+    while ((match = varRegex.exec(allText)) !== null) {
+      const token = match[1];
+      if (
+        token &&
+        !token.startsWith('#') &&
+        !token.startsWith('/') &&
+        !token.startsWith('^') &&
+        !token.startsWith('>') &&
+        !['index', '@index', '@first', '@last', 'this'].includes(token)
+      ) {
+        found.add(token);
+      }
+    }
+
+    const loopRegex = /{{\s*#each\s+(?:params\.)?([a-zA-Z0-9_.-]+)\s*}}/g;
+    while ((match = loopRegex.exec(allText)) !== null) {
+      if (match[1]) {
+        found.add(match[1]);
+      }
+    }
+
+    if (found.size === 0) {
+      toast('No variables detected in subject or template text.', { icon: 'ℹ️' });
+      return;
+    }
+
+    const merged = Array.from(new Set([...parsedVars, ...found]));
+    setVariablesRaw(merged.join(', '));
+    toast.success(`Detected and registered ${found.size} variable(s)!`);
+  };
+
+  const quickBarVars = useMemo(() => {
+    const set = new Set<string>();
+    const isNomination =
+      baseSchema.toLowerCase().includes('nomination') ||
+      linkedEvent.toLowerCase().includes('nomination');
+
+    if (isNomination) {
+      set.add('nomineesTable');
+      set.add('nominees');
+      set.add('nomineesList');
+      set.add('nomineeNames');
+      set.add('nominatorName');
+      set.add('eventName');
+    }
+
+    parsedVars.forEach((v) => set.add(v));
+
+    schemaVariables
+      .filter((v) => !v.isRelation)
+      .slice(0, 8)
+      .forEach((v) => set.add(v.field));
+
+    return Array.from(set);
+  }, [baseSchema, linkedEvent, parsedVars, schemaVariables]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -614,32 +816,15 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                       .map((v) => {
                         const isActiveChip = parsedVars.includes(v.field);
                         return (
-                          <button
+                          <VariableChipWithTooltip
                             key={v.field}
-                            type="button"
+                            name={v.field}
+                            schemaVariables={schemaVariables}
+                            isActive={isActiveChip}
                             onClick={() => handleVariableChipClick(v.field)}
-                            title={`${v.description} (${v.type}) — Click to insert`}
-                            className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer shadow-sm ${
-                              isActiveChip
-                                ? 'bg-brand-500 text-white border border-brand-600 shadow-md font-bold'
-                                : 'bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-navy-700 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-500/10'
-                            }`}
-                          >
-                            <Copy
-                              size={11}
-                              className={
-                                isActiveChip
-                                  ? 'text-white'
-                                  : 'text-gray-400 group-hover:text-brand-500 transition-colors'
-                              }
-                            />
-                            <span>{v.field}</span>
-                            {isActiveChip && (
-                              <span className="text-[9px] bg-brand-600 px-1.5 py-0.2 rounded font-sans font-bold">
-                                Selected
-                              </span>
-                            )}
-                          </button>
+                            onCopy={() => handleCopyVariable(v.field)}
+                            customBadgeText={isActiveChip ? 'Selected' : undefined}
+                          />
                         );
                       })}
                   </div>
@@ -698,32 +883,15 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                             .map((v) => {
                               const isActiveChip = parsedVars.includes(v.field);
                               return (
-                                <button
+                                <VariableChipWithTooltip
                                   key={v.field}
-                                  type="button"
+                                  name={v.field}
+                                  schemaVariables={schemaVariables}
+                                  isActive={isActiveChip}
                                   onClick={() => handleVariableChipClick(v.field)}
-                                  title={`${v.description} (${v.type}) — Click to insert`}
-                                  className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer shadow-sm ${
-                                    isActiveChip
-                                      ? 'bg-indigo-500 text-white border border-indigo-600 shadow-md font-bold'
-                                      : 'bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-navy-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
-                                  }`}
-                                >
-                                  <Copy
-                                    size={11}
-                                    className={
-                                      isActiveChip
-                                        ? 'text-white'
-                                        : 'text-gray-400 group-hover:text-indigo-500 transition-colors'
-                                    }
-                                  />
-                                  <span>{v.field}</span>
-                                  {isActiveChip && (
-                                    <span className="text-[9px] bg-indigo-650 px-1.5 py-0.2 rounded font-sans font-bold">
-                                      Selected
-                                    </span>
-                                  )}
-                                </button>
+                                  onCopy={() => handleCopyVariable(v.field)}
+                                  customBadgeText={isActiveChip ? 'Selected' : undefined}
+                                />
                               );
                             })}
                         </div>
@@ -760,30 +928,16 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
               {parsedVars.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50/50 dark:bg-navy-950/20 rounded-2xl border border-gray-100 dark:border-navy-850">
                   {parsedVars.map((v) => (
-                    <div
+                    <VariableChipWithTooltip
                       key={v}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono shadow-sm group transition-all ${getVariableColorClasses(v)}`}
-                    >
-                      <span className="font-bold">{v}</span>
-                      <div className="flex items-center gap-1 border-l border-current/20 pl-1.5 ml-1">
-                        <button
-                          type="button"
-                          onClick={() => handleCopyVariable(v)}
-                          title={`Copy {{params.${v}}} to clipboard`}
-                          className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-current opacity-70 hover:opacity-100 transition-all"
-                        >
-                          <Copy size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveVariable(v)}
-                          title={`Remove ${v}`}
-                          className="p-1 hover:bg-red-500/10 rounded-lg text-current opacity-70 hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-all"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    </div>
+                      name={v}
+                      schemaVariables={schemaVariables}
+                      isActive={true}
+                      onClick={() => handleCopyVariable(v)}
+                      onCopy={() => handleCopyVariable(v)}
+                      onRemove={() => handleRemoveVariable(v)}
+                      colorClasses={getVariableColorClasses(v)}
+                    />
                   ))}
                 </div>
               )}
@@ -817,7 +971,7 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
 
             {/* Simple HTML Textarea Editor with Preview button */}
             {channel === CommunicationChannel.EMAIL && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     HTML Template Code
@@ -831,7 +985,46 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                     <span>Preview HTML Output</span>
                   </button>
                 </div>
+
+                {/* Variable Quick-Insert & Hover-Inspector Bar */}
+                <div className="p-3.5 bg-gradient-to-r from-gray-50 to-brand-50/30 dark:from-navy-950 dark:to-navy-900/60 rounded-2xl border border-gray-200/90 dark:border-navy-800 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-brand-500 shrink-0" />
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                        Variable Inspector & Quick Insert
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 font-normal normal-case hidden sm:inline">
+                        (Hover for input type & sample response &bull; Click to insert at cursor)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAutoDetectVariables}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 bg-white dark:bg-navy-900 border border-brand-200 dark:border-brand-500/30 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-500/15 shadow-sm transition-all cursor-pointer"
+                      title="Scan template and subject to auto-detect any pasted variables"
+                    >
+                      <RefreshCw size={11} />
+                      <span>Auto-Detect Pasted Variables</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {quickBarVars.map((v) => (
+                      <VariableChipWithTooltip
+                        key={v}
+                        name={v}
+                        schemaVariables={schemaVariables}
+                        isActive={parsedVars.includes(v)}
+                        onClick={() => handleInsertVariableIntoHtml(v)}
+                        onCopy={() => handleCopyVariable(v)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
                 <textarea
+                  ref={htmlTextareaRef}
                   rows={15}
                   value={htmlContent}
                   onChange={(e) => {
@@ -1039,22 +1232,32 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                 </h4>
                 {parsedVars.length > 0 ? (
                   <div className="space-y-3">
-                    {parsedVars.map((v) => (
-                      <div key={v}>
-                        <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 font-mono">
-                          {v}
-                        </label>
-                        <input
-                          type="text"
-                          value={testValues[v] || ''}
-                          onChange={(e) =>
-                            setTestValues((prev) => ({ ...prev, [v]: e.target.value }))
-                          }
-                          placeholder={`Value for ${v}`}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900"
-                        />
-                      </div>
-                    ))}
+                    {parsedVars.map((v) => {
+                      const meta = getVariableMetadata(v, schemaVariables);
+                      return (
+                        <div key={v} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 font-mono">
+                              {v}
+                            </label>
+                            <span
+                              className={`text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.2 rounded border ${meta.badgeStyle}`}
+                            >
+                              {meta.type}
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={testValues[v] || ''}
+                            onChange={(e) =>
+                              setTestValues((prev) => ({ ...prev, [v]: e.target.value }))
+                            }
+                            placeholder={`Value for ${v}`}
+                            className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-xs text-gray-400 dark:text-gray-500 italic p-4 bg-gray-100 dark:bg-navy-900/50 rounded-xl border border-gray-150 dark:border-navy-800/50">
