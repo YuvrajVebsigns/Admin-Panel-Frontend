@@ -37,6 +37,7 @@ interface TriggerRow {
   to: string;
   cc: string;
   bcc: string;
+  senderId?: string;
   senderEmail: string;
   senderName: string;
   isActive: boolean;
@@ -93,6 +94,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
           to: t.to || '',
           cc: t.cc || '',
           bcc: t.bcc || '',
+          senderId: '',
           senderEmail: t.senderEmail || '',
           senderName: t.senderName || '',
           isActive: t.isActive,
@@ -111,6 +113,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
           to: editData.to || '',
           cc: editData.cc || '',
           bcc: editData.bcc || '',
+          senderId: '',
           senderEmail: editData.senderEmail || '',
           senderName: editData.senderName || '',
           isActive: true,
@@ -129,6 +132,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
         to: '',
         cc: '',
         bcc: '',
+        senderId: '',
         senderEmail: '',
         senderName: '',
         isActive: true,
@@ -150,6 +154,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
           updated.to = '';
           updated.cc = '';
           updated.bcc = '';
+          updated.senderId = '';
           updated.senderEmail = '';
           updated.senderName = '';
         }
@@ -561,47 +566,105 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                         )}
 
                         {/* Sender Overrides (Email) */}
-                        {trigger.channel === CommunicationChannel.EMAIL && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                                Sender Email Override
-                              </label>
-                              <select
-                                value={trigger.senderEmail}
-                                onChange={(e) =>
-                                  handleTriggerChange(trigger.id, { senderEmail: e.target.value })
-                                }
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
-                              >
-                                <option value="">Default Provider Email</option>
-                                {verifiedSenders.map((s) => (
-                                  <option key={s.id} value={s.email}>
-                                    {s.name} ({s.email})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                                Sender Name Override
-                              </label>
-                              <input
-                                type="text"
-                                value={trigger.senderName}
-                                onFocus={trackFocus}
-                                onChange={(e) =>
-                                  handleTriggerChange(trigger.id, { senderName: e.target.value })
-                                }
-                                placeholder="e.g. Core Media Support"
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-mono"
-                              />
-                              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                                Optional. Leave empty to use provider default.
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        {trigger.channel === CommunicationChannel.EMAIL &&
+                          (() => {
+                            const matchedSender =
+                              (trigger.senderId &&
+                                verifiedSenders.find((s) => String(s.id) === trigger.senderId)) ||
+                              verifiedSenders.find(
+                                (s) =>
+                                  s.email.toLowerCase() === trigger.senderEmail.toLowerCase() &&
+                                  trigger.senderName &&
+                                  s.name.toLowerCase() === trigger.senderName.toLowerCase(),
+                              ) ||
+                              verifiedSenders.find(
+                                (s) =>
+                                  s.email.toLowerCase() === trigger.senderEmail.toLowerCase() &&
+                                  trigger.senderName &&
+                                  (s.name
+                                    .toLowerCase()
+                                    .includes(trigger.senderName.toLowerCase()) ||
+                                    trigger.senderName
+                                      .toLowerCase()
+                                      .includes(s.name.toLowerCase())),
+                              ) ||
+                              verifiedSenders.find(
+                                (s) => s.email.toLowerCase() === trigger.senderEmail.toLowerCase(),
+                              );
+
+                            const selectedValue = matchedSender
+                              ? String(matchedSender.id)
+                              : trigger.senderId || (trigger.senderEmail ? '__custom__' : '');
+
+                            return (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                                    Sender Email Override
+                                  </label>
+                                  <select
+                                    value={selectedValue}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (!val) {
+                                        handleTriggerChange(trigger.id, {
+                                          senderId: '',
+                                          senderEmail: '',
+                                          senderName: '',
+                                        });
+                                        return;
+                                      }
+                                      const found = verifiedSenders.find(
+                                        (s) => String(s.id) === val,
+                                      );
+                                      if (found) {
+                                        handleTriggerChange(trigger.id, {
+                                          senderId: String(found.id),
+                                          senderEmail: found.email,
+                                          senderName: found.name,
+                                        });
+                                      }
+                                    }}
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
+                                  >
+                                    <option value="">Default Provider Email</option>
+                                    {verifiedSenders.map((s) => (
+                                      <option key={s.id} value={String(s.id)}>
+                                        {s.name} ({s.email})
+                                      </option>
+                                    ))}
+                                    {!matchedSender && trigger.senderEmail && (
+                                      <option value="__custom__">
+                                        {trigger.senderName
+                                          ? `${trigger.senderName} (${trigger.senderEmail})`
+                                          : trigger.senderEmail}
+                                      </option>
+                                    )}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">
+                                    Sender Name Override
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={trigger.senderName}
+                                    onFocus={trackFocus}
+                                    onChange={(e) =>
+                                      handleTriggerChange(trigger.id, {
+                                        senderName: e.target.value,
+                                      })
+                                    }
+                                    placeholder="e.g. Core Media Support"
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-mono"
+                                  />
+                                  <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
+                                    Optional. Leave empty to use provider default.
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })()}
                       </div>
                     )}
                   </div>

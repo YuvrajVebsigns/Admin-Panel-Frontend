@@ -360,6 +360,17 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
         return mockNomineesList
           .map((item) => {
             let row = blockContent;
+            // Handle {% if itemVar.prop %}...{% endif %}
+            row = row.replace(
+              new RegExp(
+                `{%\\s*if\\s+${itemVar}\\.([a-zA-Z0-9_]+)\\s*%}([\\s\\S]*?)(?:{%\\s*else\\s*%}([\\s\\S]*?))?{%\\s*endif\\s*%}`,
+                'gi',
+              ),
+              (_ifM: string, prop: string, ifB: string, elseB = '') => {
+                const val = (item as Record<string, unknown>)[prop];
+                return val ? ifB : elseB;
+              },
+            );
             Object.entries(item).forEach(([k, v]) => {
               row = row.replace(new RegExp(`{{\\s*${itemVar}\\.${k}\\s*}}`, 'g'), String(v));
               row = row.replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), String(v));
