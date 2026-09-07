@@ -39,12 +39,12 @@ export const getVariableMetadata = (
     return {
       name,
       type: 'Array<Nominee>',
-      syntax: '{{#each params.nominees}}',
+      syntax: '{% for nominee in params.nominees %}',
       description:
-        'Array of all nominee candidates submitted in this request. Loop through this array to render custom table rows or lists.',
+        'Array of all nominee candidates. Brevo templates use {% for nominee in params.nominees %}...{% endfor %} with {{nominee.name}}, {{nominee.company}}, {{nominee.category}}, {{nominee.email}}, {{nominee.index}} (Handlebars {{#each}} is also auto-adapted).',
       sample: `[\n  { "index": 1, "name": "Jane Smith", "company": "Infosys", "category": "CIO of the Year", "email": "jane@infosys.com", "phone": "9876543210" },\n  { "index": 2, "name": "Robert Chen", "company": "Tata Consultancy", "category": "Cloud Innovation", "email": "robert@tcs.com", "phone": "9876543211" }\n]`,
       isLoop: true,
-      loopSnippet: `{{#each params.nominees}}\n  <tr>\n    <td>{{index}}</td>\n    <td><strong>{{name}}</strong><br/><small>{{email}}</small></td>\n    <td>{{company}}</td>\n    <td>{{category}}</td>\n  </tr>\n{{/each}}`,
+      loopSnippet: `{% for nominee in params.nominees %}\n  <tr>\n    <td>{{nominee.index}}</td>\n    <td><strong>{{nominee.name}}</strong><br/><small>{{nominee.email}}</small></td>\n    <td>{{nominee.company}}</td>\n    <td>{{nominee.category}}</td>\n  </tr>\n{% endfor %}`,
       badgeStyle: 'bg-purple-500/20 text-purple-300 border border-purple-500/40',
     };
   }

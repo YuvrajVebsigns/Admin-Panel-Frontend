@@ -297,6 +297,9 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
         mobileNo: '9876543210',
         category: 'CIO of the Year',
         categoryName: 'CIO of the Year',
+        subCategory: 'Enterprise Cloud',
+        subcategory: 'Enterprise Cloud',
+        subCategoryName: 'Enterprise Cloud',
       },
       {
         index: 2,
@@ -310,6 +313,9 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
         mobileNo: '9876543211',
         category: 'Cloud Innovation',
         categoryName: 'Cloud Innovation',
+        subCategory: 'Hybrid Infrastructure',
+        subcategory: 'Hybrid Infrastructure',
+        subCategoryName: 'Hybrid Infrastructure',
       },
     ],
     [],
@@ -341,7 +347,26 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
   const renderedHtml = useMemo(() => {
     let result = htmlContent;
 
-    // Simulate {{#each nominees}}...{{/each}} or {{#each params.nominees}}...{{/each}}
+    // 1. Simulate Brevo {% for nominee in params.nominees %}...{% endfor %}
+    result = result.replace(
+      /{%\s*for\s+([a-zA-Z0-9_]+)\s+in\s+(?:params\.)?nominees\s*%}([\s\S]*?){%\s*endfor\s*%}/gi,
+      (_match, itemVar, blockContent) => {
+        return mockNomineesList
+          .map((item) => {
+            let row = blockContent;
+            Object.entries(item).forEach(([k, v]) => {
+              row = row.replace(new RegExp(`{{\\s*${itemVar}\\.${k}\\s*}}`, 'g'), String(v));
+              row = row.replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), String(v));
+              row = row.replace(new RegExp(`{{\\s*params\\.${k}\\s*}}`, 'g'), String(v));
+            });
+            row = row.replace(new RegExp(`{{\\s*forloop\\.index\\s*}}`, 'g'), String(item.index));
+            return row;
+          })
+          .join('');
+      },
+    );
+
+    // 2. Simulate Handlebars {{#each nominees}}...{{/each}} or {{#each params.nominees}}...{{/each}}
     result = result.replace(
       /{{\s*#each\s+(?:params\.)?nominees\s*}}([\s\S]*?){{\s*\/each\s*}}/g,
       (_match, blockContent) => {
@@ -590,7 +615,9 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
         !token.startsWith('/') &&
         !token.startsWith('^') &&
         !token.startsWith('>') &&
-        !['index', '@index', '@first', '@last', 'this'].includes(token)
+        !token.startsWith('nominee.') &&
+        !token.startsWith('item.') &&
+        !['index', '@index', '@first', '@last', 'this', 'forloop.index'].includes(token)
       ) {
         found.add(token);
       }
@@ -598,6 +625,13 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
 
     const loopRegex = /{{\s*#each\s+(?:params\.)?([a-zA-Z0-9_.-]+)\s*}}/g;
     while ((match = loopRegex.exec(allText)) !== null) {
+      if (match[1]) {
+        found.add(match[1]);
+      }
+    }
+
+    const brevoLoopRegex = /{%\s*for\s+[a-zA-Z0-9_]+\s+in\s+(?:params\.)?([a-zA-Z0-9_.-]+)\s*%}/gi;
+    while ((match = brevoLoopRegex.exec(allText)) !== null) {
       if (match[1]) {
         found.add(match[1]);
       }
