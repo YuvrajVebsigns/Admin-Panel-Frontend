@@ -594,7 +594,7 @@ export const VariableChipWithTooltip: React.FC<VariableChipWithTooltipProps> = (
       </button>
 
       {/* Floating tooltip strictly ABOVE the variable */}
-      <VariableTooltipCard meta={meta} onCopy={onCopy} />
+      <VariableTooltipCard meta={meta} />
     </div>
   );
 };
