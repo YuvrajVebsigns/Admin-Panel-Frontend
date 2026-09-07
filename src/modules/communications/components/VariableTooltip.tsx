@@ -231,13 +231,25 @@ export const getVariableMetadata = (
       badgeStyle: 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
     };
   }
-  if (key === 'nomineecategory') {
+  if (key === 'nomineecategory' || key === 'category' || key === 'categoryname') {
     return {
       name,
       type: 'String',
-      syntax: '{{params.nomineeCategory}}',
-      description: 'Award category in which this specific nominee was nominated.',
+      syntax: `{{params.${name}}}`,
+      description:
+        'Award category in which the nominee is nominated (e.g. CIO of the Year, Cloud Innovation). Also available as {{category}} inside loops.',
       sample: '"CIO of the Year"',
+      badgeStyle: 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
+    };
+  }
+  if (key === 'subcategory' || key === 'nomineesubcategory' || key === 'subcategoryname') {
+    return {
+      name,
+      type: 'String',
+      syntax: `{{params.${name}}}`,
+      description:
+        'Award sub-category in which the nominee is nominated. Also available as {{subCategory}} inside loops.',
+      sample: '"Cloud & Infrastructure"',
       badgeStyle: 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
     };
   }

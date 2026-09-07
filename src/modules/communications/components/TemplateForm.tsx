@@ -265,6 +265,8 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
     if (key === 'nominees' || (key.includes('nominee') && key.includes('list'))) {
       return 'Jane Smith (Infosys), Robert Chen (Tata Consultancy)';
     }
+    if (key.includes('subcategory')) return 'Cloud & Infrastructure';
+    if (key.includes('category')) return 'CIO of the Year';
     if (key.includes('name') || key.includes('user')) return 'John Doe';
     if (key.includes('email')) return 'john.doe@example.com';
     if (key.includes('otp') || key.includes('code')) return '489201';
@@ -621,7 +623,12 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
       set.add('nomineesTable');
       set.add('nominees');
       set.add('nomineesList');
+      set.add('category');
+      set.add('nomineeCategory');
+      set.add('nomineeCategories');
+      set.add('subCategory');
       set.add('nomineeNames');
+      set.add('nomineeCompanies');
       set.add('nominatorName');
       set.add('eventName');
     }
