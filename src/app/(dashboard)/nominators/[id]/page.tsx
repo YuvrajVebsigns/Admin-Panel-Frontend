@@ -39,10 +39,14 @@ import {
   Eye,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export default function NominatorDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const canViewNominators = useHasPermission(PERMISSIONS.NOMINATORS_VIEW);
+  const canViewNominees = useHasPermission(PERMISSIONS.NOMINEES_VIEW);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -251,6 +255,28 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
           Loading nominator profile and nomination submissions...
         </p>
+      </div>
+    );
+  }
+
+  if (!canViewNominators) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
+        <div className="h-16 w-16 rounded-2xl bg-error-50 dark:bg-error-500/10 text-error-500 flex items-center justify-center mb-4 border border-error-100 dark:border-error-500/20 shadow-sm">
+          <AlertCircle size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
+          You do not have permission to view nominator profiles. Please contact your administrator
+          if you believe this is an error.
+        </p>
+        <Button
+          onClick={() => router.push('/nominators')}
+          variant="outline"
+          startIcon={<ArrowLeft size={16} />}
+        >
+          Back to Nominators
+        </Button>
       </div>
     );
   }
@@ -956,7 +982,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                                   )}
                                 </div>
 
-                                {nomineeRouteId && (
+                                {nomineeRouteId && canViewNominees && (
                                   <Link
                                     href={`/nominees/${nomineeRouteId}`}
                                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-navy-700 shadow-2xs hover:shadow transition-all"

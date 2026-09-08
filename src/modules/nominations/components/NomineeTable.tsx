@@ -18,11 +18,14 @@ import {
 } from '../hooks/useNominationCategories';
 import { Mail, Briefcase, Award, Eye } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface NomineeTableProps {}
 
 export const NomineeTable: React.FC<NomineeTableProps> = () => {
   const router = useRouter();
+  const canViewNominees = useHasPermission(PERMISSIONS.NOMINEES_VIEW);
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -227,147 +230,177 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     return first ? first.toUpperCase() : '?';
   };
 
-  const columns: Column<GroupedNominee>[] = [
-    {
-      header: 'CIO Nominee',
-      accessor: (grouped) => {
-        const nominee = grouped.nominee;
-        const routeId = nominee.id || nominee._id || grouped._id;
-        return (
-          <div
-            onClick={() => router.push(`/nominees/${routeId}`)}
-            className="flex items-center gap-3.5 cursor-pointer group"
-          >
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20 group-hover:scale-105 transition-transform">
-              {getInitials(nominee.name)}
+  const columns: Column<GroupedNominee>[] = useMemo(() => {
+    const baseColumns: Column<GroupedNominee>[] = [
+      {
+        header: 'CIO Nominee',
+        accessor: (grouped) => {
+          const nominee = grouped.nominee;
+          const routeId = nominee.id || nominee._id || grouped._id;
+          return (
+            <div
+              onClick={() => {
+                if (canViewNominees) {
+                  router.push(`/nominees/${routeId}`);
+                }
+              }}
+              className={`flex items-center gap-3.5 ${
+                canViewNominees ? 'cursor-pointer group' : 'cursor-default'
+              }`}
+            >
+              <div
+                className={`h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20 transition-transform ${
+                  canViewNominees ? 'group-hover:scale-105' : ''
+                }`}
+              >
+                {getInitials(nominee.name)}
+              </div>
+              <div className="min-w-0">
+                <p
+                  className={`text-sm font-bold text-gray-900 dark:text-white truncate transition-colors ${
+                    canViewNominees
+                      ? 'group-hover:text-brand-600 dark:group-hover:text-brand-400'
+                      : ''
+                  }`}
+                >
+                  {nominee.name}
+                </p>
+                <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5">
+                  <Mail size={12} className="text-gray-400" />
+                  {nominee.email}
+                </span>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                {nominee.name}
-              </p>
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5">
-                <Mail size={12} className="text-gray-400" />
-                {nominee.email}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Company',
-      accessor: (grouped) => {
-        const nominee = grouped.nominee;
-        return (
-          <div className="flex items-center gap-2 max-w-[200px]">
-            <Briefcase size={14} className="text-gray-400 shrink-0" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-              {nominee.organization || '-'}
-            </p>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Category',
-      accessor: (grouped) => {
-        const uniqueCategoryNames = getNomineeCategoryNames(grouped).filter((name) => {
-          const subCategoryName = getNomineeSubCategoryNames(grouped).find(
-            (subName) => subName === name || name.includes(`> ${subName}`),
           );
-          return !subCategoryName;
-        });
+        },
+      },
+      {
+        header: 'Company',
+        accessor: (grouped) => {
+          const nominee = grouped.nominee;
+          return (
+            <div className="flex items-center gap-2 max-w-[200px]">
+              <Briefcase size={14} className="text-gray-400 shrink-0" />
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                {nominee.organization || '-'}
+              </p>
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Category',
+        accessor: (grouped) => {
+          const uniqueCategoryNames = getNomineeCategoryNames(grouped).filter((name) => {
+            const subCategoryName = getNomineeSubCategoryNames(grouped).find(
+              (subName) => subName === name || name.includes(`> ${subName}`),
+            );
+            return !subCategoryName;
+          });
 
-        return (
-          <div className="flex flex-wrap gap-2 max-w-[260px]">
-            {uniqueCategoryNames.length > 0 ? (
-              uniqueCategoryNames.map((name) => (
-                <Badge
-                  key={name}
-                  color="info"
-                  variant="light"
-                  startIcon={<Award size={12} />}
-                  className="font-medium text-xs rounded-lg px-2 py-1"
-                >
-                  {name}
-                </Badge>
-              ))
-            ) : (
-              <span className="text-xs text-gray-400">None</span>
-            )}
-          </div>
-        );
+          return (
+            <div className="flex flex-wrap gap-2 max-w-[260px]">
+              {uniqueCategoryNames.length > 0 ? (
+                uniqueCategoryNames.map((name) => (
+                  <Badge
+                    key={name}
+                    color="info"
+                    variant="light"
+                    startIcon={<Award size={12} />}
+                    className="font-medium text-xs rounded-lg px-2 py-1"
+                  >
+                    {name}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-gray-400">None</span>
+              )}
+            </div>
+          );
+        },
       },
-    },
-    {
-      header: 'Sub Category',
-      accessor: (grouped) => {
-        const subCategoryNames = getNomineeSubCategoryNames(grouped);
+      {
+        header: 'Sub Category',
+        accessor: (grouped) => {
+          const subCategoryNames = getNomineeSubCategoryNames(grouped);
 
-        return (
-          <div className="flex flex-wrap gap-2 max-w-[260px]">
-            {subCategoryNames.length > 0 ? (
-              subCategoryNames.map((name, idx) => (
-                <Badge
-                  key={`${name}-${idx}`}
-                  color="light"
-                  className="text-[10px] font-semibold uppercase px-2 py-1 rounded-lg border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900"
-                >
-                  {name}
-                </Badge>
-              ))
-            ) : (
-              <span className="text-xs text-gray-400">None</span>
-            )}
-          </div>
-        );
+          return (
+            <div className="flex flex-wrap gap-2 max-w-[260px]">
+              {subCategoryNames.length > 0 ? (
+                subCategoryNames.map((name, idx) => (
+                  <Badge
+                    key={`${name}-${idx}`}
+                    color="light"
+                    className="text-[10px] font-semibold uppercase px-2 py-1 rounded-lg border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900"
+                  >
+                    {name}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-gray-400">None</span>
+              )}
+            </div>
+          );
+        },
       },
-    },
-    {
-      header: 'Nominators',
-      accessor: (grouped) => (
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
-            {grouped.nominatorsCount}
-          </span>
-          <span className="text-xs text-gray-500">Submissions</span>
-        </div>
-      ),
-    },
-    {
-      header: 'Status',
-      accessor: (grouped) => (
-        <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
-          {grouped.statuses.map((status, i) => (
-            <Badge
-              key={i}
-              color={getStatusColor(status)}
-              className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
-            >
-              {status}
-            </Badge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      header: 'Actions',
-      accessor: (grouped) => {
-        const routeId = grouped.nominee?.id || grouped.nominee?._id || grouped._id;
-        return (
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => router.push(`/nominees/${routeId}`)}
-              className="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all"
-              title="View Nominee Details"
-            >
-              <Eye size={16} />
-            </button>
+      {
+        header: 'Nominators',
+        accessor: (grouped) => (
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
+              {grouped.nominatorsCount}
+            </span>
+            <span className="text-xs text-gray-500">Submissions</span>
           </div>
-        );
+        ),
       },
-    },
-  ];
+      {
+        header: 'Status',
+        accessor: (grouped) => (
+          <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
+            {grouped.statuses.map((status, i) => (
+              <Badge
+                key={i}
+                color={getStatusColor(status)}
+                className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
+              >
+                {status}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+    ];
+
+    if (canViewNominees) {
+      baseColumns.push({
+        header: 'Actions',
+        accessor: (grouped) => {
+          const routeId = grouped.nominee?.id || grouped.nominee?._id || grouped._id;
+          return (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => router.push(`/nominees/${routeId}`)}
+                className="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all"
+                title="View Nominee Details"
+              >
+                <Eye size={16} />
+              </button>
+            </div>
+          );
+        },
+      });
+    }
+
+    return baseColumns;
+  }, [
+    canViewNominees,
+    router,
+    combinedCategoryMap,
+    combinedSubCategoryMap,
+    subCategoryMap,
+    categoryMap,
+  ]);
 
   const STATUS_OPTIONS = [
     { value: '', label: 'All Statuses' },

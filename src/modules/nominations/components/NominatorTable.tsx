@@ -10,11 +10,14 @@ import { Globe, Calendar, Mail, Eye } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 
 import { useRouter } from 'next/navigation';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface NominatorTableProps {}
 
 export const NominatorTable: React.FC<NominatorTableProps> = () => {
   const router = useRouter();
+  const canViewNominators = useHasPermission(PERMISSIONS.NOMINATORS_VIEW);
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -60,129 +63,157 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
     return first ? first.toUpperCase() : '?';
   };
 
-  const columns: Column<GroupedNominator>[] = [
-    {
-      header: 'Nominator Person',
-      accessor: (grouped) => {
-        const nominator = grouped.nominator;
-        return (
-          <div className="flex items-center gap-3.5">
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20">
-              {getInitials(nominator.name)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {nominator.name}
-              </p>
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5">
-                <Mail size={12} className="text-gray-400" />
-                {nominator.email}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Company / Location',
-      accessor: (grouped) => {
-        const nominator = grouped.nominator;
-        return (
-          <div className="max-w-[200px]">
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-              {nominator.organization || '-'}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-              {nominator.city || '-'}
-            </p>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Nominees',
-      accessor: (grouped) => (
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-50 text-blue-600 font-bold text-xs dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
-            {grouped.nomineesCount}
-          </span>
-          <span className="text-xs text-gray-500">CIOs</span>
-        </div>
-      ),
-    },
-    {
-      header: 'Website Source',
-      accessor: (grouped) => {
-        const website = grouped.website;
-        return (
-          <div className="min-w-0">
-            {website ? (
-              <>
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                  {website.name}
-                </p>
-                <span className="text-xs text-brand-500 font-medium truncate flex items-center gap-0.5 mt-0.5">
-                  <Globe size={12} />
-                  {website.domain}
-                </span>
-              </>
-            ) : (
-              <span className="text-xs text-gray-400">Manual / Admin</span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Status',
-      accessor: (grouped) => (
-        <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
-          {grouped.statuses.map((status, i) => (
-            <Badge
-              key={i}
-              color={getStatusColor(status)}
-              className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
+  const columns: Column<GroupedNominator>[] = React.useMemo(() => {
+    const baseColumns: Column<GroupedNominator>[] = [
+      {
+        header: 'Nominator Person',
+        accessor: (grouped) => {
+          const nominator = grouped.nominator;
+          const routeId =
+            grouped.nominator?.id || grouped.nominator?._id || grouped.id || grouped._id;
+          return (
+            <div
+              onClick={() => {
+                if (canViewNominators) {
+                  router.push(`/nominators/${routeId}`);
+                }
+              }}
+              className={`flex items-center gap-3.5 ${
+                canViewNominators ? 'cursor-pointer group' : 'cursor-default'
+              }`}
             >
-              {status}
-            </Badge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      header: 'Latest Submission',
-      accessor: (grouped) => (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <Calendar size={13} className="text-gray-400 shrink-0" />
-          <span>
-            {new Date(grouped.submittedAt).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-          </span>
-        </div>
-      ),
-    },
-    {
-      header: 'Actions',
-      accessor: (grouped) => (
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => {
-              const routeId =
-                grouped.nominator?.id || grouped.nominator?._id || grouped.id || grouped._id;
-              router.push(`/nominators/${routeId}`);
-            }}
-            className="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all"
-            title="View details"
-          >
-            <Eye size={16} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+              <div
+                className={`h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20 transition-transform ${
+                  canViewNominators ? 'group-hover:scale-105' : ''
+                }`}
+              >
+                {getInitials(nominator.name)}
+              </div>
+              <div className="min-w-0">
+                <p
+                  className={`text-sm font-bold text-gray-900 dark:text-white truncate transition-colors ${
+                    canViewNominators
+                      ? 'group-hover:text-brand-600 dark:group-hover:text-brand-400'
+                      : ''
+                  }`}
+                >
+                  {nominator.name}
+                </p>
+                <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5">
+                  <Mail size={12} className="text-gray-400" />
+                  {nominator.email}
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Company / Location',
+        accessor: (grouped) => {
+          const nominator = grouped.nominator;
+          return (
+            <div className="max-w-[200px]">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                {nominator.organization || '-'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                {nominator.city || '-'}
+              </p>
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Nominees',
+        accessor: (grouped) => (
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-50 text-blue-600 font-bold text-xs dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
+              {grouped.nomineesCount}
+            </span>
+            <span className="text-xs text-gray-500">CIOs</span>
+          </div>
+        ),
+      },
+      {
+        header: 'Website Source',
+        accessor: (grouped) => {
+          const website = grouped.website;
+          return (
+            <div className="min-w-0">
+              {website ? (
+                <>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                    {website.name}
+                  </p>
+                  <span className="text-xs text-brand-500 font-medium truncate flex items-center gap-0.5 mt-0.5">
+                    <Globe size={12} />
+                    {website.domain}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400">Manual / Admin</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Status',
+        accessor: (grouped) => (
+          <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
+            {grouped.statuses.map((status, i) => (
+              <Badge
+                key={i}
+                color={getStatusColor(status)}
+                className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
+              >
+                {status}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        header: 'Latest Submission',
+        accessor: (grouped) => (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+            <Calendar size={13} className="text-gray-400 shrink-0" />
+            <span>
+              {new Date(grouped.submittedAt).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </span>
+          </div>
+        ),
+      },
+    ];
+
+    if (canViewNominators) {
+      baseColumns.push({
+        header: 'Actions',
+        accessor: (grouped) => (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                const routeId =
+                  grouped.nominator?.id || grouped.nominator?._id || grouped.id || grouped._id;
+                router.push(`/nominators/${routeId}`);
+              }}
+              className="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all"
+              title="View details"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        ),
+      });
+    }
+
+    return baseColumns;
+  }, [canViewNominators, router]);
 
   const STATUS_OPTIONS = [
     { value: '', label: 'All Statuses' },
