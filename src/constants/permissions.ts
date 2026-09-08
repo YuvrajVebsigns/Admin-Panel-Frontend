@@ -80,12 +80,14 @@ export const PERMISSIONS = {
   NOMINATORS_CREATE: 'nominators.create',
   NOMINATORS_UPDATE: 'nominators.update',
   NOMINATORS_DELETE: 'nominators.delete',
+  NOMINATORS_EXPORT: 'nominators.export',
 
   // Nominees
   NOMINEES_VIEW: 'nominees.view',
   NOMINEES_CREATE: 'nominees.create',
   NOMINEES_UPDATE: 'nominees.update',
   NOMINEES_DELETE: 'nominees.delete',
+  NOMINEES_EXPORT: 'nominees.export',
 };
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

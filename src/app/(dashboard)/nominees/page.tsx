@@ -1,14 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NomineeTable } from '@/modules/nominations/components/NomineeTable';
 import { NominationStatus } from '@/modules/nominations/types/nomination.types';
-import { Award, Briefcase, FileText } from 'lucide-react';
+import { Award, Briefcase, FileText, FileSpreadsheet } from 'lucide-react';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
+import Button from '@/components/ui/button/Button';
 import { useGroupedNominees } from '@/modules/nominations/hooks/useNominations';
 import { useNominationCategories } from '@/modules/nominations/hooks/useNominationCategories';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
+import { ExportDataModal } from '@/modules/nominations/components/ExportDataModal';
 
 export default function NomineesPage() {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const canExportNominees = useHasPermission(PERMISSIONS.NOMINEES_EXPORT);
+
   // Since nominees are embedded, we use the nominations endpoint for overall metrics
   const { meta: totalMeta } = useGroupedNominees({ limit: 1 });
   const { meta: approvedMeta } = useGroupedNominees({
@@ -55,6 +62,17 @@ export default function NomineesPage() {
             Browse and search all individual CIOs that have been nominated.
           </p>
         </div>
+        {canExportNominees && (
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
+            >
+              <FileSpreadsheet size={18} />
+              Export Data
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -75,6 +93,12 @@ export default function NomineesPage() {
       <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
         <NomineeTable />
       </div>
+
+      <ExportDataModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        type="nominee"
+      />
     </div>
   );
 }

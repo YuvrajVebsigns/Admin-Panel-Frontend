@@ -90,12 +90,14 @@ export const PERMISSIONS = {
   NOMINATORS_CREATE: 'nominators.create',
   NOMINATORS_UPDATE: 'nominators.update',
   NOMINATORS_DELETE: 'nominators.delete',
+  NOMINATORS_EXPORT: 'nominators.export',
 
   // Nominees
   NOMINEES_VIEW: 'nominees.view',
   NOMINEES_CREATE: 'nominees.create',
   NOMINEES_UPDATE: 'nominees.update',
   NOMINEES_DELETE: 'nominees.delete',
+  NOMINEES_EXPORT: 'nominees.export',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -156,10 +158,12 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.NOMINATORS_CREATE,
     PERMISSIONS.NOMINATORS_UPDATE,
     PERMISSIONS.NOMINATORS_DELETE,
+    PERMISSIONS.NOMINATORS_EXPORT,
     PERMISSIONS.NOMINEES_VIEW,
     PERMISSIONS.NOMINEES_CREATE,
     PERMISSIONS.NOMINEES_UPDATE,
     PERMISSIONS.NOMINEES_DELETE,
+    PERMISSIONS.NOMINEES_EXPORT,
   ],
   'System Settings': [
     PERMISSIONS.DASHBOARD_VIEW,

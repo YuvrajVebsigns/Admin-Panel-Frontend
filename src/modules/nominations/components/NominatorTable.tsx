@@ -6,18 +6,22 @@ import { GroupedNominator, NominationStatus } from '../types/nomination.types';
 import { useGroupedNominators } from '../hooks/useNominations';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { Website } from '@/modules/websites/types/website.types';
-import { Globe, Calendar, Mail, Eye } from 'lucide-react';
+import { Globe, Calendar, Mail, Eye, FileSpreadsheet } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import Button from '@/components/ui/button/Button';
 
 import { useRouter } from 'next/navigation';
 import { useHasPermission } from '@/lib/permissions';
 import { PERMISSIONS } from '@/constants/permissions';
+import { ExportDataModal } from './ExportDataModal';
 
 interface NominatorTableProps {}
 
 export const NominatorTable: React.FC<NominatorTableProps> = () => {
   const router = useRouter();
   const canViewNominators = useHasPermission(PERMISSIONS.NOMINATORS_VIEW);
+  const canExportNominators = useHasPermission(PERMISSIONS.NOMINATORS_EXPORT);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -269,6 +273,17 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
               </option>
             ))}
           </select>
+
+          {canExportNominators && (
+            <Button
+              type="button"
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+            >
+              <FileSpreadsheet size={16} />
+              Export Data
+            </Button>
+          )}
         </div>
       </div>
 
@@ -282,6 +297,14 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
         limit={params.limit}
         onPageChange={(page) => setParams((p) => ({ ...p, page }))}
         onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
+      />
+
+      <ExportDataModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        type="nominator"
+        initialSearch={params.search}
+        initialStatus={params.status}
       />
     </div>
   );

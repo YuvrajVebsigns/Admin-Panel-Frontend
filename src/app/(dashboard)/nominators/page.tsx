@@ -4,14 +4,19 @@ import React, { useState } from 'react';
 import { NominatorTable } from '@/modules/nominations/components/NominatorTable';
 import { CategoryManageModal } from '@/modules/nominations/components/CategoryManageModal';
 import { NominationStatus } from '@/modules/nominations/types/nomination.types';
-import { Award, Users, CheckCircle2, XCircle, Settings, Plus } from 'lucide-react';
+import { Award, Users, CheckCircle2, XCircle, Settings, Plus, FileSpreadsheet } from 'lucide-react';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import Button from '@/components/ui/button/Button';
 import Link from 'next/link';
 import { useGroupedNominators } from '@/modules/nominations/hooks/useNominations';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
+import { ExportDataModal } from '@/modules/nominations/components/ExportDataModal';
 
 export default function NominatorsPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const canExportNominators = useHasPermission(PERMISSIONS.NOMINATORS_EXPORT);
 
   // Fetch summaries for stats cards
   const { meta: totalMeta } = useGroupedNominators({ limit: 1 });
@@ -75,6 +80,15 @@ export default function NominatorsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {canExportNominators && (
+            <Button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
+              startIcon={<FileSpreadsheet size={16} />}
+            >
+              Export Data
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setIsCategoryModalOpen(true)}
@@ -116,6 +130,12 @@ export default function NominatorsPage() {
       <CategoryManageModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
+      />
+
+      <ExportDataModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        type="nominator"
       />
     </div>
   );

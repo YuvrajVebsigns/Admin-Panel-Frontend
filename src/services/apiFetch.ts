@@ -89,3 +89,72 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
     throw new ApiError(error instanceof Error ? error.message : 'Network error', 500);
   }
 }
+
+/**
+ * Fetch binary data (e.g. Excel spreadsheets, PDFs) with auth headers
+ */
+export async function apiFetchBlob(endpoint: string, options: FetchOptions = {}): Promise<Blob> {
+  const { requireAuth = true, headers, ...customConfig } = options;
+  const { access_token } = useAuthStore.getState();
+
+  const config: RequestInit = {
+    ...customConfig,
+    headers: {
+      ...(requireAuth && access_token ? { Authorization: `Bearer ${access_token}` } : {}),
+      ...headers,
+    },
+  };
+
+  if (requireAuth) {
+    config.credentials = 'include';
+  }
+
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      if (response.status === 401 && requireAuth) {
+        useAuthStore.getState().clearAuth();
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
+
+      let errorMsg = response.statusText || 'File download failed';
+      try {
+        const errJson = await response.json();
+        errorMsg = errJson.message || errorMsg;
+      } catch {
+        // body not json
+      }
+
+      throw new ApiError(errorMsg, response.status);
+    }
+
+    return await response.blob();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(error instanceof Error ? error.message : 'Network error', 500);
+  }
+}
+
+/**
+ * Trigger browser file download from Blob
+ */
+export function triggerFileDownload(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.style.display = 'none';
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+  }, 150);
+}

@@ -184,3 +184,13 @@ export interface UpdateNominationCategoryDto {
   isActive?: boolean;
   sortOrder?: number;
 }
+
+export interface NominationExportQueryParams {
+  websiteId?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: NominationStatus;
+  categoryId?: string;
+  subCategoryId?: string;
+  search?: string;
+}

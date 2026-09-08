@@ -16,16 +16,20 @@ import {
   useNominationSubCategoriesByIds,
   useNominationCategoriesByIds,
 } from '../hooks/useNominationCategories';
-import { Mail, Briefcase, Award, Eye } from 'lucide-react';
+import { Mail, Briefcase, Award, Eye, FileSpreadsheet } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import Button from '@/components/ui/button/Button';
 import { useHasPermission } from '@/lib/permissions';
 import { PERMISSIONS } from '@/constants/permissions';
+import { ExportDataModal } from './ExportDataModal';
 
 interface NomineeTableProps {}
 
 export const NomineeTable: React.FC<NomineeTableProps> = () => {
   const router = useRouter();
   const canViewNominees = useHasPermission(PERMISSIONS.NOMINEES_VIEW);
+  const canExportNominees = useHasPermission(PERMISSIONS.NOMINEES_EXPORT);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -441,6 +445,17 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
               </option>
             ))}
           </select>
+
+          {canExportNominees && (
+            <Button
+              type="button"
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+            >
+              <FileSpreadsheet size={16} />
+              Export Data
+            </Button>
+          )}
         </div>
       </div>
 
@@ -459,6 +474,14 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
         limit={params.limit}
         onPageChange={(page) => setParams((p) => ({ ...p, page }))}
         onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
+      />
+
+      <ExportDataModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        type="nominee"
+        initialSearch={params.search}
+        initialStatus={params.status}
       />
     </div>
   );
