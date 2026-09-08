@@ -31,6 +31,9 @@ export const nominationService = {
     if (params.websiteId) queryParams.append('websiteId', params.websiteId);
     if (params.nominatorEmail) queryParams.append('nominatorEmail', params.nominatorEmail);
     if (params.nominatorId) queryParams.append('nominatorId', params.nominatorId);
+    if (params.nomineeId) queryParams.append('nomineeId', params.nomineeId);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
 
     return apiFetch<PaginatedResponse<Nomination>>(`/admin/nominations?${queryParams.toString()}`);
   },
@@ -44,6 +47,8 @@ export const nominationService = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.websiteId) queryParams.append('websiteId', params.websiteId);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
 
     return apiFetch<PaginatedResponse<GroupedNominator>>(
       `/admin/nominations/grouped/nominators?${queryParams.toString()}`,
@@ -59,6 +64,8 @@ export const nominationService = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.websiteId) queryParams.append('websiteId', params.websiteId);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
 
     return apiFetch<PaginatedResponse<GroupedNominee>>(
       `/admin/nominations/grouped/nominees?${queryParams.toString()}`,

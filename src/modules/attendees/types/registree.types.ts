@@ -32,6 +32,7 @@ export interface Registree {
   countryCode?: string;
   phoneNumber?: string;
   organization?: string;
+  city?: string;
   websiteId?: string | { id: string; name: string; domain?: string; logo?: string };
   eventIds?: RegistreeEvent[];
   history?: RegistreeHistoryItem[];

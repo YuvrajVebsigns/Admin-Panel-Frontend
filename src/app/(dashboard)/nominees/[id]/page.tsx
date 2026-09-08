@@ -34,13 +34,12 @@ import {
   Clock,
   AlertCircle,
   XCircle,
-  Users,
+  User,
   Layers,
-  Eye,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function NominatorDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function NomineeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
 
@@ -55,14 +54,14 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
   // Fetch Websites for website filter dropdown
   const { websites } = useWebsites({ limit: 100 });
 
-  // Fetch Nominator Profile
+  // Fetch Nominee Profile
   const { data: registree, isLoading: isRegistreeLoading } = useQuery({
     queryKey: ['registree', id],
     queryFn: () => registreeService.getRegistreeById(id),
     retry: 1,
   });
 
-  // Fetch Nominations submitted by this nominator
+  // Fetch Nominations for this nominee
   const {
     nominations,
     isLoading: isNominationsLoading,
@@ -70,7 +69,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
     updateStatus,
     isUpdatingStatus,
   } = useNominations({
-    nominatorId: id,
+    nomineeId: id,
     websiteId: selectedWebsite || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
@@ -184,7 +183,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
         id: nominationId,
         data: { status },
       });
-      toast.success(`Submission status updated to ${status}`);
+      toast.success(`Nomination status updated to ${status}`);
     } catch {
       // Handled by react query toast
     }
@@ -198,10 +197,24 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
     const pending = list.filter((n) => n.status === NominationStatus.PENDING).length;
     const reviewed = list.filter((n) => n.status === NominationStatus.REVIEWED).length;
 
-    // Total Nominees count
-    let totalNominees = 0;
+    // Unique nominators count
+    const nominatorIds = new Set<string>();
     list.forEach((n) => {
-      totalNominees += n.nominees?.length || 0;
+      const nomId =
+        typeof n.nominatorId === 'object' ? n.nominatorId?.id || n.nominatorId?._id : n.nominatorId;
+      if (nomId) nominatorIds.add(String(nomId));
+    });
+
+    // Unique categories
+    const categoriesSet = new Set<string>();
+    list.forEach((n) => {
+      n.nominees?.forEach((entry) => {
+        const catName =
+          typeof entry.categoryId === 'object' && entry.categoryId
+            ? (entry.categoryId as { name?: string }).name
+            : entry.category;
+        if (catName) categoriesSet.add(catName);
+      });
     });
 
     return {
@@ -209,38 +222,39 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
       approved,
       pending,
       reviewed,
-      nomineesCount: totalNominees,
+      uniqueNominators: nominatorIds.size,
+      categoriesCount: categoriesSet.size,
     };
   }, [nominations]);
 
-  // Derive nominator details from registree or first nomination
-  const nominatorProfile = useMemo(() => {
+  // Derive nominee details from registree or first nomination
+  const nomineeProfile = useMemo(() => {
     const firstNom = nominations?.[0];
-    const nominatorRef =
-      typeof firstNom?.nominatorId === 'object' ? (firstNom.nominatorId as RegistreeRef) : null;
+    const nomineeEntry = firstNom?.nominees?.find((entry) => {
+      const eNomId =
+        typeof entry.nomineeId === 'object'
+          ? entry.nomineeId?.id || entry.nomineeId?._id
+          : entry.nomineeId;
+      return String(eNomId) === String(id);
+    });
+    const embeddedRef =
+      typeof nomineeEntry?.nomineeId === 'object' ? (nomineeEntry.nomineeId as RegistreeRef) : null;
 
     return {
-      name:
-        registree?.name ||
-        firstNom?.nominatorSnapshot?.name ||
-        nominatorRef?.name ||
-        'CIO Nominator',
-      email: registree?.email || firstNom?.nominatorSnapshot?.email || nominatorRef?.email || 'N/A',
+      name: registree?.name || nomineeEntry?.contactName || embeddedRef?.name || 'CIO Nominee',
+      email: registree?.email || nomineeEntry?.contactEmail || embeddedRef?.email || 'N/A',
       organization:
         registree?.organization ||
-        firstNom?.nominatorSnapshot?.company ||
-        nominatorRef?.organization ||
+        nomineeEntry?.companyName ||
+        embeddedRef?.organization ||
         'No Organization',
       phoneNumber:
-        registree?.phoneNumber ||
-        firstNom?.nominatorSnapshot?.phone ||
-        nominatorRef?.phoneNumber ||
-        '-',
-      city: registree?.city || firstNom?.nominatorSnapshot?.city || nominatorRef?.city || '-',
-      countryCode: registree?.countryCode || nominatorRef?.countryCode || '',
+        registree?.phoneNumber || nomineeEntry?.mobileNo || embeddedRef?.phoneNumber || '-',
+      city: registree?.city || embeddedRef?.city || '-',
+      countryCode: registree?.countryCode || embeddedRef?.countryCode || '',
       joinedAt: registree?.joinedAt || registree?.createdAt || firstNom?.submittedAt,
     };
-  }, [registree, nominations]);
+  }, [registree, nominations, id]);
 
   const isLoading = isRegistreeLoading && isNominationsLoading;
 
@@ -249,7 +263,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
       <div className="flex flex-col items-center justify-center min-h-[400px] p-8 space-y-4">
         <div className="w-10 h-10 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-          Loading nominator profile and nomination submissions...
+          Loading nominee profile and nomination submissions...
         </p>
       </div>
     );
@@ -261,25 +275,23 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
-            href="/nominators"
+            href="/nominees"
             className="p-2.5 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-navy-800 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm hover:shadow"
-            title="Back to Nomination Submissions"
+            title="Back to Nominees Directory"
           >
             <ArrowLeft size={20} />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                CIO Nominator View
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CIO Nominee View</h1>
               <Badge color="primary" variant="light" className="text-xs font-bold uppercase">
-                Nominator Profile
+                Nominee Profile
               </Badge>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Reviewing nominator profile and all nominations submitted by{' '}
+              Reviewing nominee profile and all nominators who nominated{' '}
               <span className="font-bold text-gray-800 dark:text-gray-200">
-                {nominatorProfile.name}
+                {nomineeProfile.name}
               </span>
             </p>
           </div>
@@ -289,17 +301,17 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push('/nominators')}
+            onClick={() => router.push('/nominees')}
             className="rounded-2xl"
           >
-            Back to Submissions
+            Back to Directory
           </Button>
         </div>
       </div>
 
-      {/* Main Grid: Nominator Profile & Metrics Summary */}
+      {/* Main Grid: Nominee Profile & Metrics Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Nominator Profile Card */}
+        {/* Left Column: Nominee Profile Card */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm p-6 relative overflow-hidden">
             {/* Header background accent */}
@@ -307,19 +319,19 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
 
             <div className="flex items-center gap-4 mb-6 pt-2">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xl shadow-inner border border-brand-100 dark:border-brand-500/20">
-                {getInitials(nominatorProfile.name)}
+                {getInitials(nomineeProfile.name)}
               </div>
               <div className="min-w-0">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-                  {nominatorProfile.name}
+                  {nomineeProfile.name}
                 </h2>
                 <p className="text-xs font-semibold text-brand-600 dark:text-brand-400 truncate">
-                  {nominatorProfile.organization}
+                  {nomineeProfile.organization}
                 </p>
                 <div className="mt-1 flex items-center gap-1.5">
                   <span className="inline-block w-2 h-2 rounded-full bg-success-500" />
                   <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
-                    Active CIO Nominator
+                    Active CIO Nominee
                   </span>
                 </div>
               </div>
@@ -336,10 +348,10 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                     Email Address
                   </p>
                   <a
-                    href={`mailto:${nominatorProfile.email}`}
+                    href={`mailto:${nomineeProfile.email}`}
                     className="text-sm font-semibold text-gray-800 dark:text-gray-200 hover:text-brand-600 truncate block transition-colors"
                   >
-                    {nominatorProfile.email}
+                    {nomineeProfile.email}
                   </a>
                 </div>
               </div>
@@ -353,7 +365,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                     Company / Organization
                   </p>
                   <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    {nominatorProfile.organization}
+                    {nomineeProfile.organization}
                   </p>
                 </div>
               </div>
@@ -367,8 +379,8 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                     Phone Number
                   </p>
                   <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    {nominatorProfile.countryCode ? `${nominatorProfile.countryCode} ` : ''}
-                    {nominatorProfile.phoneNumber}
+                    {nomineeProfile.countryCode ? `${nomineeProfile.countryCode} ` : ''}
+                    {nomineeProfile.phoneNumber}
                   </p>
                 </div>
               </div>
@@ -382,22 +394,22 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                     Location / City
                   </p>
                   <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    {nominatorProfile.city}
+                    {nomineeProfile.city}
                   </p>
                 </div>
               </div>
 
-              {nominatorProfile.joinedAt && (
+              {nomineeProfile.joinedAt && (
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl shrink-0">
                     <Calendar size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] uppercase font-bold text-gray-400 dark:text-navy-400 tracking-wider">
-                      First Submission
+                      First Nominated
                     </p>
                     <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                      {new Date(nominatorProfile.joinedAt).toLocaleDateString(undefined, {
+                      {new Date(nomineeProfile.joinedAt).toLocaleDateString(undefined, {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -416,7 +428,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
             <div className="bg-white dark:bg-navy-900 p-5 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Total Submissions
+                  Total Nominations
                 </span>
                 <div className="p-2 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl">
                   <Award size={18} />
@@ -425,22 +437,22 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
               <p className="text-3xl font-extrabold text-gray-900 dark:text-white">
                 {metrics.total}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Submitted forms</p>
+              <p className="text-xs text-gray-500 mt-1">Submissions received</p>
             </div>
 
             <div className="bg-white dark:bg-navy-900 p-5 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  CIOs Nominated
+                  Unique Nominators
                 </span>
                 <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
-                  <Users size={18} />
+                  <User size={18} />
                 </div>
               </div>
               <p className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                {metrics.nomineesCount}
+                {metrics.uniqueNominators}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Total nominees</p>
+              <p className="text-xs text-gray-500 mt-1">Individual peers</p>
             </div>
 
             <div className="bg-white dark:bg-navy-900 p-5 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
@@ -481,15 +493,16 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                Point-in-Time Submission Snapshot Fidelity
+                Point-in-Time Nominator Snapshot Data
                 <Badge color="primary" variant="light" className="text-[10px] font-bold">
                   Immutable Record
                 </Badge>
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
-                Each submission below captures the nominator&apos;s exact details provided at the
-                time of submission (Name, Email, Company, City, and Phone) along with each nominated
-                CIO, ensuring permanent audit accuracy and transparency.
+                Each nomination card below contains the <strong>exact details</strong> submitted by
+                the nominator at the moment of submission (Name, Email, Company, City, and Phone).
+                This ensures complete audit fidelity, regardless of future updates to their CRM
+                profiles.
               </p>
             </div>
           </div>
@@ -502,10 +515,10 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
           <div className="flex items-center gap-2">
             <Filter size={18} className="text-brand-500" />
             <h2 className="text-base font-bold text-gray-900 dark:text-white">
-              Filter Submissions
+              Filter Nominations
             </h2>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300">
-              {nominations.length} {nominations.length === 1 ? 'submission' : 'submissions'}
+              {nominations.length} {nominations.length === 1 ? 'card' : 'cards'}
             </span>
           </div>
 
@@ -522,7 +535,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
 
         {/* Filters Controls Row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Search Bar for specific nominee/submission card */}
+          {/* Search Bar for specific nominator nomination card */}
           <div className="md:col-span-4 relative">
             <Search
               size={16}
@@ -530,7 +543,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
             />
             <input
               type="text"
-              placeholder="Search nominated CIO by name, company, email..."
+              placeholder="Search nominator by name, email, company, city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
@@ -646,12 +659,12 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      {/* NOMINATION SUBMISSIONS LIST */}
+      {/* NOMINATOR NOMINATION CARDS LIST */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Award size={20} className="text-brand-500" />
-            Submitted Nominations
+            Nominator Submissions
             <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
               ({nominations.length} {nominations.length === 1 ? 'submission' : 'submissions'})
             </span>
@@ -671,12 +684,12 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                No Nomination Submissions Found
+                No Nomination Cards Found
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
                 {hasActiveFilters
-                  ? 'No submissions match your active filter criteria. Try adjusting dates, website source, or search keyword.'
-                  : 'No nomination submissions have been recorded for this nominator yet.'}
+                  ? 'No nomination submissions match your active filter criteria. Try adjusting dates, website source, or search keyword.'
+                  : 'No nominations have been recorded for this CIO nominee yet.'}
               </p>
             </div>
             {hasActiveFilters && (
@@ -693,24 +706,52 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
         ) : (
           <div className="space-y-6">
             {nominations.map((nomination, index) => {
+              const nominator =
+                typeof nomination.nominatorId === 'object'
+                  ? (nomination.nominatorId as RegistreeRef)
+                  : null;
+              const nominatorRouteId =
+                nominator?.id ||
+                nominator?._id ||
+                (typeof nomination.nominatorId === 'string' ? nomination.nominatorId : '');
+
               const website =
                 typeof nomination.websiteId === 'object'
                   ? (nomination.websiteId as WebsiteRef)
                   : null;
 
-              // Snapshot values with fallback
-              const snapshotName = nomination.nominatorSnapshot?.name || nominatorProfile.name;
-              const snapshotEmail = nomination.nominatorSnapshot?.email || nominatorProfile.email;
+              // Find the specific nominee entry inside this nomination
+              const thisNomineeEntry = nomination.nominees?.find((entry: NomineeEntry) => {
+                const eNomId =
+                  typeof entry.nomineeId === 'object'
+                    ? entry.nomineeId?.id || entry.nomineeId?._id
+                    : entry.nomineeId;
+                return String(eNomId) === String(id);
+              });
+
+              // Snapshot values with fallbacks to nominator profile
+              const snapshotName =
+                nomination.nominatorSnapshot?.name || nominator?.name || 'Unknown Nominator';
+              const snapshotEmail =
+                nomination.nominatorSnapshot?.email || nominator?.email || 'N/A';
               const snapshotCompany =
-                nomination.nominatorSnapshot?.company ||
-                nominatorProfile.organization ||
-                'Not Provided';
+                nomination.nominatorSnapshot?.company || nominator?.organization || 'Not Provided';
               const snapshotCity =
-                nomination.nominatorSnapshot?.city || nominatorProfile.city || 'Not Provided';
+                nomination.nominatorSnapshot?.city || nominator?.city || 'Not Provided';
               const snapshotPhone =
-                nomination.nominatorSnapshot?.phone ||
-                nominatorProfile.phoneNumber ||
-                'Not Provided';
+                nomination.nominatorSnapshot?.phone || nominator?.phoneNumber || 'Not Provided';
+
+              // Category info
+              const categoryName =
+                typeof thisNomineeEntry?.categoryId === 'object' && thisNomineeEntry.categoryId
+                  ? (thisNomineeEntry.categoryId as { name?: string }).name
+                  : thisNomineeEntry?.category || 'General';
+
+              const subCategoryName =
+                typeof thisNomineeEntry?.subCategoryId === 'object' &&
+                thisNomineeEntry.subCategoryId
+                  ? (thisNomineeEntry.subCategoryId as { name?: string }).name
+                  : null;
 
               return (
                 <div
@@ -721,7 +762,7 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                   <div className="px-6 py-4 bg-gray-50/70 dark:bg-navy-950/70 border-b border-gray-100 dark:border-navy-800 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2.5 py-1 rounded-xl border border-brand-100 dark:border-brand-500/20">
-                        Submission #{index + 1}
+                        #{index + 1}
                       </span>
 
                       <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
@@ -750,10 +791,6 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                           Manual / Direct Entry
                         </span>
                       )}
-
-                      <span className="text-xs font-mono text-gray-400 dark:text-gray-500">
-                        ID: {nomination.id}
-                      </span>
                     </div>
 
                     {/* Status & Quick Status Update */}
@@ -793,18 +830,24 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                              Nominator Snapshot for this Submission
+                              Nominator Snapshot Data
                             </h4>
                             <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                              Point-in-time snapshot of nominator details provided with this
-                              submission
+                              Point-in-time snapshot captured during this submission
                             </p>
                           </div>
                         </div>
 
-                        <Badge color="primary" variant="light" className="text-[10px] font-bold">
-                          Snapshot Recorded
-                        </Badge>
+                        {nominatorRouteId && (
+                          <Link
+                            href={`/nominators/${nominatorRouteId}`}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-navy-700 shadow-2xs hover:shadow transition-all"
+                            title="View nominator full history & submissions"
+                          >
+                            <span>View Full Nominator Profile</span>
+                            <ExternalLink size={12} />
+                          </Link>
+                        )}
                       </div>
 
                       {/* Snapshot Fields Grid */}
@@ -859,119 +902,54 @@ export default function NominatorDetailsPage({ params }: { params: Promise<{ id:
                       </div>
                     </div>
 
-                    {/* NOMINATED CIOS LIST */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                          <Users size={16} className="text-brand-500" />
-                          Nominated CIOs in this Submission ({nomination.nominees?.length || 0})
-                        </h4>
-                      </div>
+                    {/* NOMINATION SPECIFIC CATEGORY & SUBMISSION DETAILS */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Award size={16} className="text-brand-500" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                            Category:
+                          </span>
+                          <Badge
+                            color="info"
+                            variant="light"
+                            className="font-bold text-xs rounded-xl px-3 py-1"
+                          >
+                            {categoryName}
+                          </Badge>
+                        </div>
 
-                      <div className="grid grid-cols-1 gap-3">
-                        {nomination.nominees?.map((entry: NomineeEntry, nomineeIdx: number) => {
-                          const nominee =
-                            typeof entry.nomineeId === 'object'
-                              ? (entry.nomineeId as RegistreeRef)
-                              : null;
-                          const nomineeRouteId =
-                            nominee?.id ||
-                            nominee?._id ||
-                            (typeof entry.nomineeId === 'string' ? entry.nomineeId : '');
-
-                          const nomineeName =
-                            entry.contactName || nominee?.name || 'Unknown Nominee';
-                          const nomineeOrg =
-                            entry.companyName || nominee?.organization || 'No Company';
-                          const nomineeEmail = entry.contactEmail || nominee?.email || 'N/A';
-                          const nomineePhone = entry.mobileNo || nominee?.phoneNumber || '';
-
-                          const categoryName =
-                            typeof entry.categoryId === 'object' && entry.categoryId
-                              ? (entry.categoryId as { name?: string }).name
-                              : entry.category || 'General';
-
-                          const subCategoryName =
-                            typeof entry.subCategoryId === 'object' && entry.subCategoryId
-                              ? (entry.subCategoryId as { name?: string }).name
-                              : null;
-
-                          return (
-                            <div
-                              key={nomineeIdx}
-                              className="p-4 rounded-2xl border border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-gray-200 dark:hover:border-navy-700 transition-all"
+                        {subCategoryName && (
+                          <div className="flex items-center gap-2">
+                            <Layers size={15} className="text-indigo-500" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                              Sub Category:
+                            </span>
+                            <Badge
+                              color="light"
+                              className="font-semibold text-xs rounded-xl px-3 py-1 border border-gray-200 dark:border-navy-700"
                             >
-                              <div className="flex items-start gap-3.5">
-                                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20">
-                                  {getInitials(nomineeName)}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                                      {nomineeName}
-                                    </p>
-                                    <span className="text-[11px] font-semibold text-gray-400">
-                                      CIO #{nomineeIdx + 1}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    <span className="flex items-center gap-1">
-                                      <Briefcase size={12} className="text-gray-400" />
-                                      {nomineeOrg}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Mail size={12} className="text-gray-400" />
-                                      {nomineeEmail}
-                                    </span>
-                                    {nomineePhone && (
-                                      <span className="flex items-center gap-1">
-                                        <Phone size={12} className="text-gray-400" />
-                                        {nomineePhone}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center gap-3 shrink-0 self-start md:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-navy-800">
-                                <div className="flex items-center gap-2">
-                                  <Badge
-                                    color="info"
-                                    variant="light"
-                                    startIcon={<Award size={12} />}
-                                    className="font-bold text-xs rounded-xl px-2.5 py-1"
-                                  >
-                                    {categoryName}
-                                  </Badge>
-
-                                  {subCategoryName && (
-                                    <Badge
-                                      color="light"
-                                      startIcon={<Layers size={12} />}
-                                      className="font-semibold text-xs rounded-xl px-2.5 py-1 border border-gray-200 dark:border-navy-700"
-                                    >
-                                      {subCategoryName}
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                {nomineeRouteId && (
-                                  <Link
-                                    href={`/nominees/${nomineeRouteId}`}
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-navy-700 shadow-2xs hover:shadow transition-all"
-                                    title="View Nominee View Page"
-                                  >
-                                    <Eye size={13} />
-                                    <span>View Nominee Profile</span>
-                                    <ExternalLink size={11} />
-                                  </Link>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                              {subCategoryName}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
+
+                      {/* If custom contact details were supplied for this nominee in the submission */}
+                      {(thisNomineeEntry?.contactName || thisNomineeEntry?.companyName) && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3 bg-gray-50 dark:bg-navy-950 px-3.5 py-1.5 rounded-xl border border-gray-100 dark:border-navy-800">
+                          <span className="font-semibold text-gray-700 dark:text-gray-300">
+                            Nominated As:
+                          </span>
+                          <span>{thisNomineeEntry.contactName || nomineeProfile.name}</span>
+                          {thisNomineeEntry.companyName && (
+                            <>
+                              <span>•</span>
+                              <span>{thisNomineeEntry.companyName}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

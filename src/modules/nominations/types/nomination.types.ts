@@ -20,6 +20,8 @@ export interface RegistreeRef {
 export interface NomineeEntry {
   nomineeId: RegistreeRef | string;
   category: string;
+  categoryId?: NominationCategory | string;
+  subCategoryId?: NominationSubCategory | string;
   contactName?: string;
   companyName?: string;
   contactEmail?: string;
@@ -34,9 +36,18 @@ export interface WebsiteRef {
   logo?: string;
 }
 
+export interface NominatorSnapshot {
+  name: string;
+  email: string;
+  company?: string;
+  city?: string;
+  phone?: string;
+}
+
 export interface Nomination {
   id: string;
   nominatorId: RegistreeRef | string;
+  nominatorSnapshot?: NominatorSnapshot;
   nominees: NomineeEntry[];
   status: NominationStatus;
   websiteId?: WebsiteRef | string;
@@ -117,6 +128,9 @@ export interface NominationQueryParams {
   websiteId?: string;
   nominatorEmail?: string;
   nominatorId?: string;
+  nomineeId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface NominationCategoryQueryParams {

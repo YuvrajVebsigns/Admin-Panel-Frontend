@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import {
   GroupedNominee,
@@ -15,12 +16,13 @@ import {
   useNominationSubCategoriesByIds,
   useNominationCategoriesByIds,
 } from '../hooks/useNominationCategories';
-import { Mail, Briefcase, Award } from 'lucide-react';
+import { Mail, Briefcase, Award, Eye } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 
 interface NomineeTableProps {}
 
 export const NomineeTable: React.FC<NomineeTableProps> = () => {
+  const router = useRouter();
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -230,13 +232,17 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
       header: 'CIO Nominee',
       accessor: (grouped) => {
         const nominee = grouped.nominee;
+        const routeId = nominee.id || nominee._id || grouped._id;
         return (
-          <div className="flex items-center gap-3.5">
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20">
+          <div
+            onClick={() => router.push(`/nominees/${routeId}`)}
+            className="flex items-center gap-3.5 cursor-pointer group"
+          >
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shadow-sm border border-brand-100 dark:border-brand-500/20 group-hover:scale-105 transition-transform">
               {getInitials(nominee.name)}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+              <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                 {nominee.name}
               </p>
               <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5">
@@ -343,6 +349,23 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
           ))}
         </div>
       ),
+    },
+    {
+      header: 'Actions',
+      accessor: (grouped) => {
+        const routeId = grouped.nominee?.id || grouped.nominee?._id || grouped._id;
+        return (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => router.push(`/nominees/${routeId}`)}
+              className="p-2 text-gray-500 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all"
+              title="View Nominee Details"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
