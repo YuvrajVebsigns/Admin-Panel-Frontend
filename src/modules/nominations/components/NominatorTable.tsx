@@ -7,7 +7,6 @@ import { useGroupedNominators } from '../hooks/useNominations';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { Website } from '@/modules/websites/types/website.types';
 import { Globe, Calendar, Mail, Eye, FileSpreadsheet } from 'lucide-react';
-import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 
 import { useRouter } from 'next/navigation';
@@ -36,22 +35,6 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
 
   const { nominators, meta, isLoading } = useGroupedNominators(params);
   const { websites } = useWebsites({ limit: 100 });
-
-  const getStatusColor = (
-    status: NominationStatus,
-  ): 'warning' | 'success' | 'primary' | 'error' | 'info' | 'light' | 'dark' => {
-    switch (status) {
-      case NominationStatus.APPROVED:
-        return 'success';
-      case NominationStatus.REJECTED:
-        return 'error';
-      case NominationStatus.REVIEWED:
-        return 'primary';
-      case NominationStatus.PENDING:
-      default:
-        return 'warning';
-    }
-  };
 
   const getInitials = (name: string) => {
     if (!name) return '?';
@@ -161,22 +144,6 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
             </div>
           );
         },
-      },
-      {
-        header: 'Status',
-        accessor: (grouped) => (
-          <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
-            {grouped.statuses.map((status, i) => (
-              <Badge
-                key={i}
-                color={getStatusColor(status)}
-                className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
-              >
-                {status}
-              </Badge>
-            ))}
-          </div>
-        ),
       },
       {
         header: 'Latest Submission',

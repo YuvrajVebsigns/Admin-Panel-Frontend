@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cp .env.local .env.development.local && dotenv -e .env.local -- next dev",
-    "dev:uat": "cp .env.dev .env.development.local && dotenv -e .env.dev -- next dev",
+    "dev": "shx cp .env.local .env.development.local && dotenv -e .env.local -- next dev",
+    "dev:uat": "shx cp .env.dev .env.development.local && dotenv -e .env.dev -- next dev",
     "start": "dotenv -e .env.local -- next start",
     "lint": "eslint src",
     "format": "prettier --write .",
@@ -94,6 +94,7 @@
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.6",
     "prettier": "^3.8.3",
+    "shx": "^0.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

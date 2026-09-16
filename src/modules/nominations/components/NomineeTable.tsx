@@ -204,22 +204,6 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
 
   const localIsLoading = isLoading || isSubCategoriesLoading || isMissingSubCategoriesLoading;
 
-  const getStatusColor = (
-    status: NominationStatus,
-  ): 'warning' | 'success' | 'primary' | 'error' | 'info' | 'light' | 'dark' => {
-    switch (status) {
-      case NominationStatus.APPROVED:
-        return 'success';
-      case NominationStatus.REJECTED:
-        return 'error';
-      case NominationStatus.REVIEWED:
-        return 'primary';
-      case NominationStatus.PENDING:
-      default:
-        return 'warning';
-    }
-  };
-
   const getInitials = (name: string) => {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -355,22 +339,6 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
               {grouped.nominatorsCount}
             </span>
             <span className="text-xs text-gray-500">Submissions</span>
-          </div>
-        ),
-      },
-      {
-        header: 'Status',
-        accessor: (grouped) => (
-          <div className="flex flex-wrap items-center gap-1.5 max-w-[150px]">
-            {grouped.statuses.map((status, i) => (
-              <Badge
-                key={i}
-                color={getStatusColor(status)}
-                className="flex items-center gap-1 font-bold text-[9px] tracking-wider uppercase px-2 py-0.5 rounded-lg border-none shadow-sm"
-              >
-                {status}
-              </Badge>
-            ))}
           </div>
         ),
       },
