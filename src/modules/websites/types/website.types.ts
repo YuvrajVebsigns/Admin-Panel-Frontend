@@ -13,6 +13,23 @@ export interface SeoMetadata {
   ogImage?: string | ImageLinks;
 }
 
+export interface VotingTableHeading {
+  id: string;
+  key: string;
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  enabled: boolean;
+  order: number;
+}
+
+export interface WebsiteSettings extends Record<string, unknown> {
+  votingTableHeadings?: VotingTableHeading[];
+  nominationTitle?: string;
+  nominationSubtitle?: string;
+  maxRecommendations?: number;
+}
+
 export interface Website {
   id: string;
   name: string;
@@ -22,7 +39,7 @@ export interface Website {
   description?: string;
   isActive: boolean;
   nominationActive?: boolean;
-  settings: Record<string, unknown>;
+  settings: WebsiteSettings;
   seo: SeoMetadata;
   createdAt: string;
   updatedAt: string;

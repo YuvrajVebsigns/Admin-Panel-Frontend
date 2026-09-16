@@ -27,6 +27,7 @@ interface ExportDataModalProps {
   onClose: () => void;
   type: 'nominee' | 'nominator';
   initialSearch?: string;
+  initialWebsiteId?: string;
 }
 
 export const ExportDataModal: React.FC<ExportDataModalProps> = ({
@@ -34,8 +35,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   onClose,
   type,
   initialSearch = '',
+  initialWebsiteId = '',
 }) => {
-  const [websiteId, setWebsiteId] = useState<string>('');
+  const [websiteId, setWebsiteId] = useState<string>(initialWebsiteId);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
@@ -60,8 +62,11 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setSearch(initialSearch || '');
+      if (initialWebsiteId) {
+        setWebsiteId(initialWebsiteId);
+      }
     }
-  }, [isOpen, initialSearch]);
+  }, [isOpen, initialSearch, initialWebsiteId]);
 
   // Reset subcategory if category changes
   useEffect(() => {

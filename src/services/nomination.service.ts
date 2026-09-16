@@ -32,6 +32,8 @@ export const nominationService = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.websiteId) queryParams.append('websiteId', params.websiteId);
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+    if (params.subCategoryId) queryParams.append('subCategoryId', params.subCategoryId);
     if (params.nominatorEmail) queryParams.append('nominatorEmail', params.nominatorEmail);
     if (params.nominatorId) queryParams.append('nominatorId', params.nominatorId);
     if (params.nomineeId) queryParams.append('nomineeId', params.nomineeId);

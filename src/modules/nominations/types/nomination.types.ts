@@ -133,6 +133,8 @@ export interface NominationQueryParams {
   search?: string;
   status?: NominationStatus;
   websiteId?: string;
+  categoryId?: string;
+  subCategoryId?: string;
   nominatorEmail?: string;
   nominatorId?: string;
   nomineeId?: string;
