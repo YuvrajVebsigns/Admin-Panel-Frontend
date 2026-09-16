@@ -32,6 +32,7 @@ import { NavbarManager } from '@/modules/websites/components/NavbarManager';
 import { WebsiteSeoManager } from '@/modules/websites/components/WebsiteSeoManager';
 import { ReportManager } from '@/modules/websites/components/ReportManager';
 import { AnalyticsDashboard } from '@/modules/websites/components/AnalyticsDashboard';
+import { WebsiteNominationSubmissionsTable } from '@/modules/websites/components/WebsiteNominationSubmissionsTable';
 import { useWebsitePages } from '@/modules/websites/hooks/useWebsitePages';
 import { getImageUrl } from '@/lib/utils';
 import { nominationService } from '@/services/nomination.service';
@@ -48,7 +49,7 @@ const TABS = [
   { id: 'seo', label: 'Website SEO', icon: <Globe size={18} /> },
   { id: 'reports', label: 'Reports', icon: <FileSpreadsheet size={18} /> },
   { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
-  { id: 'nomination_status', label: 'Nomination Status', icon: <Users size={18} /> },
+  { id: 'nomination_status', label: 'Nomination & Voting', icon: <Users size={18} /> },
 ];
 
 export default function WebsiteDashboardPage() {
@@ -358,60 +359,66 @@ export default function WebsiteDashboardPage() {
           ) : activeTab === 'analytics' ? (
             <AnalyticsDashboard siteId={websiteId} />
           ) : activeTab === 'nomination_status' ? (
-            <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 text-left dark:border-navy-700 dark:bg-navy-900">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Nomination Status
-                  </h3>
+            <div className="space-y-8">
+              {/* Nomination Form Global Status Switch */}
+              <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 text-left dark:border-navy-700 dark:bg-navy-900 shadow-sm">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Nomination & Voting Portal Status
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-3 md:min-w-[220px]">
+                    <div className="text-right">
+                      <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                        Current state
+                      </p>
+                      <p
+                        className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                      >
+                        {nominationActive ? 'Active' : 'Inactive'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-3 md:min-w-[220px]">
-                  <div className="text-right">
-                    <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-                      Current state
+                <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
                     </p>
-                    <p
-                      className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Toggle the switch to {nominationActive ? 'disable' : 'enable'} nomination
+                      submissions for this website.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      disabled={nominationMutation.status === 'pending'}
+                      onClick={() => nominationMutation.mutate(!nominationActive)}
+                      className={`relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                        nominationActive ? 'bg-emerald-500' : 'bg-rose-500'
+                      } ${nominationMutation.status === 'pending' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                      aria-label={
+                        nominationActive ? 'Disable nomination form' : 'Enable nomination form'
+                      }
+                      aria-pressed={nominationActive}
                     >
-                      {nominationActive ? 'Active' : 'Inactive'}
-                    </p>
+                      <span
+                        className={`inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                          nominationActive ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Toggle the switch to {nominationActive ? 'disable' : 'enable'} nomination
-                    submissions for this website.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 flex-wrap">
-                  <button
-                    type="button"
-                    disabled={nominationMutation.status === 'pending'}
-                    onClick={() => nominationMutation.mutate(!nominationActive)}
-                    className={`relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-                      nominationActive ? 'bg-emerald-500' : 'bg-rose-500'
-                    } ${nominationMutation.status === 'pending' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-                    aria-label={
-                      nominationActive ? 'Disable nomination form' : 'Enable nomination form'
-                    }
-                    aria-pressed={nominationActive}
-                  >
-                    <span
-                      className={`inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                        nominationActive ? 'translate-x-6' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
+              {/* Nomination & Voting Submissions Table */}
+              <WebsiteNominationSubmissionsTable websiteId={websiteId} website={website} />
             </div>
           ) : (
             <EventTable websiteId={websiteId} />

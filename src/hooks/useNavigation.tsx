@@ -60,7 +60,7 @@ export function useNavigation() {
       groups[groupName].push(mapMenuItem(menu));
     });
 
-    // Add a fallback Subscribes menu item if the backend menu data does not include it.
+    // Add fallback Subscribes and Nomination Categories menu items if the backend menu data does not include them.
     Object.values(groups).forEach((items) => {
       const contactIndex = items.findIndex((item) => item.path === '/contacts');
       const hasSubscribes = items.some((item) => item.path === '/subscribes');
@@ -70,6 +70,21 @@ export function useNavigation() {
           name: 'Subscribes',
           icon: 'Mail',
           path: '/subscribes',
+        });
+      }
+
+      const nominatorIndex = items.findIndex(
+        (item) => item.path === '/nominators' || item.path === '/nominees',
+      );
+      const hasCategories = items.some((item) => item.path === '/nomination-categories');
+
+      if (nominatorIndex !== -1 && !hasCategories) {
+        const nomineeIndex = items.findIndex((item) => item.path === '/nominees');
+        const insertIdx = nomineeIndex !== -1 ? nomineeIndex + 1 : nominatorIndex + 1;
+        items.splice(insertIdx, 0, {
+          name: 'Nomination Categories',
+          icon: 'Layers',
+          path: '/nomination-categories',
         });
       }
     });

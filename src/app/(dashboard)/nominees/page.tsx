@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { NomineeTable } from '@/modules/nominations/components/NomineeTable';
 import { NominationStatus } from '@/modules/nominations/types/nomination.types';
-import { Award, Briefcase, FileText, FileSpreadsheet } from 'lucide-react';
+import { Award, Briefcase, FileText, FileSpreadsheet, Settings } from 'lucide-react';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import Button from '@/components/ui/button/Button';
+import Link from 'next/link';
 import { useGroupedNominees } from '@/modules/nominations/hooks/useNominations';
 import { useNominationCategories } from '@/modules/nominations/hooks/useNominationCategories';
 import { useHasPermission } from '@/lib/permissions';
@@ -62,8 +63,8 @@ export default function NomineesPage() {
             Browse and search all individual CIOs that have been nominated.
           </p>
         </div>
-        {canExportNominees && (
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          {canExportNominees && (
             <Button
               onClick={() => setIsExportModalOpen(true)}
               className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
@@ -71,8 +72,13 @@ export default function NomineesPage() {
               <FileSpreadsheet size={18} />
               Export Data
             </Button>
-          </div>
-        )}
+          )}
+          <Link href="/nomination-categories">
+            <Button variant="outline" startIcon={<Settings size={16} />}>
+              Categories
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

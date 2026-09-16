@@ -12,6 +12,8 @@ import {
   UpdateNominationStatusDto,
   CreateNominationCategoryDto,
   UpdateNominationCategoryDto,
+  CreateNominationSubCategoryDto,
+  UpdateNominationSubCategoryDto,
   GroupedNominator,
   GroupedNominee,
   WebsiteNominationStatusPayload,
@@ -30,6 +32,8 @@ export const nominationService = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.websiteId) queryParams.append('websiteId', params.websiteId);
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+    if (params.subCategoryId) queryParams.append('subCategoryId', params.subCategoryId);
     if (params.nominatorEmail) queryParams.append('nominatorEmail', params.nominatorEmail);
     if (params.nominatorId) queryParams.append('nominatorId', params.nominatorId);
     if (params.nomineeId) queryParams.append('nomineeId', params.nomineeId);
@@ -122,6 +126,7 @@ export const nominationService = {
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
+    if (params.websiteId) queryParams.append('websiteId', params.websiteId);
     if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
 
     return apiFetch<PaginatedResponse<NominationCategory>>(
@@ -140,6 +145,7 @@ export const nominationService = {
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
+    if (params.websiteId) queryParams.append('websiteId', params.websiteId);
     if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
     if (params.categoryId) queryParams.append('categoryId', params.categoryId);
 
@@ -171,6 +177,31 @@ export const nominationService = {
 
   deleteCategory: async (id: string): Promise<void> => {
     return apiFetch<void>(`/admin/nomination-categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  createSubCategory: async (
+    data: CreateNominationSubCategoryDto,
+  ): Promise<NominationSubCategory> => {
+    return apiFetch<NominationSubCategory>('/admin/nomination-sub-categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateSubCategory: async (
+    id: string,
+    data: UpdateNominationSubCategoryDto,
+  ): Promise<NominationSubCategory> => {
+    return apiFetch<NominationSubCategory>(`/admin/nomination-sub-categories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteSubCategory: async (id: string): Promise<void> => {
+    return apiFetch<void>(`/admin/nomination-sub-categories/${id}`, {
       method: 'DELETE',
     });
   },

@@ -27,6 +27,7 @@ interface ExportDataModalProps {
   onClose: () => void;
   type: 'nominee' | 'nominator';
   initialSearch?: string;
+  initialWebsiteId?: string;
 }
 
 export const ExportDataModal: React.FC<ExportDataModalProps> = ({
@@ -34,8 +35,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   onClose,
   type,
   initialSearch = '',
+  initialWebsiteId = '',
 }) => {
-  const [websiteId, setWebsiteId] = useState<string>('');
+  const [websiteId, setWebsiteId] = useState<string>(initialWebsiteId);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
@@ -50,20 +52,21 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
     limit: 500,
     isActive: true,
   });
-  const { data: subCategoriesData, isLoading: isSubCategoriesLoading } = useNominationSubCategories(
-    {
-      limit: 500,
-      isActive: true,
-      categoryId: categoryId || undefined,
-    },
-  );
+  const { subCategories, isLoading: isSubCategoriesLoading } = useNominationSubCategories({
+    limit: 500,
+    isActive: true,
+    categoryId: categoryId || undefined,
+  });
 
   // Sync initial props when opening
   useEffect(() => {
     if (isOpen) {
       setSearch(initialSearch || '');
+      if (initialWebsiteId) {
+        setWebsiteId(initialWebsiteId);
+      }
     }
-  }, [isOpen, initialSearch]);
+  }, [isOpen, initialSearch, initialWebsiteId]);
 
   // Reset subcategory if category changes
   useEffect(() => {
@@ -310,11 +313,11 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
             <select
               value={subCategoryId}
               onChange={(e) => setSubCategoryId(e.target.value)}
-              disabled={isSubCategoriesLoading || (!categoryId && !subCategoriesData?.data?.length)}
+              disabled={isSubCategoriesLoading || (!categoryId && !subCategories.length)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer disabled:opacity-50"
             >
               <option value="">All Sub-Categories</option>
-              {subCategoriesData?.data?.map((sub) => (
+              {subCategories.map((sub) => (
                 <option key={sub.id || sub._id} value={sub.id || sub._id}>
                   {sub.name}
                 </option>

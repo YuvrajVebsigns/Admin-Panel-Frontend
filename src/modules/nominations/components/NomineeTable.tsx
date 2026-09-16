@@ -44,7 +44,7 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
   const { nominees, meta, isLoading } = useGroupedNominees(params);
   const { categories } = useNominationCategories({ limit: 1000, isActive: true });
   const {
-    data: subCategoryData,
+    subCategories: subCategoryList,
     isLoading: isSubCategoriesLoading,
     error: subCategoryError,
   } = useNominationSubCategories({ limit: 1000, isActive: true });
@@ -62,14 +62,14 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
 
   const subCategoryMap = useMemo(() => {
     const map = new Map<string, NominationSubCategory>();
-    subCategoryData?.data.forEach((subCategory) => {
+    subCategoryList.forEach((subCategory) => {
       const id = subCategory.id || subCategory._id;
       if (id) {
         map.set(id, subCategory);
       }
     });
     return map;
-  }, [subCategoryData]);
+  }, [subCategoryList]);
 
   const getId = (item: unknown): string => {
     if (!item) return '';
@@ -113,21 +113,21 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
         ids.add(parentId);
       }
     });
-    subCategoryData?.data?.forEach((subCategory) => {
+    subCategoryList.forEach((subCategory) => {
       const parentId = getId(subCategory.categoryId);
       if (parentId && !categoryMap.has(parentId)) {
         ids.add(parentId);
       }
     });
     return Array.from(ids);
-  }, [missingSubCategories, subCategoryData, categoryMap]);
+  }, [missingSubCategories, subCategoryList, categoryMap]);
 
   const { categories: missingParentCategories } =
     useNominationCategoriesByIds(missingParentCategoryIds);
 
   const combinedSubCategoryMap = useMemo(() => {
     const map = new Map<string, NominationSubCategory>();
-    subCategoryData?.data.forEach((subCategory) => {
+    subCategoryList.forEach((subCategory) => {
       const id = subCategory.id || subCategory._id;
       if (id) {
         map.set(id, subCategory);
@@ -162,7 +162,7 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     });
 
     return map;
-  }, [subCategoryData, missingSubCategories, nominees]);
+  }, [subCategoryList, missingSubCategories, nominees]);
 
   const combinedCategoryMap = useMemo(() => {
     const map = new Map<string, NominationCategory>();
