@@ -71,6 +71,7 @@ const checkIsDataTableOrViewPage = (): boolean => {
     '/sponsors',
     '/nominators',
     '/nominees',
+    '/nomination-categories',
     '/registrations',
     '/media',
     '/attendance',

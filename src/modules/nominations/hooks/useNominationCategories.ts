@@ -8,6 +8,8 @@ import {
   NominationSubCategoryQueryParams,
   CreateNominationCategoryDto,
   UpdateNominationCategoryDto,
+  CreateNominationSubCategoryDto,
+  UpdateNominationSubCategoryDto,
 } from '../types/nomination.types';
 import toast from 'react-hot-toast';
 
@@ -57,6 +59,7 @@ export const useNominationCategories = (params: NominationCategoryQueryParams = 
   });
 
   return {
+    data,
     categories: data?.data || [],
     meta: data?.meta,
     isLoading,
@@ -72,11 +75,64 @@ export const useNominationCategories = (params: NominationCategoryQueryParams = 
 };
 
 export const useNominationSubCategories = (params: NominationSubCategoryQueryParams = {}) => {
-  return useQuery<PaginatedResponse<NominationSubCategory>, Error>({
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error, refetch } = useQuery<
+    PaginatedResponse<NominationSubCategory>,
+    Error
+  >({
     queryKey: ['nominationSubCategories', params],
     queryFn: () => nominationService.getSubCategories(params),
-    staleTime: 5 * 60 * 1000,
   });
+
+  const createMutation = useMutation({
+    mutationFn: (data: CreateNominationSubCategoryDto) => nominationService.createSubCategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nominationSubCategories'] });
+      toast.success('Subcategory created successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create subcategory');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateNominationSubCategoryDto }) =>
+      nominationService.updateSubCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nominationSubCategories'] });
+      toast.success('Subcategory updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update subcategory');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => nominationService.deleteSubCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nominationSubCategories'] });
+      toast.success('Subcategory deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete subcategory');
+    },
+  });
+
+  return {
+    data,
+    subCategories: data?.data || [],
+    meta: data?.meta,
+    isLoading,
+    error,
+    refetch,
+    createSubCategory: createMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    updateSubCategory: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    deleteSubCategory: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
+  };
 };
 
 export const useNominationSubCategory = (id: string) => {

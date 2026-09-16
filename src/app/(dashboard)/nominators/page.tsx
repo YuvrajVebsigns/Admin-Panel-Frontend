@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { NominatorTable } from '@/modules/nominations/components/NominatorTable';
-import { CategoryManageModal } from '@/modules/nominations/components/CategoryManageModal';
 import { NominationStatus } from '@/modules/nominations/types/nomination.types';
 import { Award, Users, CheckCircle2, XCircle, Settings, Plus, FileSpreadsheet } from 'lucide-react';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
@@ -14,7 +13,6 @@ import { PERMISSIONS } from '@/constants/permissions';
 import { ExportDataModal } from '@/modules/nominations/components/ExportDataModal';
 
 export default function NominatorsPage() {
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const canExportNominators = useHasPermission(PERMISSIONS.NOMINATORS_EXPORT);
 
@@ -89,13 +87,11 @@ export default function NominatorsPage() {
               Export Data
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => setIsCategoryModalOpen(true)}
-            startIcon={<Settings size={16} />}
-          >
-            Categories
-          </Button>
+          <Link href="/nomination-categories">
+            <Button variant="outline" startIcon={<Settings size={16} />}>
+              Categories
+            </Button>
+          </Link>
           <Link href="/nominators/create">
             <Button
               variant="primary"
@@ -126,11 +122,6 @@ export default function NominatorsPage() {
       <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
         <NominatorTable />
       </div>
-
-      <CategoryManageModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-      />
 
       <ExportDataModal
         isOpen={isExportModalOpen}

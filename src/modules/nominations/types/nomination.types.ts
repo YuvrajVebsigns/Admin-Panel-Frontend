@@ -90,6 +90,8 @@ export interface NominationCategory {
   _id?: string;
   name: string;
   slug: string;
+  websiteId?: WebsiteRef | string;
+  website?: WebsiteRef;
   isActive: boolean;
   sortOrder: number;
   parentId?: string | null;
@@ -108,6 +110,8 @@ export interface NominationSubCategory {
   sortOrder?: number;
   categoryId: string;
   category?: NominationCategory | { id?: string; _id?: string; name?: string };
+  websiteId?: WebsiteRef | string;
+  website?: WebsiteRef;
   parentCategoryName?: string;
   createdAt: string;
   updatedAt: string;
@@ -119,6 +123,7 @@ export interface NominationSubCategoryQueryParams {
   search?: string;
   isActive?: boolean;
   categoryId?: string;
+  websiteId?: string;
 }
 
 // Queries
@@ -140,6 +145,7 @@ export interface NominationCategoryQueryParams {
   limit?: number;
   search?: string;
   isActive?: boolean;
+  websiteId?: string;
 }
 
 // DTOs
@@ -176,6 +182,7 @@ export interface WebsiteNominationStatusResponse {
 export interface CreateNominationCategoryDto {
   name: string;
   slug: string;
+  websiteId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -183,6 +190,25 @@ export interface CreateNominationCategoryDto {
 export interface UpdateNominationCategoryDto {
   name?: string;
   slug?: string;
+  websiteId?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface CreateNominationSubCategoryDto {
+  name: string;
+  slug: string;
+  categoryId: string;
+  websiteId?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface UpdateNominationSubCategoryDto {
+  name?: string;
+  slug?: string;
+  categoryId?: string;
+  websiteId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
