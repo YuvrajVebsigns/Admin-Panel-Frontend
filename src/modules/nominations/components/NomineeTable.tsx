@@ -71,13 +71,29 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
     return map;
   }, [subCategoryData]);
 
+  const getId = (item: unknown): string => {
+    if (!item) return '';
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object') {
+      const obj = item as { id?: string; _id?: string };
+      return obj.id || obj._id || '';
+    }
+    return String(item);
+  };
+
   const missingSubCategoryIds = useMemo(() => {
     if (!nominees) return [];
 
     const ids = new Set<string>();
     nominees.forEach((grouped) => {
-      grouped.categories.forEach((id) => {
+      grouped.categories?.forEach((id) => {
         if (!categoryMap.has(id) && !subCategoryMap.has(id)) {
+          ids.add(id);
+        }
+      });
+      grouped.subCategories?.forEach((subId) => {
+        const id = getId(subId);
+        if (id && !subCategoryMap.has(id)) {
           ids.add(id);
         }
       });
@@ -92,12 +108,19 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
   const missingParentCategoryIds = useMemo(() => {
     const ids = new Set<string>();
     missingSubCategories?.forEach((subCategory) => {
-      if (subCategory.categoryId && !categoryMap.has(subCategory.categoryId)) {
-        ids.add(subCategory.categoryId);
+      const parentId = getId(subCategory.categoryId);
+      if (parentId && !categoryMap.has(parentId)) {
+        ids.add(parentId);
+      }
+    });
+    subCategoryData?.data?.forEach((subCategory) => {
+      const parentId = getId(subCategory.categoryId);
+      if (parentId && !categoryMap.has(parentId)) {
+        ids.add(parentId);
       }
     });
     return Array.from(ids);
-  }, [missingSubCategories, categoryMap]);
+  }, [missingSubCategories, subCategoryData, categoryMap]);
 
   const { categories: missingParentCategories } =
     useNominationCategoriesByIds(missingParentCategoryIds);
@@ -118,8 +141,28 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
       }
     });
 
+    nominees?.forEach((grouped) => {
+      (grouped.subCategoryDocs ?? []).forEach((doc) => {
+        if (!doc) return;
+        const id = doc.id || doc._id;
+        if (id && !map.has(id)) {
+          map.set(id, doc);
+        }
+      });
+      (grouped.categoryDocs ?? []).forEach((doc) => {
+        if (!doc) return;
+        if ('categoryId' in doc && doc.categoryId) {
+          const subDoc = doc as NominationSubCategory;
+          const id = subDoc.id || subDoc._id;
+          if (id && !map.has(id)) {
+            map.set(id, subDoc);
+          }
+        }
+      });
+    });
+
     return map;
-  }, [subCategoryData, missingSubCategories]);
+  }, [subCategoryData, missingSubCategories, nominees]);
 
   const combinedCategoryMap = useMemo(() => {
     const map = new Map<string, NominationCategory>();
@@ -135,12 +178,43 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
         map.set(id, cat);
       }
     });
+    nominees?.forEach((grouped) => {
+      (grouped.categoryDocs ?? []).forEach((doc) => {
+        if (!doc) return;
+        if (!('categoryId' in doc)) {
+          const catDoc = doc as NominationCategory;
+          const id = catDoc.id || catDoc._id;
+          if (id && !map.has(id)) {
+            map.set(id, catDoc);
+          }
+        }
+      });
+    });
     return map;
-  }, [categories, missingParentCategories]);
+  }, [categories, missingParentCategories, nominees]);
 
   const getSubCategoryLabel = (doc: NominationSubCategory) => {
-    const parentCategory = combinedCategoryMap.get(doc.categoryId);
-    return parentCategory ? `${parentCategory.name} > ${doc.name}` : doc.name;
+    if (!doc) return '';
+    if (doc.categoryId && typeof doc.categoryId === 'object') {
+      const parentObj = doc.categoryId as { name?: string; id?: string; _id?: string };
+      if (parentObj.name) {
+        return `${parentObj.name} > ${doc.name}`;
+      }
+      const parentId = parentObj.id || parentObj._id;
+      if (parentId) {
+        const parentCategory = combinedCategoryMap.get(parentId);
+        if (parentCategory) {
+          return `${parentCategory.name} > ${doc.name}`;
+        }
+      }
+    } else if (doc.categoryId && typeof doc.categoryId === 'string') {
+      const parentCategory = combinedCategoryMap.get(doc.categoryId);
+      if (parentCategory) {
+        return `${parentCategory.name} > ${doc.name}`;
+      }
+    }
+
+    return doc.name || '';
   };
 
   const getNomineeCategoryNames = (grouped: GroupedNominee) => {
@@ -160,7 +234,7 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
       addName(doc.name);
     });
 
-    grouped.categories.forEach((catId) => {
+    (grouped.categories ?? []).forEach((catId) => {
       const category = combinedCategoryMap.get(catId);
       if (category) {
         addName(category.name);
@@ -184,12 +258,26 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
       names.set(name, name);
     };
 
+    (grouped.subCategoryDocs ?? []).forEach((doc) => {
+      if (!doc) return;
+      addName(getSubCategoryLabel(doc as NominationSubCategory));
+    });
+
     (grouped.categoryDocs ?? []).forEach((doc) => {
       if (!doc || !('categoryId' in doc) || !doc.categoryId) return;
       addName(getSubCategoryLabel(doc as NominationSubCategory));
     });
 
-    grouped.categories.forEach((catId) => {
+    (grouped.subCategories ?? []).forEach((subCatId) => {
+      const id = getId(subCatId);
+      if (!id) return;
+      const subCategory = combinedSubCategoryMap.get(id);
+      if (subCategory) {
+        addName(getSubCategoryLabel(subCategory));
+      }
+    });
+
+    (grouped.categories ?? []).forEach((catId) => {
       const category = combinedCategoryMap.get(catId);
       if (category) return;
 

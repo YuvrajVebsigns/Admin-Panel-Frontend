@@ -75,12 +75,14 @@ export interface GroupedNominee {
   nominatorsCount: number;
   statuses: NominationStatus[];
   categories: string[];
+  subCategories?: string[];
   submittedAt: string;
   createdAt?: string; // May be stripped by backend
   websiteId: string;
   nominee: RegistreeRef;
   website?: WebsiteRef;
   categoryDocs?: Array<NominationCategory | NominationSubCategory>;
+  subCategoryDocs?: Array<NominationSubCategory>;
 }
 
 export interface NominationCategory {
