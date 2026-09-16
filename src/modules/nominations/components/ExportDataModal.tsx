@@ -10,11 +10,9 @@ import {
   Tag,
   Search,
   Download,
-  Filter,
   Sparkles,
   Layers,
 } from 'lucide-react';
-import { NominationStatus } from '../types/nomination.types';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { Website } from '@/modules/websites/types/website.types';
 import {
@@ -29,7 +27,6 @@ interface ExportDataModalProps {
   onClose: () => void;
   type: 'nominee' | 'nominator';
   initialSearch?: string;
-  initialStatus?: NominationStatus;
 }
 
 export const ExportDataModal: React.FC<ExportDataModalProps> = ({
@@ -37,12 +34,10 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   onClose,
   type,
   initialSearch = '',
-  initialStatus,
 }) => {
   const [websiteId, setWebsiteId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [status, setStatus] = useState<string>(initialStatus || '');
   const [categoryId, setCategoryId] = useState<string>('');
   const [subCategoryId, setSubCategoryId] = useState<string>('');
   const [search, setSearch] = useState<string>(initialSearch);
@@ -67,9 +62,8 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setSearch(initialSearch || '');
-      setStatus(initialStatus || '');
     }
-  }, [isOpen, initialSearch, initialStatus]);
+  }, [isOpen, initialSearch]);
 
   // Reset subcategory if category changes
   useEffect(() => {
@@ -135,7 +129,6 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
         websiteId: websiteId || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-        status: (status as NominationStatus) || undefined,
         categoryId: categoryId || undefined,
         subCategoryId: subCategoryId || undefined,
         search: search.trim() || undefined,
@@ -266,47 +259,25 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
           </div>
         </div>
 
-        {/* Website and Status Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Website Source */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-              <Globe size={14} className="text-brand-500" />
-              Website Source
-            </label>
-            <select
-              value={websiteId}
-              onChange={(e) => setWebsiteId(e.target.value)}
-              disabled={isWebsitesLoading}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <option value="">All Websites</option>
-              {websites?.map((ws: Website) => (
-                <option key={ws.id} value={ws.id}>
-                  {ws.name} ({ws.domain || 'Domain'})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-              <Filter size={14} className="text-brand-500" />
-              Nomination Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
-            >
-              <option value="">All Statuses</option>
-              <option value={NominationStatus.APPROVED}>Approved Only</option>
-              <option value={NominationStatus.PENDING}>Pending Only</option>
-              <option value={NominationStatus.REVIEWED}>Reviewed Only</option>
-              <option value={NominationStatus.REJECTED}>Rejected Only</option>
-            </select>
-          </div>
+        {/* Website Source */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+            <Globe size={14} className="text-brand-500" />
+            Website Source
+          </label>
+          <select
+            value={websiteId}
+            onChange={(e) => setWebsiteId(e.target.value)}
+            disabled={isWebsitesLoading}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <option value="">All Websites</option>
+            {websites?.map((ws: Website) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name} ({ws.domain || 'Domain'})
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Category and Sub-category Grid */}

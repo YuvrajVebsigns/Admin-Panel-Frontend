@@ -449,7 +449,6 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
         onClose={() => setIsExportModalOpen(false)}
         type="nominee"
         initialSearch={params.search}
-        initialStatus={params.status}
       />
     </div>
   );

@@ -271,7 +271,6 @@ export const NominatorTable: React.FC<NominatorTableProps> = () => {
         onClose={() => setIsExportModalOpen(false)}
         type="nominator"
         initialSearch={params.search}
-        initialStatus={params.status}
       />
     </div>
   );
