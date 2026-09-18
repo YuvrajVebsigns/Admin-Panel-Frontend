@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEventMappings } from '../hooks/useEventMappings';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
+import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import {
   EventTemplateMapping,
   MessageTemplate,
@@ -26,6 +27,8 @@ import {
   Mail,
   MessageSquare,
   Bell,
+  Globe,
+  Filter,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { communicationService } from '@/services/communication.service';
@@ -35,8 +38,10 @@ export const EventMappingsTab: React.FC = () => {
   const { user } = useAuthStore();
   const isAuthorized = ['super_admin', 'admin'].includes(user?.role?.roleKey || '');
 
+  const [selectedWebsiteFilter, setSelectedWebsiteFilter] = useState<string>('all');
   const { mappings, isLoading, deleteMapping } = useEventMappings();
   const { templates } = useMessageTemplates({ limit: 150 });
+  const { websites = [] } = useWebsites({ limit: 100 });
 
   // View Details Modal State
   const [selectedMapping, setSelectedMapping] = useState<EventTemplateMapping | null>(null);
@@ -95,7 +100,7 @@ export const EventMappingsTab: React.FC = () => {
           renderedPreviewHtml ||
             '<p style="font-family:sans-serif;color:#94a3b8;text-align:center;margin-top:100px;">No preview available.</p>',
         );
-        iframeDoc.close();
+        iframeDoc.close;
       }
     }
   }, [previewTemplate, renderedPreviewHtml]);
@@ -119,7 +124,6 @@ export const EventMappingsTab: React.FC = () => {
         isActive: !mapping.isActive,
       });
       toast.success(`Mapping status updated successfully`);
-      // Reload page state or query client will update cache automatically
       router.refresh();
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Failed to update mapping status.';
@@ -154,7 +158,6 @@ export const EventMappingsTab: React.FC = () => {
         triggers: updatedTriggers as unknown as EventMappingTrigger[],
       });
 
-      // Update selectedMapping state so drawer is in sync
       setSelectedMapping(updated);
       toast.success(`Action trigger status updated`);
     } catch (err: unknown) {
@@ -162,6 +165,24 @@ export const EventMappingsTab: React.FC = () => {
       toast.error(errMsg);
     }
   };
+
+  // Filter mappings based on selected website filter
+  const filteredMappings = useMemo(() => {
+    if (selectedWebsiteFilter === 'all') return mappings;
+    if (selectedWebsiteFilter === 'global') {
+      return mappings.filter((m) => m.triggers?.some((t) => !t.websiteId));
+    }
+    return mappings.filter((m) =>
+      m.triggers?.some((t) => {
+        const pop =
+          typeof t.websiteId === 'object' && t.websiteId
+            ? (t.websiteId as unknown as { _id?: string; id?: string })
+            : null;
+        const wId = pop?._id || pop?.id || (t.websiteId as string);
+        return String(wId) === selectedWebsiteFilter;
+      }),
+    );
+  }, [mappings, selectedWebsiteFilter]);
 
   const columns: Column<EventTemplateMapping>[] = [
     {
@@ -176,37 +197,113 @@ export const EventMappingsTab: React.FC = () => {
       ),
     },
     {
-      header: 'Mapped Notifications & Channels',
+      header: 'Website Scopes & Triggers',
       accessor: (m) => {
-        const triggersCount = m.triggers?.length || 0;
-        // Collect channel types
+        const triggers = m.triggers || [];
+
+        // Group triggers by website
+        const websiteMap = new Map<
+          string,
+          { count: number; name: string; domain?: string; isGlobal: boolean }
+        >();
+
+        triggers.forEach((t) => {
+          let wId = '';
+          let wName = 'Global Default';
+          let wDomain = '';
+          let isGlobal = true;
+
+          if (t.websiteId) {
+            if (typeof t.websiteId === 'object') {
+              const pop = t.websiteId as unknown as {
+                _id?: string;
+                id?: string;
+                name?: string;
+                domain?: string;
+              };
+              wId = String(pop._id || pop.id || '');
+              wName = pop.name || 'Website';
+              wDomain = pop.domain || '';
+            } else {
+              wId = String(t.websiteId);
+              const found = websites.find((w) => w.id === wId);
+              if (found) {
+                wName = found.name;
+                wDomain = found.domain;
+              }
+            }
+            isGlobal = false;
+          } else {
+            wId = 'global';
+          }
+
+          const existing = websiteMap.get(wId) || {
+            count: 0,
+            name: wName,
+            domain: wDomain,
+            isGlobal,
+          };
+          existing.count += 1;
+          websiteMap.set(wId, existing);
+        });
+
+        const groups = Array.from(websiteMap.values());
+
+        return (
+          <div className="flex flex-wrap items-center gap-1.5 max-w-md">
+            {groups.length === 0 ? (
+              <span className="text-xs text-gray-400 italic">No triggers</span>
+            ) : (
+              groups.map((g, idx) => (
+                <div
+                  key={idx}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold ${
+                    g.isGlobal
+                      ? 'bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-navy-700'
+                      : 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20'
+                  }`}
+                >
+                  <Globe
+                    size={11}
+                    className={g.isGlobal ? 'text-gray-500' : 'text-blue-600 dark:text-blue-400'}
+                  />
+                  <span>{g.name}</span>
+                  <span className="px-1 py-0.2 bg-white/80 dark:bg-navy-900 rounded text-[9px] font-mono">
+                    {g.count}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Channels',
+      accessor: (m) => {
         const channelTypes = m.triggers?.map((t) => t.channel) || [];
         const hasEmail = channelTypes.includes(CommunicationChannel.EMAIL);
         const hasSms = channelTypes.includes(CommunicationChannel.SMS);
         const hasPush = channelTypes.includes(CommunicationChannel.PUSH);
 
         return (
-          <div className="flex items-center gap-2.5">
-            <Badge color="info" className="font-bold text-[10px] rounded-lg px-2.5 py-1">
-              {triggersCount} Action{triggersCount !== 1 ? 's' : ''}
-            </Badge>
-            <div className="flex items-center gap-1.5 text-gray-450 dark:text-navy-400">
-              {hasEmail && (
-                <span title="Email">
-                  <Mail size={13} />
-                </span>
-              )}
-              {hasSms && (
-                <span title="SMS">
-                  <MessageSquare size={13} />
-                </span>
-              )}
-              {hasPush && (
-                <span title="Push">
-                  <Bell size={13} />
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2 text-gray-500 dark:text-navy-400">
+            {hasEmail && (
+              <span className="p-1 bg-gray-50 dark:bg-navy-900 rounded-md" title="Email">
+                <Mail size={13} className="text-blue-500" />
+              </span>
+            )}
+            {hasSms && (
+              <span className="p-1 bg-gray-50 dark:bg-navy-900 rounded-md" title="SMS">
+                <MessageSquare size={13} className="text-green-500" />
+              </span>
+            )}
+            {hasPush && (
+              <span className="p-1 bg-gray-50 dark:bg-navy-900 rounded-md" title="Push">
+                <Bell size={13} className="text-amber-500" />
+              </span>
+            )}
+            {!hasEmail && !hasSms && !hasPush && <span className="text-xs text-gray-400">—</span>}
           </div>
         );
       },
@@ -264,49 +361,146 @@ export const EventMappingsTab: React.FC = () => {
     },
   ];
 
+  // Helper to group selected mapping triggers by website for details modal
+  const groupedModalTriggers = useMemo(() => {
+    if (!selectedMapping?.triggers) return [];
+
+    const map = new Map<
+      string,
+      {
+        key: string;
+        name: string;
+        domain?: string;
+        allowedDomains?: string[];
+        isGlobal: boolean;
+        items: { trigger: EventMappingTrigger; originalIndex: number }[];
+      }
+    >();
+
+    selectedMapping.triggers.forEach((trigger, originalIndex) => {
+      let key = 'global';
+      let name = 'Global Default (All Websites)';
+      let domain = '';
+      let allowedDomains: string[] = [];
+      let isGlobal = true;
+
+      if (trigger.websiteId) {
+        if (typeof trigger.websiteId === 'object') {
+          const pop = trigger.websiteId as unknown as {
+            _id?: string;
+            id?: string;
+            name?: string;
+            domain?: string;
+            allowedDomains?: string[];
+          };
+          key = String(pop._id || pop.id || '');
+          name = pop.name || 'Website';
+          domain = pop.domain || '';
+          allowedDomains = pop.allowedDomains || [];
+        } else {
+          key = String(trigger.websiteId);
+          const found = websites.find((w) => w.id === key);
+          if (found) {
+            name = found.name;
+            domain = found.domain;
+            allowedDomains = found.allowedDomains || [];
+          }
+        }
+        isGlobal = false;
+      }
+
+      if (!map.has(key)) {
+        map.set(key, { key, name, domain, allowedDomains, isGlobal, items: [] });
+      }
+      map.get(key)!.items.push({ trigger, originalIndex });
+    });
+
+    return Array.from(map.values());
+  }, [selectedMapping, websites]);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header & Website Filter */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white font-outfit">
             Event Mappings
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Map system events to multiple communication action templates.
+            Map system events to website-specific and global communication action templates.
           </p>
         </div>
-        {isAuthorized && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => router.push('/communications/mappings/create')}
-            startIcon={<Plus size={14} />}
-          >
-            Add Event Mapping
-          </Button>
-        )}
+
+        <div className="flex items-center gap-3">
+          {/* Website Filter Dropdown */}
+          <div className="flex items-center gap-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-2xl px-3 py-1.5 shadow-sm">
+            <Filter size={13} className="text-gray-400" />
+            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+              Website:
+            </span>
+            <select
+              value={selectedWebsiteFilter}
+              onChange={(e) => setSelectedWebsiteFilter(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-gray-800 dark:text-white focus:outline-none cursor-pointer pr-2"
+            >
+              <option value="all">All Mappings ({mappings.length})</option>
+              <option value="global">🌐 Global Defaults Only</option>
+              {websites.map((w) => (
+                <option key={w.id} value={w.id}>
+                  🏷️ {w.name} ({w.domain})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {isAuthorized && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => router.push('/communications/mappings/create')}
+              startIcon={<Plus size={14} />}
+            >
+              Add Event Mapping
+            </Button>
+          )}
+        </div>
       </div>
 
-      {mappings.length === 0 ? (
+      {filteredMappings.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-gray-50 dark:bg-navy-950 border border-dashed border-gray-200 dark:border-navy-800 rounded-3xl text-center">
           <ToggleLeft size={40} className="text-gray-400 mb-3" />
-          <p className="text-sm font-bold text-gray-800 dark:text-white">No Event Mappings</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
-            Configure parent event triggers to automate notifications setup.
+          <p className="text-sm font-bold text-gray-800 dark:text-white">
+            {selectedWebsiteFilter !== 'all' ? 'No Mappings Matching Filter' : 'No Event Mappings'}
           </p>
-          {isAuthorized && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
+            {selectedWebsiteFilter !== 'all'
+              ? 'No event mappings have triggers configured for the selected website scope.'
+              : 'Configure parent event triggers to automate notifications setup.'}
+          </p>
+          {selectedWebsiteFilter !== 'all' ? (
             <Button
               variant="outline"
               size="sm"
               className="mt-4"
-              onClick={() => router.push('/communications/mappings/create')}
+              onClick={() => setSelectedWebsiteFilter('all')}
             >
-              Create Mapping
+              Clear Filter
             </Button>
+          ) : (
+            isAuthorized && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => router.push('/communications/mappings/create')}
+              >
+                Create Mapping
+              </Button>
+            )
           )}
         </div>
       ) : (
-        <DataTable data={mappings} columns={columns} isLoading={isLoading} />
+        <DataTable data={filteredMappings} columns={columns} isLoading={isLoading} />
       )}
 
       {/* Details View Modal */}
@@ -348,108 +542,172 @@ export const EventMappingsTab: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h5 className="text-[11px] font-bold text-gray-450 uppercase tracking-widest">
-                Notification Actions triggers ({selectedMapping.triggers?.length || 0})
-              </h5>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h5 className="text-[11px] font-bold text-gray-450 uppercase tracking-widest">
+                  Website-Segregated Triggers ({selectedMapping.triggers?.length || 0} Total
+                  Actions)
+                </h5>
+              </div>
 
               {!selectedMapping.triggers || selectedMapping.triggers.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">
                   No triggers defined for this event mapping.
                 </p>
               ) : (
-                <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-1">
-                  {selectedMapping.triggers.map((trigger, idx) => {
-                    const templateName =
-                      typeof trigger.templateId === 'object'
-                        ? (trigger.templateId as MessageTemplate).name
-                        : templates.find((t) => t.id === trigger.templateId)?.name ||
-                          'Unknown Template';
-
-                    const templateSlug =
-                      typeof trigger.templateId === 'object'
-                        ? (trigger.templateId as MessageTemplate).slug
-                        : templates.find((t) => t.id === trigger.templateId)?.slug || '';
-
-                    return (
-                      <div
-                        key={idx}
-                        className="p-4 bg-white dark:bg-navy-900 border border-gray-150 dark:border-navy-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                              Action #{idx + 1}:
-                            </span>
-                            <Badge
-                              color="info"
-                              className="text-[9px] rounded font-bold px-1.5 py-0.5 uppercase"
-                            >
-                              {trigger.channel}
-                            </Badge>
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                              {templateName}
-                            </span>
-                            {templateSlug && (
-                              <span className="text-[10px] text-gray-400 dark:text-navy-450 font-mono">
-                                ({templateSlug})
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[10px] text-gray-500 font-mono space-y-0.5">
-                            <div>
-                              <span className="font-bold text-gray-450">To:</span> {trigger.to}
-                            </div>
-                            {trigger.cc && (
-                              <div>
-                                <span className="font-bold text-gray-450">CC:</span> {trigger.cc}
-                              </div>
-                            )}
-                            {trigger.bcc && (
-                              <div>
-                                <span className="font-bold text-gray-450">BCC:</span> {trigger.bcc}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleOpenTemplatePreview(
-                                typeof trigger.templateId === 'object'
-                                  ? (trigger.templateId as MessageTemplate).id
-                                  : trigger.templateId,
-                              )
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                  {groupedModalTriggers.map((group) => (
+                    <div
+                      key={group.key}
+                      className={`rounded-2xl border p-4 space-y-3 ${
+                        group.isGlobal
+                          ? 'bg-gray-50/70 dark:bg-navy-950/60 border-gray-200 dark:border-navy-800'
+                          : 'bg-blue-50/30 dark:bg-navy-950/60 border-blue-200/70 dark:border-blue-500/20'
+                      }`}
+                    >
+                      {/* Website Group Header */}
+                      <div className="flex items-center justify-between border-b border-gray-200/60 dark:border-navy-800 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <Globe
+                            size={14}
+                            className={
+                              group.isGlobal ? 'text-gray-500' : 'text-blue-600 dark:text-blue-400'
                             }
-                            className="text-xs font-bold text-brand-500 hover:text-brand-650 flex items-center gap-1 cursor-pointer"
+                          />
+                          <span
+                            className={`text-xs font-bold ${
+                              group.isGlobal
+                                ? 'text-gray-800 dark:text-gray-200'
+                                : 'text-blue-800 dark:text-blue-300'
+                            }`}
                           >
-                            <Eye size={12} /> Preview
-                          </button>
-
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-400">
-                              Trigger Status
+                            {group.name}
+                          </span>
+                          {group.domain && (
+                            <span className="text-[11px] font-mono text-gray-500 dark:text-navy-400">
+                              ({group.domain})
                             </span>
-                            <button
-                              onClick={() => handleToggleTriggerActive(selectedMapping, idx)}
-                              className={`relative w-8 h-4.5 rounded-full transition-colors duration-250 shrink-0 ${
-                                trigger.isActive ? 'bg-brand-500' : 'bg-gray-250 dark:bg-navy-750'
-                              }`}
-                              disabled={!isAuthorized}
-                            >
-                              <span
-                                className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-250 ${
-                                  trigger.isActive ? 'translate-x-3.5' : 'translate-x-0'
-                                }`}
-                              />
-                            </button>
-                          </div>
+                          )}
                         </div>
+                        <Badge
+                          color={group.isGlobal ? 'light' : 'info'}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg"
+                        >
+                          {group.items.length} Trigger{group.items.length !== 1 ? 's' : ''}
+                        </Badge>
                       </div>
-                    );
-                  })}
+
+                      {/* Triggers in this group */}
+                      <div className="space-y-2.5">
+                        {group.items.map(({ trigger, originalIndex }) => {
+                          const templateName =
+                            typeof trigger.templateId === 'object'
+                              ? (trigger.templateId as MessageTemplate).name
+                              : templates.find((t) => t.id === trigger.templateId)?.name ||
+                                'Unknown Template';
+
+                          const templateSlug =
+                            typeof trigger.templateId === 'object'
+                              ? (trigger.templateId as MessageTemplate).slug
+                              : templates.find((t) => t.id === trigger.templateId)?.slug || '';
+
+                          return (
+                            <div
+                              key={originalIndex}
+                              className="p-3.5 bg-white dark:bg-navy-900 border border-gray-150 dark:border-navy-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                            >
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                                    Action #{originalIndex + 1}:
+                                  </span>
+                                  <Badge
+                                    color="info"
+                                    className="text-[9px] rounded font-bold px-1.5 py-0.5 uppercase"
+                                  >
+                                    {trigger.channel}
+                                  </Badge>
+                                  <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                                    {templateName}
+                                  </span>
+                                  {templateSlug && (
+                                    <span className="text-[10px] text-gray-400 dark:text-navy-450 font-mono">
+                                      ({templateSlug})
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[10px] text-gray-500 font-mono space-y-0.5">
+                                  <div>
+                                    <span className="font-bold text-gray-450">To:</span>{' '}
+                                    {trigger.to}
+                                  </div>
+                                  {trigger.cc && (
+                                    <div>
+                                      <span className="font-bold text-gray-450">CC:</span>{' '}
+                                      {trigger.cc}
+                                    </div>
+                                  )}
+                                  {trigger.bcc && (
+                                    <div>
+                                      <span className="font-bold text-gray-450">BCC:</span>{' '}
+                                      {trigger.bcc}
+                                    </div>
+                                  )}
+                                  {(trigger.senderEmail || trigger.senderName) && (
+                                    <div>
+                                      <span className="font-bold text-gray-450">Sender:</span>{' '}
+                                      {trigger.senderName
+                                        ? `${trigger.senderName} <${trigger.senderEmail}>`
+                                        : trigger.senderEmail}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenTemplatePreview(
+                                      typeof trigger.templateId === 'object'
+                                        ? (trigger.templateId as MessageTemplate).id
+                                        : trigger.templateId,
+                                    )
+                                  }
+                                  className="text-xs font-bold text-brand-500 hover:text-brand-650 flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Eye size={12} /> Preview
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold text-gray-400">
+                                    Status
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      handleToggleTriggerActive(selectedMapping, originalIndex)
+                                    }
+                                    className={`relative w-8 h-4.5 rounded-full transition-colors duration-250 shrink-0 ${
+                                      trigger.isActive
+                                        ? 'bg-brand-500'
+                                        : 'bg-gray-250 dark:bg-navy-750'
+                                    }`}
+                                    disabled={!isAuthorized}
+                                  >
+                                    <span
+                                      className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-250 ${
+                                        trigger.isActive ? 'translate-x-3.5' : 'translate-x-0'
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

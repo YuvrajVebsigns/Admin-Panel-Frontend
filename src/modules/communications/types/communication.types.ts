@@ -194,6 +194,18 @@ export interface SendTemplateMessageDto {
 }
 
 export interface EventMappingTrigger {
+  websiteId?:
+    | string
+    | {
+        id: string;
+        _id?: string;
+        name: string;
+        domain: string;
+        slug: string;
+        logo?: string;
+        allowedDomains?: string[];
+      }
+    | null;
   channel: CommunicationChannel;
   templateId: MessageTemplate | string;
   to: string;
@@ -241,6 +253,13 @@ export interface UpdateEventTemplateMappingDto {
   senderName?: string;
   triggers?: EventMappingTrigger[];
   isActive?: boolean;
+}
+
+export interface EventMappingQueryParams {
+  websiteId?: string;
+  event?: string;
+  isActive?: boolean;
+  search?: string;
 }
 
 export interface BrevoSender {

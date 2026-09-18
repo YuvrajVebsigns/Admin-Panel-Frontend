@@ -19,6 +19,7 @@ import {
   EventTemplateMapping,
   CreateEventTemplateMappingDto,
   UpdateEventTemplateMappingDto,
+  EventMappingQueryParams,
   BrevoSender,
   SchemaDiscoveryResult,
   CommunicationVariable,
@@ -276,8 +277,19 @@ export const communicationService = {
 
   // ── Event Mappings CRUD ──────────────────────────────────────────
 
-  getEventMappings: async (): Promise<EventTemplateMapping[]> => {
-    return apiFetch<EventTemplateMapping[]>(`${BASE}/event-mappings`);
+  getEventMappings: async (
+    params: EventMappingQueryParams = {},
+  ): Promise<EventTemplateMapping[]> => {
+    const qp = new URLSearchParams();
+    if (params.websiteId) qp.append('websiteId', params.websiteId);
+    if (params.event) qp.append('event', params.event);
+    if (params.isActive !== undefined) qp.append('isActive', params.isActive.toString());
+    if (params.search) qp.append('search', params.search);
+
+    const queryString = qp.toString();
+    return apiFetch<EventTemplateMapping[]>(
+      `${BASE}/event-mappings${queryString ? `?${queryString}` : ''}`,
+    );
   },
 
   getEventMapping: async (id: string): Promise<EventTemplateMapping> => {

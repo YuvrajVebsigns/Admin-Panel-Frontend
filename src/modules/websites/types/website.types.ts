@@ -35,6 +35,7 @@ export interface Website {
   name: string;
   slug: string;
   domain: string;
+  allowedDomains?: string[];
   logo?: string | ImageLinks;
   description?: string;
   isActive: boolean;

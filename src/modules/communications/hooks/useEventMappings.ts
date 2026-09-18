@@ -3,10 +3,11 @@ import { communicationService } from '@/services/communication.service';
 import {
   CreateEventTemplateMappingDto,
   UpdateEventTemplateMappingDto,
+  EventMappingQueryParams,
 } from '../types/communication.types';
 import toast from 'react-hot-toast';
 
-export const useEventMappings = () => {
+export const useEventMappings = (params: EventMappingQueryParams = {}) => {
   const queryClient = useQueryClient();
 
   const {
@@ -15,8 +16,8 @@ export const useEventMappings = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['communication-event-mappings'],
-    queryFn: () => communicationService.getEventMappings(),
+    queryKey: ['communication-event-mappings', params],
+    queryFn: () => communicationService.getEventMappings(params),
   });
 
   const createMutation = useMutation({
