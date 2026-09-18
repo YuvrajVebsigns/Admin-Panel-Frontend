@@ -13,6 +13,7 @@ import { useEventMappings, useEventMapping } from '../hooks/useEventMappings';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
 import { useSystemEvents } from '../hooks/useSystemEvents';
 import { useCommunicationProviders } from '../hooks/useCommunicationProviders';
+import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { VariableTokenSidebar } from './VariableTokenSidebar';
 import { TargetPathSelector } from './TargetPathSelector';
 import {
@@ -26,12 +27,14 @@ import {
   Radio,
   Clock,
   Hash,
+  Globe,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // ── Types ──
 interface TriggerRow {
   id: string;
+  websiteId?: string;
   channel: CommunicationChannel;
   templateId: string;
   to: string;
@@ -61,6 +64,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
   const { templates } = useMessageTemplates({ limit: 150 });
   const { categories } = useSystemEvents();
   const { senders } = useCommunicationProviders();
+  const { websites = [] } = useWebsites({ limit: 100 });
 
   const [triggerMode, setTriggerMode] = useState<TriggerMode>('system_event');
   const [event, setEvent] = useState('');
@@ -84,21 +88,28 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
 
     if (editData.triggers?.length) {
       setTriggers(
-        editData.triggers.map((t, idx) => ({
-          id: `trigger_${idx}_${Date.now()}`,
-          channel: t.channel,
-          templateId:
-            typeof t.templateId === 'object'
-              ? (t.templateId as unknown as { id: string }).id
-              : (t.templateId as string),
-          to: t.to || '',
-          cc: t.cc || '',
-          bcc: t.bcc || '',
-          senderId: '',
-          senderEmail: t.senderEmail || '',
-          senderName: t.senderName || '',
-          isActive: t.isActive,
-        })),
+        editData.triggers.map((t, idx) => {
+          const popWebsite =
+            typeof t.websiteId === 'object' && t.websiteId
+              ? (t.websiteId as unknown as { _id?: string; id?: string })
+              : null;
+          return {
+            id: `trigger_${idx}_${Date.now()}`,
+            websiteId: popWebsite?._id || popWebsite?.id || (t.websiteId as string) || '',
+            channel: t.channel,
+            templateId:
+              typeof t.templateId === 'object'
+                ? (t.templateId as unknown as { id: string }).id
+                : (t.templateId as string),
+            to: t.to || '',
+            cc: t.cc || '',
+            bcc: t.bcc || '',
+            senderId: '',
+            senderEmail: t.senderEmail || '',
+            senderName: t.senderName || '',
+            isActive: t.isActive,
+          };
+        }),
       );
     } else if (editData.templateId) {
       const legacy = editData.templateId as unknown as {
@@ -108,6 +119,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
       setTriggers([
         {
           id: `legacy_${Date.now()}`,
+          websiteId: '',
           channel: legacy?.channel || CommunicationChannel.EMAIL,
           templateId: legacy?.id || (editData.templateId as unknown as string),
           to: editData.to || '',
@@ -122,11 +134,12 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
     }
   }, [isEdit, editData]);
 
-  const handleAddTrigger = () => {
+  const handleAddTrigger = (presetWebsiteId?: string) => {
     setTriggers((prev) => [
       ...prev,
       {
         id: `trigger_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        websiteId: presetWebsiteId || '',
         channel: CommunicationChannel.EMAIL,
         templateId: '',
         to: '',
@@ -203,6 +216,7 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
       setError('Add at least one output channel trigger.');
       return;
     }
+    const seenTriggers = new Set<string>();
     for (let i = 0; i < triggers.length; i++) {
       const trg = triggers[i]!;
       if (!trg.templateId) {
@@ -213,12 +227,25 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
         setError(`Trigger #${i + 1}: Recipient (To) is required`);
         return;
       }
+      const comboKey = `${trg.websiteId?.trim() || 'global'}_${trg.channel}_${trg.templateId}`;
+      if (seenTriggers.has(comboKey)) {
+        const websiteName = trg.websiteId
+          ? websites.find((w) => w.id === trg.websiteId)?.name || 'Selected Website'
+          : 'All Websites (Global Default)';
+        const tplName = templates.find((t) => t.id === trg.templateId)?.name || trg.templateId;
+        setError(
+          `Duplicate trigger at #${i + 1}: Template "${tplName}" on ${trg.channel} is already mapped for ${websiteName}. Each website can have only one mapping per template and channel.`,
+        );
+        return;
+      }
+      seenTriggers.add(comboKey);
     }
 
     const payload: CreateEventTemplateMappingDto = {
       event: triggerMode === 'system_event' ? event.trim() : `slug:${templateSlug}`,
       isActive,
       triggers: triggers.map((t) => ({
+        websiteId: t.websiteId?.trim() || undefined,
         channel: t.channel,
         templateId: t.templateId,
         to: t.to.trim(),
@@ -272,7 +299,8 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
               {isEdit ? 'Edit Communication Mapping' : 'Create Communication Mapping'}
             </h1>
             <p className="text-xs text-gray-500 mt-1">
-              Configure triggers, channels, and dynamic recipients for automated communications.
+              Configure triggers, website scopes, channels, and dynamic recipients for automated
+              communications.
             </p>
           </div>
         </div>
@@ -403,19 +431,27 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
           {/* Dynamic Trigger Matrix */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wide">
-                2. Output Channels ({triggers.length})
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                onClick={handleAddTrigger}
-                startIcon={<Plus size={14} />}
-                className="font-bold border-brand-500 text-brand-650 hover:bg-brand-50 dark:hover:bg-brand-500/10"
-              >
-                Add Output Channel
-              </Button>
+              <div>
+                <h3 className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wide">
+                  2. Output Channels & Website Triggers ({triggers.length})
+                </h3>
+                <p className="text-xs text-gray-450 dark:text-navy-400 mt-0.5">
+                  Route notifications based on website domain source or fall back to global
+                  channels.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => handleAddTrigger()}
+                  startIcon={<Plus size={14} />}
+                  className="font-bold border-brand-500 text-brand-650 hover:bg-brand-50 dark:hover:bg-brand-500/10"
+                >
+                  Add Channel Trigger
+                </Button>
+              </div>
             </div>
 
             {triggers.length === 0 ? (
@@ -425,8 +461,8 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                   No output channels configured
                 </p>
                 <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                  Click &ldquo;Add Output Channel&rdquo; to configure email, SMS, or push delivery
-                  triggers.
+                  Click &ldquo;Add Channel Trigger&rdquo; to configure website-scoped or global
+                  delivery triggers.
                 </p>
               </div>
             ) : (
@@ -435,17 +471,39 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                   (t) => t.channel === trigger.channel && t.isActive,
                 );
                 const selectedTemplate = templates.find((t) => t.id === trigger.templateId);
+                const targetWebsite = websites.find((w) => w.id === trigger.websiteId);
 
                 return (
                   <div
                     key={trigger.id}
-                    className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-4 relative border-l-4 border-l-brand-500 animate-fade-in"
+                    className={`rounded-3xl border p-6 shadow-sm space-y-4 relative border-l-4 animate-fade-in transition-all ${
+                      trigger.websiteId
+                        ? 'bg-blue-50/20 dark:bg-navy-900 border-blue-150 dark:border-navy-800 border-l-blue-600'
+                        : 'bg-white dark:bg-navy-900 border-gray-100 dark:border-navy-800 border-l-brand-500'
+                    }`}
                   >
                     {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-850 pb-3">
-                      <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-                        Channel #{idx + 1}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-navy-850 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">
+                          Action #{idx + 1}
+                        </span>
+                        {targetWebsite ? (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
+                            <Globe size={12} className="text-blue-600 dark:text-blue-400" />
+                            <span>{targetWebsite.name}</span>
+                            <span className="text-[10px] font-mono text-blue-600/75 dark:text-blue-400/75">
+                              ({targetWebsite.domain})
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-gray-100 text-gray-700 dark:bg-navy-800 dark:text-gray-300 border border-gray-200 dark:border-navy-700">
+                            <Globe size={12} className="text-gray-500" />
+                            <span>🌐 All Websites (Global Default)</span>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-gray-500">Active</span>
@@ -465,15 +523,53 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                           type="button"
                           onClick={() => handleRemoveTrigger(trigger.id)}
                           className="p-1.5 hover:bg-red-50 hover:text-red-500 text-gray-400 dark:hover:bg-red-500/10 rounded-xl transition-all"
-                          title="Remove"
+                          title="Remove Trigger"
                         >
                           <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
 
-                    {/* Channel & Template */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Website Scope, Channel & Template */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Website Scope */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-450 uppercase tracking-wide mb-1.5">
+                          Target Website Scope
+                        </label>
+                        <select
+                          value={trigger.websiteId || ''}
+                          onChange={(e) =>
+                            handleTriggerChange(trigger.id, {
+                              websiteId: e.target.value || undefined,
+                            })
+                          }
+                          className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
+                        >
+                          <option value="">🌐 All Websites (Global Default)</option>
+                          {websites.map((w) => (
+                            <option key={w.id} value={w.id}>
+                              🏷️ {w.name} ({w.domain})
+                            </option>
+                          ))}
+                        </select>
+                        {targetWebsite ? (
+                          <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                            Only triggers when event originates from{' '}
+                            <span className="font-mono font-bold">{targetWebsite.domain}</span>
+                            {targetWebsite.allowedDomains?.length
+                              ? ` or its allowed domains.`
+                              : '.'}
+                          </p>
+                        ) : (
+                          <p className="mt-1.5 text-[10px] text-gray-450 dark:text-navy-400">
+                            Serves as standard trigger or fallback when no website-specific rule
+                            exists.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Delivery Channel */}
                       <div>
                         <label className="block text-[11px] font-bold text-gray-450 uppercase tracking-wide mb-1.5">
                           Delivery Channel
@@ -492,6 +588,8 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                           <option value={CommunicationChannel.PUSH}>🔔 Push</option>
                         </select>
                       </div>
+
+                      {/* Message Template */}
                       <div>
                         <label className="block text-[11px] font-bold text-gray-450 uppercase tracking-wide mb-1.5">
                           Message Template
