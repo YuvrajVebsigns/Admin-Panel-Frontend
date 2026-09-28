@@ -16,7 +16,6 @@ export const reportService = {
     if (params.isPublished) queryParams.append('isPublished', params.isPublished);
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
-
     return apiFetch<PaginatedResponse<Report>>(`/admin/website/reports?${queryParams.toString()}`);
   },
 
