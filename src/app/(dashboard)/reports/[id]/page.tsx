@@ -49,8 +49,18 @@ export default function ReportDetailsPage() {
     {
       header: 'NAME',
       accessor: (item) => (
-        <div className="font-bold text-gray-900 dark:text-white text-sm">
-          {item.name || `${item.firstName} ${item.lastName}`.trim() || 'Anonymous'}
+        <div className="flex items-center gap-2">
+          <div className="font-bold text-gray-900 dark:text-white text-sm">
+            {item.name || `${item.firstName} ${item.lastName}`.trim() || 'Anonymous'}
+          </div>
+          {item.downloadCount && item.downloadCount > 1 && (
+            <span
+              className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-500 dark:bg-brand-500/10"
+              title={`${item.downloadCount} downloads`}
+            >
+              {item.downloadCount}
+            </span>
+          )}
         </div>
       ),
     },

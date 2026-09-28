@@ -110,6 +110,7 @@ export interface ReportDownloader {
   phoneNumber: string;
   countryCode: string;
   downloadedAt: string;
+  downloadCount?: number;
 }
 
 export interface CxoNetworkMember {
