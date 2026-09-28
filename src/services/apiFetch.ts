@@ -43,11 +43,7 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
     config.credentials = 'include';
   }
 
-  let url = `${API_BASE_URL}${endpoint}`;
-
-  if (!config.method || config.method.toUpperCase() === 'GET') {
-    url += url.includes('?') ? '&showMetaData=true' : '?showMetaData=true';
-  }
+  const url = `${API_BASE_URL}${endpoint}`;
 
   try {
     const response = await fetch(url, config);
@@ -113,11 +109,7 @@ export async function apiFetchBlob(endpoint: string, options: FetchOptions = {})
     config.credentials = 'include';
   }
 
-  let url = `${API_BASE_URL}${endpoint}`;
-
-  if (!config.method || config.method.toUpperCase() === 'GET') {
-    url += url.includes('?') ? '&showMetaData=true' : '?showMetaData=true';
-  }
+  const url = `${API_BASE_URL}${endpoint}`;
 
   try {
     const response = await fetch(url, config);
