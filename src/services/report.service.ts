@@ -16,12 +16,11 @@ export const reportService = {
     if (params.isPublished) queryParams.append('isPublished', params.isPublished);
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
-    queryParams.append('showMetaData', 'true');
     return apiFetch<PaginatedResponse<Report>>(`/admin/website/reports?${queryParams.toString()}`);
   },
 
   getReportById: async (id: string): Promise<Report> => {
-    return apiFetch<Report>(`/admin/website/reports/${id}?showMetaData=true`);
+    return apiFetch<Report>(`/admin/website/reports/${id}`);
   },
 
   createReport: async (data: Partial<Report>): Promise<Report> => {
@@ -45,8 +44,6 @@ export const reportService = {
   },
 
   getReportDownloaders: async (id: string): Promise<ReportDownloader[]> => {
-    return apiFetch<ReportDownloader[]>(
-      `/admin/website/reports/${id}/downloaders?showMetaData=true`,
-    );
+    return apiFetch<ReportDownloader[]>(`/admin/website/reports/${id}/downloaders`);
   },
 };
