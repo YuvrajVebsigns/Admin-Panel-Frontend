@@ -79,6 +79,7 @@ const checkIsDataTableOrViewPage = (): boolean => {
     '/roles-permission',
     '/sidebar-menu',
     '/system-user',
+    '/users',
     '/websites',
     '/deployments',
     '/communications',

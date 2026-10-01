@@ -16,6 +16,9 @@ export const registreeService = {
       if (params.email) searchParams.append('email', params.email);
       if (params.eventId) searchParams.append('eventId', params.eventId);
       if (params.websiteId) searchParams.append('websiteId', params.websiteId);
+      if (params.tag) searchParams.append('tag', params.tag);
+      if (params.eventOnly !== undefined)
+        searchParams.append('eventOnly', params.eventOnly.toString());
     }
     const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
     return apiFetch<PaginatedRegistreesResponse>(`/admin/registrees${queryStr}`);
