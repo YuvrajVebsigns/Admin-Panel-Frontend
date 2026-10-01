@@ -11,6 +11,9 @@ import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { useAuthStore } from '@/store/auth.store';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { getImageUrl } from '@/lib/utils';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 export const WebsiteTable: React.FC = () => {
   const router = useRouter();
@@ -217,6 +220,42 @@ export const WebsiteTable: React.FC = () => {
         onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
         onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
         onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
+        actions={
+          <ExportButton
+            permission={PERMISSIONS.WEBSITES_EXPORT}
+            exportTitle="Export Managed Websites"
+            exportDescription="Generate a comprehensive Excel directory of registered websites, brands, domains, and configuration metadata."
+            showStatusFilter={true}
+            statusOptions={[
+              { value: 'true', label: 'Active Websites' },
+              { value: 'false', label: 'Inactive / Maintenance' },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by website activity and domain coverage.',
+              },
+              {
+                sheet: 'Sheet 2: Websites Directory',
+                desc: 'Detailed table of site name, domain, SSL/theme configuration, and status.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+            }}
+            onExport={(filters) =>
+              dataExportService.exportWebsites({
+                ...filters,
+                isActive:
+                  filters?.status === 'true'
+                    ? true
+                    : filters?.status === 'false'
+                      ? false
+                      : undefined,
+              })
+            }
+          />
+        }
       />
     </>
   );

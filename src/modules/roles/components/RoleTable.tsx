@@ -4,6 +4,9 @@ import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { Role } from '@/types/user.types';
 import { Edit, Trash2, Shield } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 interface RoleTableProps {
   roles: Role[];
@@ -116,6 +119,24 @@ const RoleTable: React.FC<RoleTableProps> = ({
       columns={columns}
       searchPlaceholder="Search roles..."
       isLoading={isLoading}
+      actions={
+        <ExportButton
+          permission={PERMISSIONS.ROLES_EXPORT}
+          exportTitle="Export Security Roles & Permissions"
+          exportDescription="Generate an audit spreadsheet of system access roles, permission matrices, and security policies."
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI breakdown by role hierarchy, system vs custom roles.',
+            },
+            {
+              sheet: 'Sheet 2: Roles & Permissions',
+              desc: 'Detailed role catalogue with permission scope mappings.',
+            },
+          ]}
+          onExport={(filters) => dataExportService.exportRoles(filters)}
+        />
+      }
     />
   );
 };

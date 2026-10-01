@@ -19,6 +19,9 @@ import { useEvents } from '../hooks/useEvents';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import { Modal } from '@/components/ui/modal';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface EventTableProps {
   websiteId?: string;
@@ -233,6 +236,41 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
           columns={columns}
           isLoading={isLoading}
           searchPlaceholder="Search events..."
+          actions={
+            <ExportButton
+              permission={PERMISSIONS.EVENTS_EXPORT}
+              exportTitle="Export Events Registry"
+              exportDescription="Generate an Excel workbook with event schedules, registration tallies, venues, and status summaries."
+              showWebsiteFilter={!websiteId}
+              showStatusFilter={true}
+              statusOptions={[
+                { value: EventStatus.PUBLISHED, label: 'Published' },
+                { value: EventStatus.DRAFT, label: 'Draft' },
+                { value: EventStatus.ON_GOING, label: 'Ongoing' },
+                { value: EventStatus.COMPLETED, label: 'Completed' },
+                { value: EventStatus.CANCELLED, label: 'Cancelled' },
+              ]}
+              sheetsInfo={[
+                {
+                  sheet: 'Sheet 1: Analytics',
+                  desc: 'KPI breakdown by status, attendance totals, and capacity utilization.',
+                },
+                {
+                  sheet: 'Sheet 2: Events Directory',
+                  desc: 'Detailed events schedule, start/end dates, location, and organizers.',
+                },
+              ]}
+              initialFilters={{
+                websiteId: websiteId,
+              }}
+              onExport={(filters) =>
+                dataExportService.exportEvents({
+                  ...filters,
+                  websiteId: filters?.websiteId || websiteId,
+                })
+              }
+            />
+          }
         />
       </div>
 

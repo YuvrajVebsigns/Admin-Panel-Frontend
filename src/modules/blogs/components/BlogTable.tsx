@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getImageUrl } from '@/lib/utils';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface BlogTableProps {
   websiteId?: string;
@@ -259,6 +262,42 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
         searchPlaceholder="Search blogs..."
         search={searchTerm}
         onSearchChange={setSearchTerm}
+        actions={
+          <ExportButton
+            permission={PERMISSIONS.BLOGS_EXPORT}
+            exportTitle="Export Blog Articles"
+            exportDescription="Generate a comprehensive Excel export of published and draft articles, view metrics, and author details."
+            showWebsiteFilter={!websiteId}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: 'Publish', label: 'Published' },
+              { value: 'Draft', label: 'Draft' },
+              { value: 'Schedule', label: 'Scheduled' },
+              { value: 'Archive', label: 'Archived' },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by publication status, websites, and view performance.',
+              },
+              {
+                sheet: 'Sheet 2: Articles Directory',
+                desc: 'Articles table with slug, category, views, and publication date.',
+              },
+            ]}
+            initialFilters={{
+              search: searchTerm,
+              websiteId: websiteId,
+            }}
+            onExport={(filters) =>
+              dataExportService.exportBlogs({
+                ...filters,
+                websiteId: filters?.websiteId || websiteId,
+                isActive: isActiveFilter,
+              })
+            }
+          />
+        }
       />
     </div>
   );

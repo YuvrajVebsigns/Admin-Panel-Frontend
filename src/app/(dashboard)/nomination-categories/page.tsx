@@ -33,6 +33,9 @@ import {
   NominationSubCategory,
   WebsiteRef,
 } from '@/modules/nominations/types/nomination.types';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 type CategoryTab = 'main' | 'sub';
 
@@ -411,7 +414,87 @@ export default function NominationCategoriesPage() {
             isolation.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportButton
+            permission={PERMISSIONS.NOMINATION_CATEGORIES_EXPORT}
+            label={activeTab === 'main' ? 'Export Categories' : 'Export Subcategories'}
+            exportTitle={
+              activeTab === 'main'
+                ? 'Export Nomination Categories'
+                : 'Export Nomination Subcategories'
+            }
+            exportDescription={
+              activeTab === 'main'
+                ? 'Generate an analytical Excel workbook of main award categories, nomination criteria, and website mappings.'
+                : 'Generate an analytical Excel workbook of subcategories, parent category links, and nomination parameters.'
+            }
+            showWebsiteFilter={true}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
+            sheetsInfo={
+              activeTab === 'main'
+                ? [
+                    {
+                      sheet: 'Sheet 1: Analytics',
+                      desc: 'KPI breakdown by category status, websites, and submission quotas.',
+                    },
+                    {
+                      sheet: 'Sheet 2: Categories Directory',
+                      desc: 'Detailed table of category titles, codes, descriptions, and statuses.',
+                    },
+                  ]
+                : [
+                    {
+                      sheet: 'Sheet 1: Analytics',
+                      desc: 'KPI breakdown by parent categories and subcategory distribution.',
+                    },
+                    {
+                      sheet: 'Sheet 2: Subcategories Directory',
+                      desc: 'Detailed table of subcategories, parent categories, and criteria.',
+                    },
+                  ]
+            }
+            initialFilters={{
+              search: searchTerm,
+              websiteId:
+                selectedWebsiteId && selectedWebsiteId !== 'global' ? selectedWebsiteId : undefined,
+            }}
+            onExport={(filters) =>
+              activeTab === 'main'
+                ? dataExportService.exportNominationCategories({
+                    ...filters,
+                    websiteId:
+                      filters?.websiteId ||
+                      (selectedWebsiteId && selectedWebsiteId !== 'global'
+                        ? selectedWebsiteId
+                        : undefined),
+                    isActive:
+                      filters?.status === 'true'
+                        ? true
+                        : filters?.status === 'false'
+                          ? false
+                          : computedIsActive,
+                  })
+                : dataExportService.exportNominationSubCategories({
+                    ...filters,
+                    websiteId:
+                      filters?.websiteId ||
+                      (selectedWebsiteId && selectedWebsiteId !== 'global'
+                        ? selectedWebsiteId
+                        : undefined),
+                    categoryId: selectedParentCategoryId || undefined,
+                    isActive:
+                      filters?.status === 'true'
+                        ? true
+                        : filters?.status === 'false'
+                          ? false
+                          : computedIsActive,
+                  })
+            }
+          />
           <Button
             variant="outline"
             onClick={() => {

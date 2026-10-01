@@ -8,6 +8,9 @@ import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { Website } from '@/modules/websites/types/website.types';
 import { Trash2, Globe, Calendar, Mail, Phone, CornerUpLeft, Eye } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface ContactTableProps {
   onViewDetails: (contact: Contact) => void;
@@ -233,6 +236,34 @@ export const ContactTable: React.FC<ContactTableProps> = ({ onViewDetails, onDel
               </option>
             ))}
           </select>
+
+          <ExportButton
+            permission={PERMISSIONS.CONTACTS_EXPORT}
+            exportTitle="Export Contacts & Enquiries"
+            exportDescription="Generate a structured Excel report of contact messages, inquiry details, response status, and submission dates."
+            showWebsiteFilter={true}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: ContactStatus.PENDING, label: 'Pending' },
+              { value: ContactStatus.REPLIED, label: 'Replied' },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'Executive KPI metrics, reply rates, and status tallies.',
+              },
+              {
+                sheet: 'Sheet 2: Directory',
+                desc: 'Complete list of contacts, emails, phones, and messages.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              status: params.status,
+              websiteId: params.websiteId,
+            }}
+            onExport={(filters) => dataExportService.exportContacts(filters)}
+          />
         </div>
       </div>
 

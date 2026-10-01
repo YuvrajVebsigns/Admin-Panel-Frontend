@@ -20,6 +20,9 @@ import {
   Filter,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface CxoNetworkManagerProps {
   siteId: string;
@@ -40,7 +43,7 @@ const LinkedInIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => 
   </svg>
 );
 
-export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = () => {
+export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = ({ siteId }) => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [page, setPage] = useState(1);
@@ -51,6 +54,7 @@ export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = () => {
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
   const { members, meta, isLoading, deleteMember } = useCxoNetwork({
+    websiteId: siteId || undefined,
     search: search || undefined,
     companyCategory: categoryFilter !== 'All Categories' ? categoryFilter : undefined,
     page,
@@ -282,15 +286,55 @@ export const CxoNetworkManager: React.FC<CxoNetworkManagerProps> = () => {
           </span>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={handleExportCSV}
-          disabled={!members.length}
-          className="w-full md:w-auto bg-white dark:bg-navy-800"
-        >
-          <Download size={16} className="mr-2" />
-          Export CSV
-        </Button>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+          <ExportButton
+            permission={PERMISSIONS.CXO_NETWORK_EXPORT}
+            exportTitle="Export CXO Network Directory"
+            exportDescription="Generate an executive spreadsheet of CXO club members, designations, organizations, and contact information."
+            showWebsiteFilter={!siteId}
+            customFilters={[
+              {
+                key: 'companyCategory',
+                label: 'Company Category',
+                placeholder: 'All Categories',
+                options: CATEGORY_OPTIONS.filter((c) => c !== 'All Categories').map((c) => ({
+                  value: c,
+                  label: c,
+                })),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by company categories and organizational density.',
+              },
+              {
+                sheet: 'Sheet 2: Member Directory',
+                desc: 'Full profile cards including executive designation, email, and phone.',
+              },
+            ]}
+            initialFilters={{
+              search: search,
+              websiteId: siteId,
+              companyCategory: categoryFilter !== 'All Categories' ? categoryFilter : undefined,
+            }}
+            onExport={(filters) =>
+              dataExportService.exportCxoNetwork({
+                ...filters,
+                websiteId: filters?.websiteId || siteId || undefined,
+              })
+            }
+          />
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            disabled={!members.length}
+            className="w-full sm:w-auto bg-white dark:bg-navy-800"
+          >
+            <Download size={16} className="mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Network Data Table */}

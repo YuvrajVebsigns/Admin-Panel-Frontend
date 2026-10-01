@@ -7,6 +7,9 @@ import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { Edit, Trash2 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 export const SidebarMenuTable: React.FC = () => {
   const router = useRouter();
@@ -188,6 +191,27 @@ export const SidebarMenuTable: React.FC = () => {
       onPageChange={setPage}
       onPageSizeChange={setLimit}
       onSearchChange={setSearch}
+      actions={
+        <ExportButton
+          permission={PERMISSIONS.SIDEBAR_MENU_EXPORT}
+          exportTitle="Export Sidebar Navigation Menus"
+          exportDescription="Generate a spreadsheet inventory of sidebar navigation hierarchy, groups, routes, and roles."
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI breakdown by menu groups, active vs hidden items, and depth hierarchy.',
+            },
+            {
+              sheet: 'Sheet 2: Navigation Items',
+              desc: 'Detailed table of menu names, icons, URLs, parent links, and sort order.',
+            },
+          ]}
+          initialFilters={{
+            search: search,
+          }}
+          onExport={(filters) => dataExportService.exportSidebarMenu(filters)}
+        />
+      }
     />
   );
 };
