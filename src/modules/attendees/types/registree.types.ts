@@ -29,10 +29,17 @@ export interface Registree {
   id: string;
   name: string;
   email: string;
+  personalEmail?: string;
   countryCode?: string;
   phoneNumber?: string;
+  landlineNumber?: string;
   organization?: string;
+  jobTitle?: string;
+  industryVertical?: string;
   city?: string;
+  state?: string;
+  country?: string;
+  tags?: string[];
   websiteId?: string | { id: string; name: string; domain?: string; logo?: string };
   eventIds?: RegistreeEvent[];
   history?: RegistreeHistoryItem[];
@@ -48,14 +55,23 @@ export interface RegistreeQueryParams {
   email?: string;
   eventId?: string;
   websiteId?: string;
+  tags?: string[];
 }
 
 export interface UpdateRegistreeInput {
   name?: string;
   email?: string;
+  personalEmail?: string;
   countryCode?: string;
   phoneNumber?: string;
+  landlineNumber?: string;
   organization?: string;
+  jobTitle?: string;
+  industryVertical?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  tags?: string[];
   websiteId?: string;
 }
 

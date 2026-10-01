@@ -20,8 +20,19 @@ export interface Attendee {
       };
   name: string;
   email: string;
+  personalEmail?: string;
+  countryCode?: string;
   phoneNumber?: string;
+  landlineNumber?: string;
   organization?: string;
+  jobTitle?: string;
+  industryVertical?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  registrationType?: string;
+  message?: string;
+  sponsorConsent?: boolean;
   status: AttendeeStatus;
   passCode: string;
   qrCode?: string;
@@ -33,6 +44,7 @@ export interface Attendee {
     name: string;
     email: string;
   };
+  registrationDetails?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,21 +57,47 @@ export interface AttendeeQueryParams {
   eventId?: string;
   websiteId?: string;
   email?: string;
+  registrationType?: string;
 }
 
 export interface CreateAttendeeInput {
   eventId: string;
   name: string;
   email: string;
+  personalEmail?: string;
+  countryCode?: string;
   phoneNumber?: string;
+  landlineNumber?: string;
   organization?: string;
+  jobTitle?: string;
+  industryVertical?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  registrationType?: string;
+  message?: string;
+  sponsorConsent?: boolean;
   status?: AttendeeStatus;
   websiteId?: string;
 }
 
 export interface UpdateAttendeeInput {
-  status?: AttendeeStatus;
+  name?: string;
+  email?: string;
+  personalEmail?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  landlineNumber?: string;
   organization?: string;
+  jobTitle?: string;
+  industryVertical?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  registrationType?: string;
+  message?: string;
+  sponsorConsent?: boolean;
+  status?: AttendeeStatus;
   eventId?: string;
   websiteId?: string;
 }
