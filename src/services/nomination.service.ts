@@ -1,4 +1,5 @@
-import { apiFetch, apiFetchBlob, triggerFileDownload } from '@/services/apiFetch';
+import { apiFetch } from '@/services/apiFetch';
+import { dataExportService } from '@/services/dataExport.service';
 import { PaginatedResponse } from '@/types/api.types';
 import {
   Nomination,
@@ -206,37 +207,13 @@ export const nominationService = {
     });
   },
 
-  // --- Data Export ---
+  // --- Data Export (delegated to dataExportService) ---
 
   exportNominees: async (params: NominationExportQueryParams = {}): Promise<void> => {
-    const queryParams = new URLSearchParams();
-    if (params.websiteId) queryParams.append('websiteId', params.websiteId);
-    if (params.startDate) queryParams.append('startDate', params.startDate);
-    if (params.endDate) queryParams.append('endDate', params.endDate);
-    if (params.status) queryParams.append('status', params.status);
-    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
-    if (params.subCategoryId) queryParams.append('subCategoryId', params.subCategoryId);
-    if (params.search) queryParams.append('search', params.search);
-
-    const blob = await apiFetchBlob(`/admin/nominations/export/nominees?${queryParams.toString()}`);
-    const dateStr = new Date().toISOString().slice(0, 10);
-    triggerFileDownload(blob, `nominees-analytics-export-${dateStr}.xlsx`);
+    return dataExportService.exportNominees({ ...params });
   },
 
   exportNominators: async (params: NominationExportQueryParams = {}): Promise<void> => {
-    const queryParams = new URLSearchParams();
-    if (params.websiteId) queryParams.append('websiteId', params.websiteId);
-    if (params.startDate) queryParams.append('startDate', params.startDate);
-    if (params.endDate) queryParams.append('endDate', params.endDate);
-    if (params.status) queryParams.append('status', params.status);
-    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
-    if (params.subCategoryId) queryParams.append('subCategoryId', params.subCategoryId);
-    if (params.search) queryParams.append('search', params.search);
-
-    const blob = await apiFetchBlob(
-      `/admin/nominations/export/nominators?${queryParams.toString()}`,
-    );
-    const dateStr = new Date().toISOString().slice(0, 10);
-    triggerFileDownload(blob, `nominators-analytics-export-${dateStr}.xlsx`);
+    return dataExportService.exportNominators({ ...params });
   },
 };

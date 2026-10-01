@@ -15,6 +15,9 @@ import { ArrowLeft, Loader2, FileText, Calendar, Download } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 import { ReportDownloader } from '@/modules/websites/types/cms.types';
 import { Website } from '@/modules/websites/types/website.types';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export default function ReportDetailsPage() {
   const params = useParams();
@@ -265,6 +268,24 @@ export default function ReportDetailsPage() {
             columns={columns}
             isLoading={isDownloadersLoading}
             searchPlaceholder="Search downloaders..."
+            actions={
+              <ExportButton
+                permission={PERMISSIONS.REPORTS_EXPORT}
+                exportTitle={`Export Downloaders for "${report.title}"`}
+                exportDescription="Generate a structured spreadsheet of downloader contacts, organizations, phone numbers, and timestamps."
+                sheetsInfo={[
+                  {
+                    sheet: 'Sheet 1: Summary',
+                    desc: 'KPI summary with downloader count and total downloads.',
+                  },
+                  {
+                    sheet: 'Sheet 2: Downloaders Leads',
+                    desc: 'Detailed contact directory with company, role, phone, and download date.',
+                  },
+                ]}
+                onExport={(filters) => dataExportService.exportReportDownloaders(reportId, filters)}
+              />
+            }
           />
         </div>
       </div>

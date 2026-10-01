@@ -18,6 +18,9 @@ import { useFiles } from '../hooks/useFiles';
 import { formatBytes } from '@/lib/utils';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { toast } from 'react-hot-toast';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 interface FileTableProps {
   params: Record<string, unknown>;
@@ -184,6 +187,42 @@ export const FileTable: React.FC<FileTableProps> = ({ params, onParamsChange }) 
       limit={Number(params.limit)}
       onPageChange={(page) => onParamsChange({ ...params, page })}
       onPageSizeChange={(limit) => onParamsChange({ ...params, limit, page: 1 })}
+      actions={
+        <ExportButton
+          permission={PERMISSIONS.MEDIA_EXPORT}
+          exportTitle="Export Media Assets & Files"
+          exportDescription="Generate a spreadsheet inventory of stored media assets, file sizes, MIME types, and storage links."
+          showWebsiteFilter={true}
+          showStatusFilter={true}
+          statusOptions={[
+            { value: 'image', label: 'Image' },
+            { value: 'document', label: 'Document' },
+            { value: 'video', label: 'Video' },
+            { value: 'audio', label: 'Audio' },
+          ]}
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI breakdown by file types, total storage bytes consumed, and website counts.',
+            },
+            {
+              sheet: 'Sheet 2: Media Assets',
+              desc: 'Detailed file list with filename, size, mime type, CDN URL, and creation date.',
+            },
+          ]}
+          initialFilters={{
+            search: (params.search as string) || undefined,
+            websiteId: (params.websiteId as string) || undefined,
+            status: (params.type as string) || undefined,
+          }}
+          onExport={(filters) =>
+            dataExportService.exportMedia({
+              ...filters,
+              type: filters?.status || filters?.type || (params.type as string),
+            })
+          }
+        />
+      }
     />
   );
 };

@@ -10,6 +10,9 @@ import {
 import { useCommunicationLogs } from '../hooks/useCommunicationLogs';
 import { Mail, MessageSquare, Bell, Link2, Calendar, RotateCcw } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 interface CommunicationLogsTableProps {
   onViewDetails: (log: CommunicationLog) => void;
@@ -245,6 +248,38 @@ export const CommunicationLogsTable: React.FC<CommunicationLogsTableProps> = ({
               </option>
             ))}
           </select>
+
+          <ExportButton
+            permission={PERMISSIONS.COMMUNICATIONS_EXPORT}
+            exportTitle="Export Communication Logs"
+            exportDescription="Generate an audit spreadsheet of outbound notifications, delivery statuses, error traces, and timestamps."
+            showStatusFilter={true}
+            statusOptions={STATUS_OPTIONS.filter((s) => s.value !== '')}
+            customFilters={[
+              {
+                key: 'channel',
+                label: 'Channel',
+                placeholder: 'All Channels',
+                options: CHANNEL_OPTIONS.filter((c) => c.value !== ''),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by channel volume, delivery success rates, and failure tracking.',
+              },
+              {
+                sheet: 'Sheet 2: Communication Logs',
+                desc: 'Detailed log events with recipient, subject, channel, delivery status, and timestamps.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              channel: params.channel,
+              status: params.status,
+            }}
+            onExport={(filters) => dataExportService.exportCommunicationLogs(filters)}
+          />
         </div>
       </div>
 

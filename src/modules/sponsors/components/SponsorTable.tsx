@@ -8,6 +8,9 @@ import { Edit, Trash2, Globe, Building2, User, Award, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Badge from '@/components/ui/badge/Badge';
 import { useRouter } from 'next/navigation';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface SponsorTableProps {
   onEdit: (sponsor: Sponsor) => void;
@@ -267,6 +270,42 @@ export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) 
               </option>
             ))}
           </select>
+
+          <ExportButton
+            permission={PERMISSIONS.SPONSORS_EXPORT}
+            exportTitle="Export Sponsors & Partners"
+            exportDescription="Generate a structured Excel catalog with sponsor categories, tiers, websites, and representative contacts."
+            customFilters={[
+              {
+                key: 'type',
+                label: 'Sponsor Type',
+                placeholder: 'All Types',
+                options: TYPE_OPTIONS.filter((o) => o.value !== ''),
+              },
+              {
+                key: 'tier',
+                label: 'Sponsor Tier',
+                placeholder: 'All Tiers',
+                options: TIER_OPTIONS.filter((o) => o.value !== ''),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by sponsorship tier, type, and engagement rate.',
+              },
+              {
+                sheet: 'Sheet 2: Sponsors Directory',
+                desc: 'Detailed table with company name, tier, website, and contact person.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              type: params.type,
+              tier: params.tier,
+            }}
+            onExport={(filters) => dataExportService.exportSponsors(filters)}
+          />
         </div>
       </div>
 

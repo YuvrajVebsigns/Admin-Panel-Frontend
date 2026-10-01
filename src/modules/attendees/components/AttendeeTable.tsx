@@ -22,6 +22,9 @@ import {
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import toast from 'react-hot-toast';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 interface AttendeeTableProps {
   onEdit: (attendee: Attendee) => void;
@@ -365,13 +368,52 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
           </div>
         </div>
 
-        <Button
-          onClick={onCreateNew}
-          className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
-        >
-          <Users size={16} />
-          Register Attendee
-        </Button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <ExportButton
+            permission={PERMISSIONS.ATTENDANCE_EXPORT}
+            exportTitle="Export Event Attendees"
+            exportDescription="Generate a detailed attendee spreadsheet with check-in timestamps, VIP statuses, passcode tracking, and event tags."
+            showStatusFilter={true}
+            statusOptions={Object.values(AttendeeStatus).map((status) => ({
+              value: status,
+              label: status.replace('_', ' '),
+            }))}
+            customFilters={[
+              {
+                key: 'eventId',
+                label: 'Assigned Event',
+                placeholder: 'All Events',
+                options: events.map((ev) => ({
+                  value: ev.id,
+                  label: ev.title,
+                })),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI cards with total registrations, confirmed guests, check-in rate.',
+              },
+              {
+                sheet: 'Sheet 2: Attendees Directory',
+                desc: 'Detailed list of names, emails, phones, ticket types, and badges.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              eventId: params.eventId,
+              status: params.status,
+            }}
+            onExport={(filters) => dataExportService.exportAttendees(filters)}
+          />
+          <Button
+            onClick={onCreateNew}
+            className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
+          >
+            <Users size={16} />
+            Register Attendee
+          </Button>
+        </div>
       </div>
 
       {/* Main DataTable */}

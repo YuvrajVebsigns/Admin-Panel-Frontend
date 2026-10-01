@@ -19,8 +19,7 @@ import {
   useNominationCategories,
   useNominationSubCategories,
 } from '../hooks/useNominationCategories';
-import { nominationService } from '@/services/nomination.service';
-import toast from 'react-hot-toast';
+import { dataExportService } from '@/services/dataExport.service';
 
 interface ExportDataModalProps {
   isOpen: boolean;
@@ -138,20 +137,14 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
       };
 
       if (type === 'nominee') {
-        await nominationService.exportNominees(exportParams);
-        toast.success('Nominee voting data exported successfully!');
+        await dataExportService.exportNominees(exportParams);
       } else {
-        await nominationService.exportNominators(exportParams);
-        toast.success('Nominator submission data exported successfully!');
+        await dataExportService.exportNominators(exportParams);
       }
 
       onClose();
-    } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error
-          ? err.message
-          : 'Failed to export Excel spreadsheet. Please try again.';
-      toast.error(errorMsg);
+    } catch {
+      // Export error notification is handled by dataExportService
     } finally {
       setIsExporting(false);
     }

@@ -5,6 +5,9 @@ import { User } from '@/types/user.types';
 import { useSystemUsers } from '../hooks/useSystemUsers';
 import { Edit, Trash2, ShieldCheck, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
+import { ExportButton } from '@/components/common/ExportButton';
+import { PERMISSIONS } from '@/constants/permissions';
+import { dataExportService } from '@/services/dataExport.service';
 
 interface UserTableProps {
   onEdit: (user: User) => void;
@@ -117,6 +120,38 @@ export const UserTable: React.FC<UserTableProps> = ({ onEdit, onDelete }) => {
       onPageChange={(page) => setParams((p) => ({ ...p, page }))}
       onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
       onSearchChange={(search) => setParams((p) => ({ ...p, search, page: 1 }))}
+      actions={
+        <ExportButton
+          permission={PERMISSIONS.USERS_EXPORT}
+          exportTitle="Export System Users"
+          exportDescription="Generate a structured Excel roster of administrative users, assigned security roles, and active statuses."
+          showStatusFilter={true}
+          statusOptions={[
+            { value: 'true', label: 'Active Users' },
+            { value: 'false', label: 'Inactive / Suspended' },
+          ]}
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI breakdown by user active status and assigned role distribution.',
+            },
+            {
+              sheet: 'Sheet 2: Users Directory',
+              desc: 'Full user directory with full name, email, phone, role key, and status.',
+            },
+          ]}
+          initialFilters={{
+            search: params.search,
+          }}
+          onExport={(filters) =>
+            dataExportService.exportSystemUsers({
+              ...filters,
+              isActive:
+                filters?.status === 'true' ? true : filters?.status === 'false' ? false : undefined,
+            })
+          }
+        />
+      }
     />
   );
 };

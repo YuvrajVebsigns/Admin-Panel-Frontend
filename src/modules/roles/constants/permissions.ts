@@ -4,12 +4,14 @@ export const PERMISSIONS = {
   USERS_CREATE: 'users.create',
   USERS_UPDATE: 'users.update',
   USERS_DELETE: 'users.delete',
+  USERS_EXPORT: 'users.export',
 
   // Roles
   ROLES_VIEW: 'roles.view',
   ROLES_CREATE: 'roles.create',
   ROLES_UPDATE: 'roles.update',
   ROLES_DELETE: 'roles.delete',
+  ROLES_EXPORT: 'roles.export',
 
   // Sidebar Menu
   SIDEBAR_MENU_VIEW: 'sidebar-menu.view',
@@ -17,6 +19,7 @@ export const PERMISSIONS = {
   SIDEBAR_MENU_UPDATE: 'sidebar-menu.update',
   SIDEBAR_MENU_DELETE: 'sidebar-menu.delete',
   SIDEBAR_MENU_READ_ALL: 'sidebar-menu.read_all',
+  SIDEBAR_MENU_EXPORT: 'sidebar-menu.export',
 
   // Dashboard
   DASHBOARD_VIEW: 'dashboard.view',
@@ -29,6 +32,7 @@ export const PERMISSIONS = {
   WEBSITES_MANAGE_NAVBAR: 'websites.manage_navbar',
   WEBSITES_SEO_EDIT: 'websites.seo_edit',
   WEBSITES_META_EDIT: 'websites.meta_edit',
+  WEBSITES_EXPORT: 'websites.export',
 
   // Pages
   PAGES_VIEW: 'pages.view',
@@ -38,6 +42,7 @@ export const PERMISSIONS = {
   PAGES_PUBLISH: 'pages.publish',
   PAGES_SEO_EDIT: 'pages.seo_edit',
   PAGES_META_EDIT: 'pages.meta_edit',
+  PAGES_EXPORT: 'pages.export',
 
   // Feature Toggle
   FEATURE_TOGGLE_VIEW: 'feature-toggle.view',
@@ -60,30 +65,39 @@ export const PERMISSIONS = {
   BLOGS_STATUS_UPDATE: 'blogs.status_update',
   BLOGS_SEO_EDIT: 'blogs.seo_edit',
   BLOGS_META_EDIT: 'blogs.meta_edit',
+  BLOGS_EXPORT: 'blogs.export',
 
   // Events
   EVENTS_VIEW: 'events.view',
   EVENTS_CREATE: 'events.create',
   EVENTS_UPDATE: 'events.update',
   EVENTS_DELETE: 'events.delete',
+  EVENTS_EXPORT: 'events.export',
 
   // Sponsors
   SPONSORS_VIEW: 'sponsors.view',
   SPONSORS_CREATE: 'sponsors.create',
   SPONSORS_UPDATE: 'sponsors.update',
   SPONSORS_DELETE: 'sponsors.delete',
+  SPONSORS_EXPORT: 'sponsors.export',
 
-  // Registrations
+  // Registrations / CRM Registrees
   REGISTRATIONS_VIEW: 'registrations.view',
   REGISTRATIONS_CREATE: 'registrations.create',
   REGISTRATIONS_UPDATE: 'registrations.update',
   REGISTRATIONS_DELETE: 'registrations.delete',
+  REGISTRATIONS_EXPORT: 'registrations.export',
 
-  // Attendance
+  // Attendance / Event Passes
   ATTENDANCE_VIEW: 'attendance.view',
   ATTENDANCE_CREATE: 'attendance.create',
   ATTENDANCE_UPDATE: 'attendance.update',
   ATTENDANCE_DELETE: 'attendance.delete',
+  ATTENDANCE_EXPORT: 'attendance.export',
+
+  // CXO Network
+  CXO_NETWORK_VIEW: 'cxo-network.view',
+  CXO_NETWORK_EXPORT: 'cxo-network.export',
 
   // Nominators
   NOMINATORS_VIEW: 'nominators.view',
@@ -98,6 +112,37 @@ export const PERMISSIONS = {
   NOMINEES_UPDATE: 'nominees.update',
   NOMINEES_DELETE: 'nominees.delete',
   NOMINEES_EXPORT: 'nominees.export',
+
+  // Nomination Categories
+  NOMINATION_CATEGORIES_VIEW: 'nomination-categories.view',
+  NOMINATION_CATEGORIES_EXPORT: 'nomination-categories.export',
+
+  // Contacts & Inquiries
+  CONTACTS_VIEW: 'contacts.view',
+  CONTACTS_DELETE: 'contacts.delete',
+  CONTACTS_EXPORT: 'contacts.export',
+
+  // Subscribes
+  SUBSCRIBES_VIEW: 'subscribes.view',
+  SUBSCRIBES_DELETE: 'subscribes.delete',
+  SUBSCRIBES_EXPORT: 'subscribes.export',
+
+  // Reports / Whitepapers
+  REPORTS_VIEW: 'reports.view',
+  REPORTS_CREATE: 'reports.create',
+  REPORTS_UPDATE: 'reports.update',
+  REPORTS_DELETE: 'reports.delete',
+  REPORTS_EXPORT: 'reports.export',
+
+  // Media Library
+  MEDIA_VIEW: 'media.view',
+  MEDIA_CREATE: 'media.create',
+  MEDIA_DELETE: 'media.delete',
+  MEDIA_EXPORT: 'media.export',
+
+  // Communications
+  COMMUNICATIONS_VIEW: 'communications.view',
+  COMMUNICATIONS_EXPORT: 'communications.export',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -108,10 +153,12 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.USERS_CREATE,
     PERMISSIONS.USERS_UPDATE,
     PERMISSIONS.USERS_DELETE,
+    PERMISSIONS.USERS_EXPORT,
     PERMISSIONS.ROLES_VIEW,
     PERMISSIONS.ROLES_CREATE,
     PERMISSIONS.ROLES_UPDATE,
     PERMISSIONS.ROLES_DELETE,
+    PERMISSIONS.ROLES_EXPORT,
   ],
   'Content Management': [
     PERMISSIONS.WEBSITES_VIEW,
@@ -121,6 +168,7 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.WEBSITES_MANAGE_NAVBAR,
     PERMISSIONS.WEBSITES_SEO_EDIT,
     PERMISSIONS.WEBSITES_META_EDIT,
+    PERMISSIONS.WEBSITES_EXPORT,
     PERMISSIONS.PAGES_VIEW,
     PERMISSIONS.PAGES_CREATE,
     PERMISSIONS.PAGES_UPDATE,
@@ -128,6 +176,7 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.PAGES_PUBLISH,
     PERMISSIONS.PAGES_SEO_EDIT,
     PERMISSIONS.PAGES_META_EDIT,
+    PERMISSIONS.PAGES_EXPORT,
     PERMISSIONS.BLOGS_VIEW,
     PERMISSIONS.BLOGS_CREATE,
     PERMISSIONS.BLOGS_UPDATE,
@@ -136,24 +185,40 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.BLOGS_STATUS_UPDATE,
     PERMISSIONS.BLOGS_SEO_EDIT,
     PERMISSIONS.BLOGS_META_EDIT,
+    PERMISSIONS.BLOGS_EXPORT,
+    PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.REPORTS_CREATE,
+    PERMISSIONS.REPORTS_UPDATE,
+    PERMISSIONS.REPORTS_DELETE,
+    PERMISSIONS.REPORTS_EXPORT,
+    PERMISSIONS.MEDIA_VIEW,
+    PERMISSIONS.MEDIA_CREATE,
+    PERMISSIONS.MEDIA_DELETE,
+    PERMISSIONS.MEDIA_EXPORT,
   ],
   'Events Management': [
     PERMISSIONS.EVENTS_VIEW,
     PERMISSIONS.EVENTS_CREATE,
     PERMISSIONS.EVENTS_UPDATE,
     PERMISSIONS.EVENTS_DELETE,
+    PERMISSIONS.EVENTS_EXPORT,
     PERMISSIONS.SPONSORS_VIEW,
     PERMISSIONS.SPONSORS_CREATE,
     PERMISSIONS.SPONSORS_UPDATE,
     PERMISSIONS.SPONSORS_DELETE,
+    PERMISSIONS.SPONSORS_EXPORT,
     PERMISSIONS.REGISTRATIONS_VIEW,
     PERMISSIONS.REGISTRATIONS_CREATE,
     PERMISSIONS.REGISTRATIONS_UPDATE,
     PERMISSIONS.REGISTRATIONS_DELETE,
+    PERMISSIONS.REGISTRATIONS_EXPORT,
     PERMISSIONS.ATTENDANCE_VIEW,
     PERMISSIONS.ATTENDANCE_CREATE,
     PERMISSIONS.ATTENDANCE_UPDATE,
     PERMISSIONS.ATTENDANCE_DELETE,
+    PERMISSIONS.ATTENDANCE_EXPORT,
+    PERMISSIONS.CXO_NETWORK_VIEW,
+    PERMISSIONS.CXO_NETWORK_EXPORT,
     PERMISSIONS.NOMINATORS_VIEW,
     PERMISSIONS.NOMINATORS_CREATE,
     PERMISSIONS.NOMINATORS_UPDATE,
@@ -164,6 +229,18 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.NOMINEES_UPDATE,
     PERMISSIONS.NOMINEES_DELETE,
     PERMISSIONS.NOMINEES_EXPORT,
+    PERMISSIONS.NOMINATION_CATEGORIES_VIEW,
+    PERMISSIONS.NOMINATION_CATEGORIES_EXPORT,
+  ],
+  'Communications & Inquiries': [
+    PERMISSIONS.CONTACTS_VIEW,
+    PERMISSIONS.CONTACTS_DELETE,
+    PERMISSIONS.CONTACTS_EXPORT,
+    PERMISSIONS.SUBSCRIBES_VIEW,
+    PERMISSIONS.SUBSCRIBES_DELETE,
+    PERMISSIONS.SUBSCRIBES_EXPORT,
+    PERMISSIONS.COMMUNICATIONS_VIEW,
+    PERMISSIONS.COMMUNICATIONS_EXPORT,
   ],
   'System Settings': [
     PERMISSIONS.DASHBOARD_VIEW,
@@ -172,6 +249,7 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.SIDEBAR_MENU_UPDATE,
     PERMISSIONS.SIDEBAR_MENU_DELETE,
     PERMISSIONS.SIDEBAR_MENU_READ_ALL,
+    PERMISSIONS.SIDEBAR_MENU_EXPORT,
     PERMISSIONS.FEATURE_TOGGLE_VIEW,
     PERMISSIONS.FEATURE_TOGGLE_UPDATE,
     PERMISSIONS.SETTINGS_VIEW,

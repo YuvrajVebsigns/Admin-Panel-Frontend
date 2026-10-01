@@ -16,6 +16,7 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   itemsPerPage?: number;
   isLoading?: boolean;
+  actions?: React.ReactNode;
   // Server-side props
   serverSide?: boolean;
   totalItems?: number;
@@ -33,6 +34,7 @@ export function DataTable<T extends object>({
   searchPlaceholder = 'Search...',
   itemsPerPage = 10,
   isLoading = false,
+  actions,
   serverSide = false,
   totalItems,
   page,
@@ -133,26 +135,29 @@ export function DataTable<T extends object>({
           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">entries</span>
         </div>
 
-        <div className="relative w-full sm:max-w-[280px]">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-            <Search size={16} />
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-[280px]">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+              <Search size={16} />
+            </div>
+            <input
+              type="text"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-navy-700 rounded-xl bg-gray-50 dark:bg-navy-900/50 text-sm font-medium placeholder-gray-400 focus:outline-none focus:border-brand-500 transition-all shadow-theme-xs"
+              placeholder={searchPlaceholder}
+              value={currentSearchTerm}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (onSearchChange) {
+                  setSearchBuffer(value); // Update local buffer immediately for responsiveness
+                  onSearchChange(value); // Notify parent
+                } else {
+                  setSearchTermState(value);
+                  setCurrentPageState(1);
+                }
+              }}
+            />
           </div>
-          <input
-            type="text"
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-navy-700 rounded-xl bg-gray-50 dark:bg-navy-900/50 text-sm font-medium placeholder-gray-400 focus:outline-none focus:border-brand-500 transition-all shadow-theme-xs"
-            placeholder={searchPlaceholder}
-            value={currentSearchTerm}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (onSearchChange) {
-                setSearchBuffer(value); // Update local buffer immediately for responsiveness
-                onSearchChange(value); // Notify parent
-              } else {
-                setSearchTermState(value);
-                setCurrentPageState(1);
-              }
-            }}
-          />
+          {actions}
         </div>
       </div>
 

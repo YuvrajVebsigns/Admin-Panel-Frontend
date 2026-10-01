@@ -27,6 +27,9 @@ import {
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import toast from 'react-hot-toast';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export const RegistreeTable: React.FC = () => {
   const [params, setParams] = useState<{
@@ -389,6 +392,45 @@ export const RegistreeTable: React.FC = () => {
             </select>
           </div>
         </div>
+
+        <ExportButton
+          permission={PERMISSIONS.REGISTRATIONS_EXPORT}
+          exportTitle="Export Registrees Directory"
+          exportDescription="Generate an analytical spreadsheet of event registrations, approval statuses, corporate affiliations, and VIP tags."
+          showStatusFilter={true}
+          statusOptions={[
+            { value: 'approved', label: 'Approved' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'rejected', label: 'Rejected' },
+            { value: 'blocked', label: 'Blocked' },
+          ]}
+          customFilters={[
+            {
+              key: 'eventId',
+              label: 'Assigned Event',
+              placeholder: 'All Events',
+              options: events.map((ev) => ({
+                value: ev.id,
+                label: ev.title,
+              })),
+            },
+          ]}
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI cards with total registrations, approvals, and breakdown.',
+            },
+            {
+              sheet: 'Sheet 2: Registrees Directory',
+              desc: 'Detailed table with name, designation, organization, email, and approval status.',
+            },
+          ]}
+          initialFilters={{
+            search: params.search,
+            eventId: params.eventId,
+          }}
+          onExport={(filters) => dataExportService.exportRegistrees(filters)}
+        />
       </div>
 
       {/* Main DataTable */}

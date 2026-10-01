@@ -44,6 +44,8 @@ import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import { Modal } from '@/components/ui/modal';
 import { ExportDataModal } from '@/modules/nominations/components/ExportDataModal';
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
 import { nominationService } from '@/services/nomination.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -203,6 +205,9 @@ export const WebsiteNominationSubmissionsTable: React.FC<
 
   const [viewMode, setViewMode] = useState<ViewMode>('submissions');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const canExportNominees = useHasPermission(PERMISSIONS.NOMINEES_EXPORT);
+  const canExportNominators = useHasPermission(PERMISSIONS.NOMINATORS_EXPORT);
+  const canExport = canExportNominees || canExportNominators;
   const [selectedSubmission, setSelectedSubmission] = useState<Nomination | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -1029,14 +1034,16 @@ export const WebsiteNominationSubmissionsTable: React.FC<
           )}
 
           {/* Export Data Modal Trigger */}
-          <Button
-            type="button"
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
-          >
-            <FileSpreadsheet size={16} />
-            Export Excel
-          </Button>
+          {canExport && (
+            <Button
+              type="button"
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+            >
+              <FileSpreadsheet size={16} />
+              Export Excel
+            </Button>
+          )}
         </div>
       </div>
 

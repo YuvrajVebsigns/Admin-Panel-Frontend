@@ -14,6 +14,9 @@ import { Edit, Trash2, Globe, Lock, Plus, FileText, Eye } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { getImageUrl, cn } from '@/lib/utils';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export const ReportsDashboard: React.FC = () => {
   const router = useRouter();
@@ -350,8 +353,35 @@ export const ReportsDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Action button */}
-        <div className="w-full md:w-auto flex justify-end">
+        {/* Action buttons */}
+        <div className="w-full md:w-auto flex items-center justify-end gap-3">
+          <ExportButton
+            permission={PERMISSIONS.REPORTS_EXPORT}
+            exportTitle="Export Reports Catalog"
+            exportDescription="Generate a structured Excel spreadsheet of executive reports, publications, download counts, and status tracking."
+            showWebsiteFilter={true}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: 'published', label: 'Published' },
+              { value: 'draft', label: 'Draft' },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI breakdown by publication status, download metrics, and website counts.',
+              },
+              {
+                sheet: 'Sheet 2: Reports Directory',
+                desc: 'Detailed table with title, slug, website, downloads, and publication date.',
+              },
+            ]}
+            initialFilters={{
+              search: search,
+              websiteId: selectedWebsiteId,
+              status: statusFilter === 'all' ? undefined : statusFilter,
+            }}
+            onExport={(filters) => dataExportService.exportReports(filters)}
+          />
           <Button variant="primary" onClick={handleCreate} className="w-full sm:w-auto">
             <Plus size={18} className="mr-2" />
             Create Report

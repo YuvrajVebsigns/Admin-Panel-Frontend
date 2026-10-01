@@ -5,6 +5,9 @@ import { DataTable, Column } from '@/components/ui/table/DataTable';
 import { useSubscribes } from '../hooks/useSubscribes';
 import { Subscribe } from '../types/subscribe.types';
 import { Calendar, Globe, Mail } from 'lucide-react';
+import { ExportButton } from '@/components/common/ExportButton';
+import { dataExportService } from '@/services/dataExport.service';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export const SubscribeTable: React.FC = () => {
   const [params, setParams] = useState({
@@ -80,8 +83,8 @@ export const SubscribeTable: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
-        <div className="flex-1">
+      <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm items-center">
+        <div className="flex-1 w-full">
           <input
             type="text"
             placeholder="Search subscribers by email or name..."
@@ -90,6 +93,26 @@ export const SubscribeTable: React.FC = () => {
             className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
           />
         </div>
+        <ExportButton
+          permission={PERMISSIONS.SUBSCRIBES_EXPORT}
+          exportTitle="Export Subscribers List"
+          exportDescription="Generate an Excel workbook with subscriber email addresses, source websites, and subscription dates."
+          showWebsiteFilter={true}
+          sheetsInfo={[
+            {
+              sheet: 'Sheet 1: Analytics',
+              desc: 'KPI breakdown by source website and subscription growth.',
+            },
+            {
+              sheet: 'Sheet 2: Subscribers Directory',
+              desc: 'Full list with name, email, website domain, and subscription timestamp.',
+            },
+          ]}
+          initialFilters={{
+            search: params.search,
+          }}
+          onExport={(filters) => dataExportService.exportSubscribes(filters)}
+        />
       </div>
 
       <DataTable
