@@ -56,6 +56,8 @@ export interface RegistreeQueryParams {
   eventId?: string;
   websiteId?: string;
   tags?: string[];
+  tag?: string;
+  eventOnly?: boolean;
 }
 
 export interface UpdateRegistreeInput {

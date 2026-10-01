@@ -37,10 +37,12 @@ export const RegistreeTable: React.FC = () => {
     limit: number;
     search: string;
     eventId?: string;
+    eventOnly?: boolean;
   }>({
     page: 1,
     limit: 10,
     search: '',
+    eventOnly: true,
   });
 
   const { data, isLoading } = useRegistrees(params);
@@ -53,8 +55,8 @@ export const RegistreeTable: React.FC = () => {
 
   const totalItems = data?.meta?.total || 0;
 
-  // Load a broader dataset for aggregate stats
-  const { data: allStatsData } = useRegistrees({ limit: 1000 });
+  // Load event registrees dataset for aggregate stats
+  const { data: allStatsData } = useRegistrees({ limit: 1000, eventOnly: true });
   const allRegistrees = allStatsData?.data || [];
 
   const stats = React.useMemo(() => {
@@ -429,7 +431,9 @@ export const RegistreeTable: React.FC = () => {
             search: params.search,
             eventId: params.eventId,
           }}
-          onExport={(filters) => dataExportService.exportRegistrees(filters)}
+          onExport={(filters) =>
+            dataExportService.exportRegistrees({ ...filters, eventOnly: true })
+          }
         />
       </div>
 

@@ -60,8 +60,16 @@ export function useNavigation() {
       groups[groupName].push(mapMenuItem(menu));
     });
 
-    // Add fallback Subscribes and Nomination Categories menu items if the backend menu data does not include them.
+    // Add fallback Subscribes, Nomination Categories, and User Management menu items if the backend menu data does not include them.
     Object.values(groups).forEach((items) => {
+      // Fix any legacy System Users menu path if it was set to /users instead of /system-user
+      const sysUserItem = items.find(
+        (item) => item.name === 'System Users' && item.path === '/users',
+      );
+      if (sysUserItem) {
+        sysUserItem.path = '/system-user';
+      }
+
       const contactIndex = items.findIndex((item) => item.path === '/contacts');
       const hasSubscribes = items.some((item) => item.path === '/subscribes');
 
@@ -85,6 +93,17 @@ export function useNavigation() {
           name: 'Nomination Categories',
           icon: 'Layers',
           path: '/nomination-categories',
+        });
+      }
+
+      const sysUserIndex = items.findIndex((item) => item.path === '/system-user');
+      const hasUserManagement = items.some((item) => item.path === '/users');
+
+      if (sysUserIndex !== -1 && !hasUserManagement) {
+        items.splice(sysUserIndex, 0, {
+          name: 'User Management',
+          icon: 'Users',
+          path: '/users',
         });
       }
     });
