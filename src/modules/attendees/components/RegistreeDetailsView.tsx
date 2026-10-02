@@ -96,16 +96,59 @@ export const RegistreeDetailsView: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Safe date formatters
+  const formatDate = (dateStr?: string | Date, options?: Intl.DateTimeFormatOptions) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString(
+        undefined,
+        options || {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        },
+      );
+    } catch {
+      return '—';
+    }
+  };
+
+  const formatDateTime = (dateStr?: string | Date) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '—';
+    }
+  };
+
   // Pagination for history
   const [historyPage, setHistoryPage] = useState(1);
   const historyLimit = 5;
 
-  const eventIds = registree?.eventIds || [];
-  const history = registree?.history || [];
+  const eventIds: RegistreeEvent[] = Array.isArray(registree?.eventIds)
+    ? registree.eventIds.filter((ev): ev is RegistreeEvent =>
+        Boolean(ev && (ev.id || ev._id || ev.title)),
+      )
+    : [];
+
+  const history: RegistreeHistoryItem[] = Array.isArray(registree?.history)
+    ? registree.history.filter((h): h is RegistreeHistoryItem => Boolean(h))
+    : [];
 
   // Paginate history locally since registree detail returns all history
   const totalHistoryItems = history.length;
-  const totalHistoryPages = Math.ceil(totalHistoryItems / historyLimit);
+  const totalHistoryPages = Math.max(1, Math.ceil(totalHistoryItems / historyLimit));
   const paginatedHistory = history.slice(
     (historyPage - 1) * historyLimit,
     historyPage * historyLimit,
@@ -115,10 +158,32 @@ export const RegistreeDetailsView: React.FC = () => {
   const stats = React.useMemo(() => {
     if (!history.length) return { total: 0, attended: 0, rate: 0 };
     const total = history.length;
-    const attended = history.filter((h) => h.attended).length;
+    const attended = history.filter((h) => Boolean(h?.attended)).length;
     const rate = Math.round((attended / total) * 100);
     return { total, attended, rate };
   }, [history]);
+
+  // Safe event lookup
+  const getMatchEvent = (item?: RegistreeHistoryItem | null): RegistreeEvent | undefined => {
+    if (!item) return undefined;
+    if (
+      item.event &&
+      typeof item.event === 'object' &&
+      (item.event.id || item.event._id || item.event.title)
+    ) {
+      return item.event;
+    }
+    const targetEventId =
+      item.eventId?.toString() ||
+      item.event?._id?.toString() ||
+      item._id?.toString() ||
+      item.id?.toString();
+    if (!targetEventId) return undefined;
+    return eventIds.find((ev) => {
+      const evId = ev?.id || ev?._id;
+      return evId && evId.toString() === targetEventId;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -170,15 +235,27 @@ export const RegistreeDetailsView: React.FC = () => {
 
             <div className="flex flex-col items-center text-center pt-2">
               <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-gray-100 dark:border-navy-700 bg-gray-50 dark:bg-navy-900/50 flex items-center justify-center text-gray-500 shadow-md mb-4">
-                <User size={36} className="text-gray-400 dark:text-navy-500 animate-pulse" />
+                <User size={36} className="text-gray-400 dark:text-navy-500" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
-                {registree.name}
+                {registree.name || 'Unnamed Contact'}
               </h3>
+              {registree.jobTitle && (
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                  {registree.jobTitle}
+                </p>
+              )}
               {registree.organization && (
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500 dark:text-gray-400 font-semibold bg-gray-50 dark:bg-navy-950 px-2.5 py-1 rounded-full border border-gray-100 dark:border-navy-900">
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-700 dark:text-gray-300 font-semibold bg-gray-50 dark:bg-navy-950 px-3 py-1 rounded-full border border-gray-100 dark:border-navy-900">
                   <Building size={12} className="text-brand-500" />
                   <span>{registree.organization}</span>
+                </div>
+              )}
+              {registree.registrationType && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                    {registree.registrationType}
+                  </span>
                 </div>
               )}
             </div>
@@ -191,13 +268,29 @@ export const RegistreeDetailsView: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
-                    Email Address
+                    Official Email
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
                     {registree.email}
                   </p>
                 </div>
               </div>
+
+              {registree.personalEmail && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Mail size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Personal Email
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {registree.personalEmail}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
@@ -215,6 +308,40 @@ export const RegistreeDetailsView: React.FC = () => {
                 </div>
               </div>
 
+              {(registree.city || registree.country || registree.state) && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Globe size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Location
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {[registree.city, registree.state, registree.country]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {registree.industryVertical && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Building size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Industry Vertical
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {registree.industryVertical}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {registree.websiteId && (
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
@@ -225,9 +352,9 @@ export const RegistreeDetailsView: React.FC = () => {
                       Origin Website
                     </p>
                     <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
-                      {typeof registree.websiteId === 'object'
-                        ? registree.websiteId.name
-                        : registree.websiteId}
+                      {typeof registree.websiteId === 'object' && registree.websiteId !== null
+                        ? registree.websiteId.name || registree.websiteId.domain || 'Website'
+                        : String(registree.websiteId)}
                     </p>
                   </div>
                 </div>
@@ -239,14 +366,10 @@ export const RegistreeDetailsView: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
-                    First Registered
+                    Registration Date
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white line-clamp-1">
-                    {new Date(registree.createdAt).toLocaleString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
+                    {formatDate(registree.registeredAt || registree.createdAt)}
                   </p>
                 </div>
               </div>
@@ -260,36 +383,40 @@ export const RegistreeDetailsView: React.FC = () => {
                 Registered Events ({eventIds.length})
               </h4>
               <div className="space-y-3">
-                {eventIds.map((ev: RegistreeEvent) => (
-                  <div
-                    key={ev.id}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border border-gray-100 dark:border-navy-800"
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0 mt-0.5">
-                      <Calendar size={14} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-gray-800 dark:text-white line-clamp-1">
-                        {ev.title}
-                      </p>
-                      {ev.type && (
-                        <span className="text-[10px] font-bold text-brand-500 uppercase tracking-widest">
-                          {ev.type}
-                        </span>
+                {eventIds.map((ev: RegistreeEvent, idx: number) => {
+                  const evId = ev?.id || ev?._id || `ev-${idx}`;
+                  return (
+                    <div
+                      key={evId}
+                      className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border border-gray-100 dark:border-navy-800"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0 mt-0.5">
+                        <Calendar size={14} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-gray-800 dark:text-white line-clamp-1">
+                          {ev?.title || 'Event'}
+                        </p>
+                        {ev?.type && (
+                          <span className="text-[10px] font-bold text-brand-500 uppercase tracking-widest">
+                            {ev.type}
+                          </span>
+                        )}
+                        <p className="text-[10px] text-gray-400 dark:text-navy-400 mt-0.5">
+                          {formatDate(ev?.startDate)}
+                        </p>
+                      </div>
+                      {ev?.status && (
+                        <Badge
+                          color={ev.status === 'ACTIVE' ? 'success' : 'warning'}
+                          variant="light"
+                        >
+                          {ev.status}
+                        </Badge>
                       )}
-                      <p className="text-[10px] text-gray-400 dark:text-navy-400 mt-0.5">
-                        {new Date(ev.startDate).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
                     </div>
-                    <Badge color={ev.status === 'ACTIVE' ? 'success' : 'warning'} variant="light">
-                      {ev.status}
-                    </Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -363,8 +490,9 @@ export const RegistreeDetailsView: React.FC = () => {
                       <tr className="border-b border-gray-100 dark:border-navy-800 text-[10px] uppercase font-bold text-gray-400 dark:text-navy-500 tracking-wider">
                         <th className="py-3.5 pr-4">Event</th>
                         <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-4">Opportunity / Type</th>
                         <th className="py-3.5 px-4">Pass Code</th>
-                        <th className="py-3.5 px-4">Organization</th>
+                        <th className="py-3.5 px-4">Organization & Designation</th>
                         <th className="py-3.5 px-4">Attended</th>
                         <th className="py-3.5 px-4 text-center">Actions</th>
                         <th className="py-3.5 pl-4 text-right">Registered On</th>
@@ -372,13 +500,17 @@ export const RegistreeDetailsView: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-navy-850/50 text-xs">
                       {paginatedHistory.map((item: RegistreeHistoryItem, idx: number) => {
-                        // Try to find corresponding event from eventIds
-                        const matchEvent =
-                          item.event || eventIds.find((ev) => ev.id === item.eventId?.toString());
+                        const matchEvent = getMatchEvent(item);
+                        const matchEventId =
+                          matchEvent?.id ||
+                          matchEvent?._id ||
+                          item?.eventId?.toString() ||
+                          item?.event?._id?.toString() ||
+                          item?.event?.id?.toString();
 
                         return (
                           <tr
-                            key={`${item.passCode || idx}`}
+                            key={`${item?.passCode || item?.id || item?._id || idx}`}
                             className="hover:bg-gray-50/50 dark:hover:bg-navy-950/20 transition-colors"
                           >
                             <td className="py-4 pr-4">
@@ -396,27 +528,41 @@ export const RegistreeDetailsView: React.FC = () => {
                             <td className="py-4 px-4">
                               <Badge
                                 color={
-                                  item.status === 'APPROVED'
+                                  item?.status === 'APPROVED'
                                     ? 'success'
-                                    : item.status === 'PENDING'
+                                    : item?.status === 'PENDING'
                                       ? 'warning'
-                                      : item.status === 'REJECTED'
+                                      : item?.status === 'REJECTED'
                                         ? 'error'
                                         : 'dark'
                                 }
                                 variant="light"
                               >
-                                {item.status || 'APPROVED'}
+                                {item?.status || 'PENDING'}
                               </Badge>
                             </td>
-                            <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300">
-                              {item.passCode || '—'}
+                            <td className="py-4 px-4">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                                {item?.registrationType ||
+                                  registree.registrationType ||
+                                  'CIO Delegate'}
+                              </span>
                             </td>
-                            <td className="py-4 px-4 text-gray-600 dark:text-gray-300 font-medium">
-                              {item.organization || '—'}
+                            <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300">
+                              {item?.passCode || '—'}
                             </td>
                             <td className="py-4 px-4">
-                              {item.attended ? (
+                              <p className="text-gray-800 dark:text-gray-200 font-bold">
+                                {item?.organization || registree?.organization || '—'}
+                              </p>
+                              {(item?.jobTitle || registree?.jobTitle) && (
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                                  {item?.jobTitle || registree?.jobTitle}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-4 px-4">
+                              {item?.attended ? (
                                 <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full w-fit">
                                   <CheckCircle size={12} />
                                   <span className="text-[10px] uppercase">Yes</span>
@@ -430,16 +576,16 @@ export const RegistreeDetailsView: React.FC = () => {
                             </td>
                             <td className="py-4 px-4 text-center">
                               <div className="flex items-center justify-center gap-2">
-                                {matchEvent?.id && (
+                                {matchEventId && (
                                   <button
-                                    onClick={() => router.push(`/events/${matchEvent.id}/view`)}
+                                    onClick={() => router.push(`/events/${matchEventId}/view`)}
                                     className="h-8 w-8 rounded-lg bg-gray-50 hover:bg-brand-500/10 text-gray-500 hover:text-brand-500 flex items-center justify-center border border-gray-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
                                     title="View Event Details"
                                   >
                                     <Eye size={14} />
                                   </button>
                                 )}
-                                {(item.status === 'APPROVED' || !item.status) && item.qrCode && (
+                                {(item?.status === 'APPROVED' || !item?.status) && item?.qrCode && (
                                   <button
                                     onClick={() => setSelectedPass(item)}
                                     className="h-8 w-8 rounded-lg bg-gray-50 hover:bg-indigo-500/10 text-gray-500 hover:text-indigo-500 flex items-center justify-center border border-gray-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
@@ -448,12 +594,12 @@ export const RegistreeDetailsView: React.FC = () => {
                                     <Ticket size={14} />
                                   </button>
                                 )}
-                                {matchEvent?.id &&
-                                  (item.status === 'PENDING' ||
-                                    item.status === 'REJECTED' ||
-                                    item.status === 'BLOCKED') && (
+                                {matchEventId &&
+                                  (item?.status === 'PENDING' ||
+                                    item?.status === 'REJECTED' ||
+                                    item?.status === 'BLOCKED') && (
                                     <button
-                                      onClick={() => handleApprove(matchEvent.id)}
+                                      onClick={() => handleApprove(matchEventId)}
                                       disabled={approveMutation.isPending}
                                       className="h-8 w-8 rounded-lg bg-emerald-50 hover:bg-emerald-500/15 text-emerald-600 flex items-center justify-center border border-emerald-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
                                       title="Approve Registration"
@@ -461,9 +607,9 @@ export const RegistreeDetailsView: React.FC = () => {
                                       <Check size={14} />
                                     </button>
                                   )}
-                                {matchEvent?.id && item.status === 'PENDING' && (
+                                {matchEventId && item?.status === 'PENDING' && (
                                   <button
-                                    onClick={() => handleReject(matchEvent.id)}
+                                    onClick={() => handleReject(matchEventId)}
                                     disabled={rejectMutation.isPending}
                                     className="h-8 w-8 rounded-lg bg-rose-50 hover:bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
                                     title="Reject Registration"
@@ -471,9 +617,9 @@ export const RegistreeDetailsView: React.FC = () => {
                                     <X size={14} />
                                   </button>
                                 )}
-                                {matchEvent?.id && item.status !== 'BLOCKED' && (
+                                {matchEventId && item?.status !== 'BLOCKED' && (
                                   <button
-                                    onClick={() => handleBlock(matchEvent.id)}
+                                    onClick={() => handleBlock(matchEventId)}
                                     disabled={blockMutation.isPending}
                                     className="h-8 w-8 rounded-lg bg-gray-50 hover:bg-red-500/10 text-red-500 flex items-center justify-center border border-gray-100 dark:bg-navy-900/50 dark:border-navy-800 transition-colors"
                                     title="Block Registration"
@@ -484,13 +630,7 @@ export const RegistreeDetailsView: React.FC = () => {
                               </div>
                             </td>
                             <td className="py-4 pl-4 text-right text-gray-500 dark:text-gray-400">
-                              {item.savedAt
-                                ? new Date(item.savedAt).toLocaleDateString(undefined, {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                  })
-                                : '—'}
+                              {formatDate(item?.savedAt)}
                             </td>
                           </tr>
                         );
@@ -544,9 +684,8 @@ export const RegistreeDetailsView: React.FC = () => {
         >
           {selectedPass &&
             (() => {
-              const passEvent =
-                selectedPass.event ||
-                eventIds.find((ev) => ev.id === selectedPass.eventId?.toString());
+              const passEvent = getMatchEvent(selectedPass);
+
               return (
                 <div className="p-6 text-center space-y-6">
                   {/* Print Stylesheet injection */}
@@ -648,13 +787,7 @@ export const RegistreeDetailsView: React.FC = () => {
                               className="text-brand-500 dark:text-brand-400 shrink-0"
                             />
                             <span className="font-semibold text-gray-700 dark:text-navy-200">
-                              {new Date(passEvent.startDate).toLocaleString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              {formatDateTime(passEvent.startDate)}
                             </span>
                           </div>
                         )}
@@ -769,7 +902,7 @@ export const RegistreeDetailsView: React.FC = () => {
                             Attendee
                           </p>
                           <p className="font-bold text-gray-800 dark:text-white mt-0.5 truncate">
-                            {selectedPass.name || registree.name}
+                            {selectedPass.name || registree.name || '—'}
                           </p>
                         </div>
                         <div>
@@ -777,7 +910,7 @@ export const RegistreeDetailsView: React.FC = () => {
                             Organization
                           </p>
                           <p className="font-semibold text-gray-700 dark:text-gray-300 mt-0.5 truncate">
-                            {selectedPass.organization || '—'}
+                            {selectedPass.organization || registree.organization || '—'}
                           </p>
                         </div>
                       </div>

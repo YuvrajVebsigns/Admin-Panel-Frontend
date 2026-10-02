@@ -58,22 +58,29 @@ export const UserManagementTable: React.FC = () => {
 
   const stats = React.useMemo(() => {
     const total = allRegistrees.length;
-    const withEvents = allRegistrees.filter((r) => r.eventIds && r.eventIds.length > 0).length;
+    const withEvents = allRegistrees.filter(
+      (r) => r && Array.isArray(r.eventIds) && r.eventIds.filter(Boolean).length > 0,
+    ).length;
     const sponsors = allRegistrees.filter(
-      (r) => r.tags && r.tags.some((t) => t.toLowerCase().includes('sponsor')),
+      (r) =>
+        r && Array.isArray(r.tags) && r.tags.some((t) => t && t.toLowerCase().includes('sponsor')),
     ).length;
     const nominations = allRegistrees.filter(
       (r) =>
-        r.tags &&
+        r &&
+        Array.isArray(r.tags) &&
         r.tags.some(
-          (t) => t.toLowerCase().includes('nominator') || t.toLowerCase().includes('nominee'),
+          (t) =>
+            t && (t.toLowerCase().includes('nominator') || t.toLowerCase().includes('nominee')),
         ),
     ).length;
     const downloaders = allRegistrees.filter(
       (r) =>
-        r.tags &&
+        r &&
+        Array.isArray(r.tags) &&
         r.tags.some(
-          (t) => t.toLowerCase().includes('downloader') || t.toLowerCase().includes('report'),
+          (t) =>
+            t && (t.toLowerCase().includes('downloader') || t.toLowerCase().includes('report')),
         ),
     ).length;
 
@@ -107,49 +114,79 @@ export const UserManagementTable: React.FC = () => {
 
   const columns: Column<Registree>[] = [
     {
-      header: 'User Profile',
+      header: 'Name',
       accessor: (registree) => (
-        <div className="flex items-center gap-3.5">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-gray-100 dark:border-navy-800 bg-gray-50 dark:bg-navy-900/50 flex items-center justify-center text-gray-500 shadow-sm">
-            <User size={20} className="text-gray-400 dark:text-navy-500" />
+        <div className="flex items-center gap-2.5 min-w-[140px]">
+          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-gray-100 dark:border-navy-800 bg-brand-50 dark:bg-navy-900/60 flex items-center justify-center text-xs font-bold text-brand-600 dark:text-brand-400 shadow-sm">
+            {registree.name ? registree.name.charAt(0).toUpperCase() : <User size={14} />}
           </div>
-          <div className="min-w-0">
-            <Link
-              href={`/users/${registree.id}/view`}
-              className="text-sm font-bold text-gray-900 dark:text-white hover:text-brand-500 transition-colors truncate block"
-            >
-              {registree.name}
-            </Link>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{registree.email}</p>
-            {registree.personalEmail && (
-              <p className="text-[11px] text-gray-400 dark:text-navy-400 truncate">
-                Alt: {registree.personalEmail}
-              </p>
-            )}
-            {registree.phoneNumber && (
-              <p className="text-[11px] text-gray-400 dark:text-navy-400">
-                {registree.countryCode ? `${registree.countryCode} ` : ''}
-                {registree.phoneNumber}
-              </p>
-            )}
-          </div>
+          <Link
+            href={`/users/${registree.id}/view`}
+            className="text-xs font-bold text-gray-900 dark:text-white hover:text-brand-500 transition-colors truncate block"
+            title={registree.name}
+          >
+            {registree.name || '—'}
+          </Link>
         </div>
       ),
     },
     {
-      header: 'Organization & Role',
+      header: 'Email',
       accessor: (registree) => (
-        <div className="min-w-0 max-w-[200px]">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-            {registree.organization || '—'}
-          </p>
-          {registree.jobTitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {registree.jobTitle}
-            </p>
+        <div className="min-w-[170px]">
+          <span
+            className="text-xs font-medium text-gray-800 dark:text-gray-200 block truncate"
+            title={registree.email}
+          >
+            {registree.email}
+          </span>
+          {registree.personalEmail && (
+            <span
+              className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+              title={`Alt: ${registree.personalEmail}`}
+            >
+              Alt: {registree.personalEmail}
+            </span>
           )}
+        </div>
+      ),
+    },
+    {
+      header: 'Phone Number',
+      accessor: (registree) => (
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[120px] block">
+          {registree.phoneNumber
+            ? `${registree.countryCode ? registree.countryCode + ' ' : ''}${registree.phoneNumber}`.trim()
+            : '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Organization',
+      accessor: (registree) => (
+        <span
+          className="text-xs font-bold text-gray-800 dark:text-gray-200 block truncate min-w-[130px]"
+          title={registree.organization || '—'}
+        >
+          {registree.organization || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Designation',
+      accessor: (registree) => (
+        <div className="min-w-[130px]">
+          <span
+            className="text-xs font-medium text-gray-600 dark:text-gray-300 block truncate"
+            title={registree.jobTitle || '—'}
+          >
+            {registree.jobTitle || '—'}
+          </span>
           {registree.industryVertical && (
-            <span className="inline-block text-[11px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-navy-900 text-gray-600 dark:text-gray-300 font-medium mt-0.5">
+            <span
+              className="text-[10px] text-brand-600 dark:text-brand-400 font-semibold block truncate"
+              title={registree.industryVertical}
+            >
               {registree.industryVertical}
             </span>
           )}
