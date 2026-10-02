@@ -18,6 +18,10 @@ import {
   Ban,
   Percent,
   Eye,
+  Sparkles,
+  Mic,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
@@ -55,14 +59,8 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
   const deleteMutation = useDeleteAttendee();
   const checkInMutation = useCheckInAttendee();
 
-  // Aggregate stats from the current view or queries
-  // To have accurate summary counts, let's query all or fetch statistics.
-  // Since we have paginated list, let's also pull a non-paginated search to compute stats,
-  // or simply calculate from a wide load, or fetch them dynamically.
-  // Standard approach: load wide stats, or simply calculate from the currently fetched paginated list and metadata.
   const totalItems = data?.meta?.total || 0;
 
-  // Let's load counts by querying status-specific totals or calculate from current meta
   const { data: allStatsData } = useAttendees({ limit: 1000 });
   const allAttendees = allStatsData?.data || [];
 
@@ -79,7 +77,9 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
   const handleCheckIn = async (attendee: Attendee) => {
     try {
       await checkInMutation.mutateAsync(attendee.passCode);
-      toast.success(`${attendee.name} has been successfully checked in!`);
+      toast.success(
+        `${attendee.name || attendee.registrationDetails?.name} has been successfully checked in!`,
+      );
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || 'Failed to check in attendee');
@@ -87,7 +87,8 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
   };
 
   const handleDelete = async (attendee: Attendee) => {
-    if (confirm(`Are you sure you want to delete registration for ${attendee.name}?`)) {
+    const displayName = attendee.name || attendee.registrationDetails?.name || 'Attendee';
+    if (confirm(`Are you sure you want to delete registration for ${displayName}?`)) {
       try {
         await deleteMutation.mutateAsync(attendee.id);
         toast.success('Registration deleted successfully');
@@ -96,6 +97,66 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
         toast.error(error.message || 'Failed to delete attendee');
       }
     }
+  };
+
+  const formatDate = (dateStr?: string | Date) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return '—';
+    }
+  };
+
+  const formatTime = (dateStr?: string | Date) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const renderRegistrationTypeBadge = (type?: string) => {
+    const rawType = (type || '').toLowerCase();
+    const isSponsor = rawType.includes('sponsor') || rawType.includes('partner');
+    const isSpeaker = rawType.includes('speaker');
+
+    if (isSponsor) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 whitespace-nowrap">
+          <Sparkles size={11} className="text-purple-500 shrink-0" />
+          <span>Sponsor / Partner</span>
+        </span>
+      );
+    }
+
+    if (isSpeaker) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+          <Mic size={11} className="text-amber-500 shrink-0" />
+          <span>Speaker</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 whitespace-nowrap">
+        <UserCheck size={11} className="text-sky-500 shrink-0" />
+        <span>Delegate</span>
+      </span>
+    );
   };
 
   const getStatusColor = (
@@ -118,26 +179,122 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
 
   const columns: Column<Attendee>[] = [
     {
-      header: 'Attendee Profile',
-      accessor: (attendee) => (
-        <div className="flex items-center gap-3.5">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-gray-100 dark:border-navy-800 bg-gray-50 dark:bg-navy-900/50 flex items-center justify-center text-gray-500 shadow-sm">
-            <User size={20} className="text-gray-400 dark:text-navy-500" />
-          </div>
-          <div className="min-w-0">
+      header: 'Name',
+      accessor: (attendee) => {
+        const name = attendee.name || attendee.registrationDetails?.name || '—';
+        return (
+          <div className="flex items-center gap-2.5 min-w-[140px]">
+            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-gray-100 dark:border-navy-800 bg-brand-50 dark:bg-navy-900/60 flex items-center justify-center text-xs font-bold text-brand-600 dark:text-brand-400 shadow-sm">
+              {name !== '—' ? name.charAt(0).toUpperCase() : <User size={14} />}
+            </div>
             <Link
               href={`/attendance/${attendee.id}/view`}
-              className="text-sm font-bold text-gray-900 dark:text-white hover:text-brand-500 transition-colors truncate block"
+              className="text-xs font-bold text-gray-900 dark:text-white hover:text-brand-500 transition-colors truncate block"
+              title={name}
             >
-              {attendee.name}
+              {name}
             </Link>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{attendee.email}</p>
-            {attendee.phoneNumber && (
-              <p className="text-[11px] text-gray-400 dark:text-navy-400">{attendee.phoneNumber}</p>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Email',
+      accessor: (attendee) => {
+        const officialEmail = attendee.email || attendee.registrationDetails?.email || '—';
+        const personalEmail = attendee.personalEmail || attendee.registrationDetails?.personalEmail;
+
+        return (
+          <div className="min-w-[170px]">
+            <span
+              className="text-xs font-medium text-gray-800 dark:text-gray-200 block truncate"
+              title={officialEmail}
+            >
+              {officialEmail}
+            </span>
+            {personalEmail && (
+              <span
+                className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+                title={`Personal: ${personalEmail}`}
+              >
+                {personalEmail}
+              </span>
             )}
           </div>
-        </div>
-      ),
+        );
+      },
+    },
+    {
+      header: 'Phone Number',
+      accessor: (attendee) => {
+        const countryCode = attendee.countryCode || attendee.registrationDetails?.countryCode || '';
+        const phone = attendee.phoneNumber || attendee.registrationDetails?.phoneNumber;
+        const landline = attendee.landlineNumber || attendee.registrationDetails?.landlineNumber;
+
+        return (
+          <div className="min-w-[120px]">
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap block">
+              {phone ? `${countryCode ? countryCode + ' ' : ''}${phone}`.trim() : '—'}
+            </span>
+            {landline && (
+              <span
+                className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+                title={`Landline: ${landline}`}
+              >
+                Landline: {landline}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Organization',
+      accessor: (attendee) => {
+        const org = attendee.organization || attendee.registrationDetails?.organization || '—';
+        return (
+          <span
+            className="text-xs font-bold text-gray-800 dark:text-gray-200 block truncate min-w-[130px]"
+            title={org}
+          >
+            {org}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Designation',
+      accessor: (attendee) => {
+        const jobTitle = attendee.jobTitle || attendee.registrationDetails?.jobTitle || '—';
+        const industry =
+          attendee.industryVertical || attendee.registrationDetails?.industryVertical;
+
+        return (
+          <div className="min-w-[130px]">
+            <span
+              className="text-xs font-medium text-gray-600 dark:text-gray-300 block truncate"
+              title={jobTitle}
+            >
+              {jobTitle}
+            </span>
+            {industry && (
+              <span
+                className="text-[10px] text-brand-600 dark:text-brand-400 font-semibold block truncate"
+                title={industry}
+              >
+                {industry}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Registration Type',
+      accessor: (attendee) => {
+        const regType = attendee.registrationType || attendee.registrationDetails?.registrationType;
+        return <div className="min-w-[130px]">{renderRegistrationTypeBadge(regType)}</div>;
+      },
     },
     {
       header: 'Event Assignment',
@@ -147,12 +304,15 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
         const type = typeof ev === 'object' && ev ? ev.type : '';
 
         return (
-          <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white max-w-[200px] truncate">
+          <div className="min-w-[150px]">
+            <span
+              className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 block"
+              title={title}
+            >
               {title}
-            </p>
+            </span>
             {type && (
-              <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mt-0.5">
+              <span className="text-[10px] font-bold text-brand-500 uppercase tracking-wider block mt-0.5">
                 {type}
               </span>
             )}
@@ -161,18 +321,10 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
       },
     },
     {
-      header: 'Organization',
-      accessor: (attendee) => (
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {attendee.organization || '-'}
-        </span>
-      ),
-    },
-    {
       header: 'Pass Code',
       accessor: (attendee) => (
-        <code className="px-2.5 py-1 bg-gray-100 dark:bg-navy-900 text-xs font-mono font-bold rounded-lg text-brand-600 dark:text-brand-400 border border-gray-200/50 dark:border-navy-700">
-          {attendee.passCode}
+        <code className="px-2 py-0.5 bg-gray-100 dark:bg-navy-900 text-xs font-mono font-bold rounded-lg text-brand-600 dark:text-brand-400 border border-gray-200/50 dark:border-navy-700 whitespace-nowrap">
+          {attendee.passCode || attendee.registrationDetails?.passCode || '—'}
         </code>
       ),
     },
@@ -185,68 +337,109 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
       ),
     },
     {
-      header: 'Timestamps',
-      accessor: (attendee) => (
-        <div className="text-xs space-y-0.5 text-gray-500 dark:text-gray-400">
-          <p>Reg: {new Date(attendee.registeredAt || attendee.createdAt).toLocaleDateString()}</p>
-          {attendee.checkedInAt && (
-            <p className="text-emerald-500 font-medium">
-              In:{' '}
-              {new Date(attendee.checkedInAt).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+      header: 'Attended',
+      accessor: (attendee) => {
+        const isCheckedIn =
+          attendee.status === AttendeeStatus.CHECKED_IN ||
+          Boolean(attendee.checkedInAt) ||
+          attendee.registrationDetails?.attended;
+
+        return isCheckedIn ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+            <CheckCircle size={11} />
+            Checked In
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-navy-900 px-2 py-0.5 rounded-full whitespace-nowrap">
+            <Clock size={11} />
+            Not Yet
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Location',
+      accessor: (attendee) => {
+        const city = attendee.city || attendee.registrationDetails?.city;
+        const state = attendee.state || attendee.registrationDetails?.state;
+        const country = attendee.country || attendee.registrationDetails?.country;
+        const loc = [city, state, country].filter(Boolean).join(', ');
+
+        return (
+          <span
+            className="text-xs text-gray-600 dark:text-gray-300 block truncate min-w-[110px]"
+            title={loc || '—'}
+          >
+            {loc || '—'}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Registration Date',
+      accessor: (attendee) => {
+        const regDate =
+          attendee.registeredAt || attendee.registrationDetails?.registeredAt || attendee.createdAt;
+
+        return (
+          <div className="whitespace-nowrap min-w-[105px]">
+            <div className="flex items-center gap-1 text-xs font-bold text-gray-800 dark:text-gray-200">
+              <Calendar size={11} className="text-brand-500 shrink-0" />
+              <span>{formatDate(regDate)}</span>
+            </div>
+            <p className="text-[10px] text-gray-400 dark:text-navy-400 pl-4 font-medium">
+              {formatTime(regDate)}
             </p>
-          )}
-        </div>
-      ),
+          </div>
+        );
+      },
     },
     {
       header: 'Actions',
       className: 'text-right',
       accessor: (attendee) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5 min-w-[120px]">
           {attendee.status !== AttendeeStatus.CHECKED_IN &&
             attendee.status !== AttendeeStatus.BLOCKED && (
               <button
                 onClick={() => handleCheckIn(attendee)}
                 title="Mark Checked In"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-emerald-500 shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all hover:scale-105"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-emerald-500 shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all hover:scale-105"
               >
-                <CheckCircle size={18} />
+                <CheckCircle size={14} />
               </button>
             )}
 
           <Link
             href={`/attendance/${attendee.id}/view`}
             title="View History Details"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-indigo-500 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all hover:scale-105"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-indigo-500 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all hover:scale-105"
           >
-            <Eye size={16} />
+            <Eye size={14} />
           </Link>
 
           <button
             onClick={() => onViewPass(attendee)}
             title="View Ticket Pass"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-brand-500 shadow-sm hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-all hover:scale-105"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-brand-500 shadow-sm hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-all hover:scale-105"
           >
-            <QrCode size={17} />
+            <QrCode size={14} />
           </button>
 
           <button
             onClick={() => onEdit(attendee)}
             title="Edit Registration"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
           >
-            <Edit size={16} />
+            <Edit size={14} />
           </button>
 
           <button
             onClick={() => handleDelete(attendee)}
             title="Delete Registration"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       ),

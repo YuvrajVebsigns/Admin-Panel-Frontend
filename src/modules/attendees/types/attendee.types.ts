@@ -8,10 +8,12 @@ export enum AttendeeStatus {
 
 export interface Attendee {
   id: string;
+  _id?: string;
   eventId:
     | string
     | {
         id: string;
+        _id?: string;
         title: string;
         type: string;
         startDate: string;
@@ -36,7 +38,15 @@ export interface Attendee {
   status: AttendeeStatus;
   passCode: string;
   qrCode?: string;
-  websiteId?: string | { id: string; name: string; domain?: string; logo?: string };
+  websiteId?:
+    | string
+    | {
+        id?: string;
+        _id?: string;
+        name?: string;
+        domain?: string;
+        logo?: string;
+      };
   registeredAt: string;
   checkedInAt?: string;
   checkedInBy?: {
@@ -44,7 +54,30 @@ export interface Attendee {
     name: string;
     email: string;
   };
-  registrationDetails?: Record<string, unknown>;
+  registrationDetails?: {
+    name?: string;
+    email?: string;
+    personalEmail?: string;
+    countryCode?: string;
+    phoneNumber?: string;
+    landlineNumber?: string;
+    organization?: string;
+    jobTitle?: string;
+    industryVertical?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    registrationType?: string;
+    message?: string;
+    sponsorConsent?: boolean;
+    passCode?: string;
+    qrCode?: string;
+    registeredAt?: string;
+    websiteId?: string | { id?: string; name?: string; domain?: string };
+    eventId?: string | { id?: string; title?: string };
+    attended?: boolean;
+    attendedAt?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

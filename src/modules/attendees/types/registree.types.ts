@@ -56,6 +56,8 @@ export interface Registree {
   city?: string;
   state?: string;
   country?: string;
+  message?: string;
+  sponsorConsent?: boolean;
   tags?: string[];
   websiteId?:
     | string

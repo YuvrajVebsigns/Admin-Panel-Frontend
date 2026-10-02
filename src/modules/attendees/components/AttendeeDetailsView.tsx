@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Mail,
   Phone,
+  PhoneCall,
   Building,
   Calendar,
   CheckCircle,
@@ -21,6 +22,8 @@ import {
   Globe,
   Eye,
   Printer,
+  MessageSquare,
+  Ticket,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
@@ -159,6 +162,33 @@ export const AttendeeDetailsView: React.FC = () => {
   const eventLocation =
     typeof event === 'object' && event ? event.location?.address || 'Online Venue' : 'Online Venue';
 
+  const attendeeName = attendee.name || attendee.registrationDetails?.name || 'Attendee';
+  const attendeeJobTitle = attendee.jobTitle || attendee.registrationDetails?.jobTitle;
+  const attendeeOrg = attendee.organization || attendee.registrationDetails?.organization;
+  const attendeeRegType =
+    attendee.registrationType || attendee.registrationDetails?.registrationType;
+  const attendeeEmail = attendee.email || attendee.registrationDetails?.email;
+  const attendeePersonalEmail =
+    attendee.personalEmail || attendee.registrationDetails?.personalEmail;
+  const attendeeCountryCode =
+    attendee.countryCode || attendee.registrationDetails?.countryCode || '';
+  const attendeePhone = attendee.phoneNumber || attendee.registrationDetails?.phoneNumber;
+  const attendeeLandline = attendee.landlineNumber || attendee.registrationDetails?.landlineNumber;
+  const attendeeIndustry =
+    attendee.industryVertical || attendee.registrationDetails?.industryVertical;
+  const attendeeCity = attendee.city || attendee.registrationDetails?.city;
+  const attendeeState = attendee.state || attendee.registrationDetails?.state;
+  const attendeeCountry = attendee.country || attendee.registrationDetails?.country;
+  const attendeeLocation = [attendeeCity, attendeeState, attendeeCountry]
+    .filter(Boolean)
+    .join(', ');
+  const attendeeMessage = attendee.message || attendee.registrationDetails?.message;
+  const attendeeSponsorConsent =
+    attendee.sponsorConsent ?? attendee.registrationDetails?.sponsorConsent;
+  const attendeeWebsite = attendee.websiteId || attendee.registrationDetails?.websiteId;
+  const attendeeRegisteredAt =
+    attendee.registeredAt || attendee.registrationDetails?.registeredAt || attendee.createdAt;
+
   return (
     <div className="space-y-6">
       {/* Top action header bar */}
@@ -189,7 +219,7 @@ export const AttendeeDetailsView: React.FC = () => {
           {attendee.status !== AttendeeStatus.CHECKED_IN &&
             attendee.status !== AttendeeStatus.BLOCKED && (
               <Button
-                onClick={() => handleCheckIn(attendee.passCode, attendee.name)}
+                onClick={() => handleCheckIn(attendee.passCode, attendeeName)}
                 className="flex items-center gap-2 rounded-xl text-xs py-2"
               >
                 <CheckCircle size={15} />
@@ -212,12 +242,24 @@ export const AttendeeDetailsView: React.FC = () => {
                 <User size={36} className="text-gray-400 dark:text-navy-500" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
-                {attendee.name}
+                {attendeeName}
               </h3>
-              {attendee.organization && (
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500 dark:text-gray-400 font-semibold bg-gray-50 dark:bg-navy-950 px-2.5 py-1 rounded-full border border-gray-100 dark:border-navy-900">
+              {attendeeJobTitle && (
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                  {attendeeJobTitle}
+                </p>
+              )}
+              {attendeeOrg && (
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-700 dark:text-gray-300 font-semibold bg-gray-50 dark:bg-navy-950 px-3 py-1 rounded-full border border-gray-100 dark:border-navy-900">
                   <Building size={12} className="text-brand-500" />
-                  <span>{attendee.organization}</span>
+                  <span>{attendeeOrg}</span>
+                </div>
+              )}
+              {attendeeRegType && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                    {attendeeRegType}
+                  </span>
                 </div>
               )}
 
@@ -236,13 +278,29 @@ export const AttendeeDetailsView: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
-                    Email Address
+                    Official Email
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
-                    {attendee.email}
+                    {attendeeEmail}
                   </p>
                 </div>
               </div>
+
+              {attendeePersonalEmail && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Mail size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Personal Email
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {attendeePersonalEmail}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
@@ -253,7 +311,89 @@ export const AttendeeDetailsView: React.FC = () => {
                     Phone Number
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white">
-                    {attendee.phoneNumber || '—'}
+                    {attendeePhone
+                      ? `${attendeeCountryCode ? attendeeCountryCode + ' ' : ''}${attendeePhone}`.trim()
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+
+              {attendeeLandline && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <PhoneCall size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Landline Number
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white">
+                      {attendeeLandline}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {attendeeLocation && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <MapPin size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Location
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {attendeeLocation}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {attendeeIndustry && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Building size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Industry Vertical
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {attendeeIndustry}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {attendeeWebsite && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <Globe size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Origin Website
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
+                      {typeof attendeeWebsite === 'object' && attendeeWebsite !== null
+                        ? attendeeWebsite.name || attendeeWebsite.domain || 'Website'
+                        : String(attendeeWebsite)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                  <Ticket size={15} className="text-gray-500 dark:text-navy-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                    Pass Code
+                  </p>
+                  <p className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                    {attendee.passCode}
                   </p>
                 </div>
               </div>
@@ -264,22 +404,38 @@ export const AttendeeDetailsView: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
-                    Primary Event Registration
+                    Registration Date
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white line-clamp-1">
-                    {new Date(attendee.registeredAt || attendee.createdAt).toLocaleString(
-                      undefined,
-                      {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      },
-                    )}
+                    {new Date(attendeeRegisteredAt).toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </p>
                 </div>
               </div>
             </div>
           </div>
+          {/* Message / Registration Inquiry Card */}
+          {attendeeMessage && (
+            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare size={16} className="text-brand-500" />
+                  Registration Message
+                </h4>
+                {attendeeSponsorConsent && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Sponsor Consent
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-navy-900/60 p-3.5 rounded-2xl border border-gray-100 dark:border-navy-800 whitespace-pre-wrap leading-relaxed">
+                {attendeeMessage}
+              </p>
+            </div>
+          )}
           {/* Card: On Desk Check-in Log / Action */}
           {attendee.status === AttendeeStatus.CHECKED_IN ? (
             <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs relative overflow-hidden">
