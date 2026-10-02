@@ -258,45 +258,77 @@ export const RegistreeTable: React.FC = () => {
     },
     {
       header: 'Phone Number',
-      accessor: (registree) => (
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[120px] block">
-          {registree.phoneNumber
-            ? `${registree.countryCode ? registree.countryCode + ' ' : ''}${registree.phoneNumber}`.trim()
-            : '—'}
-        </span>
-      ),
+      accessor: (registree) => {
+        const targetReg = params.eventId
+          ? registree.history?.find((h) => h.eventId === params.eventId)
+          : registree.latestRegistration || registree.history?.[0];
+        const countryCode = targetReg?.countryCode || registree.countryCode || '';
+        const phone = targetReg?.phoneNumber || registree.phoneNumber;
+        const landline = targetReg?.landlineNumber || registree.landlineNumber;
+
+        return (
+          <div className="min-w-[120px]">
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap block">
+              {phone ? `${countryCode ? countryCode + ' ' : ''}${phone}`.trim() : '—'}
+            </span>
+            {landline && (
+              <span
+                className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+                title={`Landline: ${landline}`}
+              >
+                Landline: {landline}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Organization',
-      accessor: (registree) => (
-        <span
-          className="text-xs font-bold text-gray-800 dark:text-gray-200 block truncate min-w-[130px]"
-          title={registree.organization || '—'}
-        >
-          {registree.organization || '—'}
-        </span>
-      ),
+      accessor: (registree) => {
+        const targetReg = params.eventId
+          ? registree.history?.find((h) => h.eventId === params.eventId)
+          : registree.latestRegistration || registree.history?.[0];
+        const org = targetReg?.organization || registree.organization || '—';
+
+        return (
+          <span
+            className="text-xs font-bold text-gray-800 dark:text-gray-200 block truncate min-w-[130px]"
+            title={org}
+          >
+            {org}
+          </span>
+        );
+      },
     },
     {
       header: 'Designation',
-      accessor: (registree) => (
-        <div className="min-w-[130px]">
-          <span
-            className="text-xs font-medium text-gray-600 dark:text-gray-300 block truncate"
-            title={registree.jobTitle || '—'}
-          >
-            {registree.jobTitle || '—'}
-          </span>
-          {registree.industryVertical && (
+      accessor: (registree) => {
+        const targetReg = params.eventId
+          ? registree.history?.find((h) => h.eventId === params.eventId)
+          : registree.latestRegistration || registree.history?.[0];
+        const jobTitle = targetReg?.jobTitle || registree.jobTitle || '—';
+        const industry = targetReg?.industryVertical || registree.industryVertical;
+
+        return (
+          <div className="min-w-[130px]">
             <span
-              className="text-[10px] text-brand-600 dark:text-brand-400 font-semibold block truncate"
-              title={registree.industryVertical}
+              className="text-xs font-medium text-gray-600 dark:text-gray-300 block truncate"
+              title={jobTitle}
             >
-              {registree.industryVertical}
+              {jobTitle}
             </span>
-          )}
-        </div>
-      ),
+            {industry && (
+              <span
+                className="text-[10px] text-brand-600 dark:text-brand-400 font-semibold block truncate"
+                title={industry}
+              >
+                {industry}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Registration Type',
@@ -399,14 +431,20 @@ export const RegistreeTable: React.FC = () => {
     {
       header: 'Location',
       accessor: (registree) => {
-        const loc = [registree.city, registree.country].filter(Boolean).join(', ');
+        const targetReg = params.eventId
+          ? registree.history?.find((h) => h.eventId === params.eventId)
+          : registree.latestRegistration || registree.history?.[0];
+        const city = targetReg?.city || registree.city;
+        const state = targetReg?.state || registree.state;
+        const country = targetReg?.country || registree.country;
+        const loc = [city, state, country].filter(Boolean).join(', ');
 
         return (
           <span
             className="text-xs text-gray-600 dark:text-gray-300 block truncate min-w-[100px]"
-            title={loc || registree.state || '—'}
+            title={loc || '—'}
           >
-            {loc || registree.state || '—'}
+            {loc || '—'}
           </span>
         );
       },
@@ -736,7 +774,7 @@ export const RegistreeTable: React.FC = () => {
         onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
         onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
         onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
-        searchPlaceholder="Search by name, email, phone, organization, designation..."
+        searchPlaceholder="Search by name, email, phone, passcode, organization, designation..."
       />
     </div>
   );

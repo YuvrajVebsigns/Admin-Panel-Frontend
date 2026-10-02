@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Mail,
   Phone,
+  PhoneCall,
   Building,
   Calendar,
   CheckCircle,
@@ -24,6 +25,8 @@ import {
   Loader2,
   Users,
   Globe,
+  MapPin,
+  MessageSquare,
   Eye,
   Ticket,
   Copy,
@@ -86,8 +89,13 @@ export const RegistreeDetailsView: React.FC = () => {
     }
   };
 
-  // Pass modal state
+  // Pass and message modal states
   const [selectedPass, setSelectedPass] = useState<RegistreeHistoryItem | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<{
+    title: string;
+    message: string;
+    sponsorConsent?: boolean;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (code: string) => {
@@ -308,10 +316,26 @@ export const RegistreeDetailsView: React.FC = () => {
                 </div>
               </div>
 
-              {(registree.city || registree.country || registree.state) && (
+              {registree.landlineNumber && (
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
-                    <Globe size={15} className="text-gray-500 dark:text-navy-400" />
+                    <PhoneCall size={15} className="text-gray-500 dark:text-navy-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
+                      Landline Number
+                    </p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white">
+                      {registree.landlineNumber}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(registree.city || registree.state || registree.country) && (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-navy-900 flex items-center justify-center shrink-0 border border-gray-100 dark:border-navy-900">
+                    <MapPin size={15} className="text-gray-500 dark:text-navy-400" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500">
@@ -375,6 +399,26 @@ export const RegistreeDetailsView: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Message / Inquiry Card */}
+          {(registree.message || registree.latestRegistration?.message) && (
+            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare size={16} className="text-brand-500" />
+                  Registration Message
+                </h4>
+                {(registree.sponsorConsent || registree.latestRegistration?.sponsorConsent) && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Sponsor Consent
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-navy-900/60 p-3.5 rounded-2xl border border-gray-100 dark:border-navy-800 whitespace-pre-wrap leading-relaxed">
+                {registree.message || registree.latestRegistration?.message}
+              </p>
+            </div>
+          )}
 
           {/* Events Sidebar */}
           {eventIds.length > 0 && (
@@ -493,6 +537,9 @@ export const RegistreeDetailsView: React.FC = () => {
                         <th className="py-3.5 px-4">Opportunity / Type</th>
                         <th className="py-3.5 px-4">Pass Code</th>
                         <th className="py-3.5 px-4">Organization & Designation</th>
+                        <th className="py-3.5 px-4">Location</th>
+                        <th className="py-3.5 px-4">Contact</th>
+                        <th className="py-3.5 px-4 text-center">Inquiry Note</th>
                         <th className="py-3.5 px-4">Attended</th>
                         <th className="py-3.5 px-4 text-center">Actions</th>
                         <th className="py-3.5 pl-4 text-right">Registered On</th>
@@ -507,6 +554,25 @@ export const RegistreeDetailsView: React.FC = () => {
                           item?.eventId?.toString() ||
                           item?.event?._id?.toString() ||
                           item?.event?.id?.toString();
+
+                        const itemCity = item?.city || registree.city;
+                        const itemState = item?.state || registree.state;
+                        const itemCountry = item?.country || registree.country;
+                        const itemLoc = [itemCity, itemState, itemCountry]
+                          .filter(Boolean)
+                          .join(', ');
+
+                        const itemPhone = item?.phoneNumber || registree.phoneNumber;
+                        const itemCountryCode = item?.countryCode || registree.countryCode || '';
+                        const itemLandline = item?.landlineNumber || registree.landlineNumber;
+                        const itemOfficialEmail = item?.email || registree.email;
+                        const itemPersonalEmail = item?.personalEmail || registree.personalEmail;
+
+                        const itemMessage =
+                          item?.message || (idx === 0 ? registree.message : undefined);
+                        const itemConsent =
+                          item?.sponsorConsent ??
+                          (idx === 0 ? registree.sponsorConsent : undefined);
 
                         return (
                           <tr
@@ -542,13 +608,13 @@ export const RegistreeDetailsView: React.FC = () => {
                               </Badge>
                             </td>
                             <td className="py-4 px-4">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 whitespace-nowrap">
                                 {item?.registrationType ||
                                   registree.registrationType ||
                                   'CIO Delegate'}
                               </span>
                             </td>
-                            <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300">
+                            <td className="py-4 px-4 font-mono font-bold text-gray-600 dark:text-navy-300 whitespace-nowrap">
                               {item?.passCode || '—'}
                             </td>
                             <td className="py-4 px-4">
@@ -560,15 +626,78 @@ export const RegistreeDetailsView: React.FC = () => {
                                   {item?.jobTitle || registree?.jobTitle}
                                 </p>
                               )}
+                              {(item?.industryVertical || registree?.industryVertical) && (
+                                <p className="text-[10px] text-brand-600 dark:text-brand-400 font-semibold">
+                                  {item?.industryVertical || registree?.industryVertical}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span
+                                className="text-gray-600 dark:text-gray-300 block truncate max-w-[120px]"
+                                title={itemLoc || '—'}
+                              >
+                                {itemLoc || '—'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="min-w-[120px]">
+                                <span
+                                  className="text-gray-800 dark:text-gray-200 block truncate"
+                                  title={itemOfficialEmail}
+                                >
+                                  {itemOfficialEmail}
+                                </span>
+                                {itemPersonalEmail && (
+                                  <span
+                                    className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+                                    title={`Personal: ${itemPersonalEmail}`}
+                                  >
+                                    {itemPersonalEmail}
+                                  </span>
+                                )}
+                                {itemPhone && (
+                                  <span className="text-[11px] text-gray-600 dark:text-gray-400 block truncate">
+                                    {`${itemCountryCode ? itemCountryCode + ' ' : ''}${itemPhone}`.trim()}
+                                  </span>
+                                )}
+                                {itemLandline && (
+                                  <span className="text-[10px] text-gray-400 dark:text-navy-400 block truncate">
+                                    Landline: {itemLandline}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              {itemMessage ? (
+                                <button
+                                  onClick={() =>
+                                    setSelectedMessage({
+                                      title: matchEvent?.title
+                                        ? `Registration Message - ${matchEvent.title}`
+                                        : 'Registration Message',
+                                      message: itemMessage,
+                                      sponsorConsent: itemConsent,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-navy-900/60 dark:hover:bg-navy-800 dark:text-brand-400 transition-colors text-[11px] font-semibold"
+                                  title="View Registration Message"
+                                >
+                                  <MessageSquare size={13} />
+                                  <span>View Note</span>
+                                </button>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
                             </td>
                             <td className="py-4 px-4">
                               {item?.attended ? (
-                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full w-fit">
+                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full w-fit whitespace-nowrap">
                                   <CheckCircle size={12} />
                                   <span className="text-[10px] uppercase">Yes</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-full w-fit">
+                                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-full w-fit whitespace-nowrap">
                                   <Clock size={12} />
                                   <span className="text-[10px] uppercase">No</span>
                                 </div>
@@ -629,8 +758,8 @@ export const RegistreeDetailsView: React.FC = () => {
                                 )}
                               </div>
                             </td>
-                            <td className="py-4 pl-4 text-right text-gray-500 dark:text-gray-400">
-                              {formatDate(item?.savedAt)}
+                            <td className="py-4 pl-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                              {formatDate(item?.savedAt || item?.registeredAt)}
                             </td>
                           </tr>
                         );
@@ -940,6 +1069,37 @@ export const RegistreeDetailsView: React.FC = () => {
                 </div>
               );
             })()}
+        </Modal>
+
+        {/* Registration Message Modal */}
+        <Modal isOpen={!!selectedMessage} onClose={() => setSelectedMessage(null)} size="md">
+          {selectedMessage && (
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-700 pb-3">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare className="text-brand-500" size={17} />
+                  {selectedMessage.title}
+                </h3>
+                {selectedMessage.sponsorConsent && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Sponsor Consent
+                  </span>
+                )}
+              </div>
+              <div className="bg-gray-50 dark:bg-navy-900/60 p-4 rounded-2xl border border-gray-100 dark:border-navy-800 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                {selectedMessage.message}
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={() => setSelectedMessage(null)}
+                  variant="outline"
+                  className="rounded-xl text-xs py-2"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </Modal>
       </div>
     </div>

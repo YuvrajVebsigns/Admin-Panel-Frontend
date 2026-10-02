@@ -154,11 +154,21 @@ export const UserManagementTable: React.FC = () => {
     {
       header: 'Phone Number',
       accessor: (registree) => (
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[120px] block">
-          {registree.phoneNumber
-            ? `${registree.countryCode ? registree.countryCode + ' ' : ''}${registree.phoneNumber}`.trim()
-            : '—'}
-        </span>
+        <div className="min-w-[120px]">
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap block">
+            {registree.phoneNumber
+              ? `${registree.countryCode ? registree.countryCode + ' ' : ''}${registree.phoneNumber}`.trim()
+              : '—'}
+          </span>
+          {registree.landlineNumber && (
+            <span
+              className="text-[10px] text-gray-400 dark:text-navy-400 block truncate"
+              title={`Landline: ${registree.landlineNumber}`}
+            >
+              Landline: {registree.landlineNumber}
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -469,7 +479,7 @@ export const UserManagementTable: React.FC = () => {
         onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
         onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
         onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
-        searchPlaceholder="Search all users by name, email, organization, city, tags..."
+        searchPlaceholder="Search all users by name, email, passcode, organization, city, tags..."
       />
     </div>
   );
