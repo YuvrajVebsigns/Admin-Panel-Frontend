@@ -17,6 +17,7 @@ export const registreeService = {
       if (params.eventId) searchParams.append('eventId', params.eventId);
       if (params.websiteId) searchParams.append('websiteId', params.websiteId);
       if (params.tag) searchParams.append('tag', params.tag);
+      if (params.status) searchParams.append('status', params.status);
       if (params.eventOnly !== undefined)
         searchParams.append('eventOnly', params.eventOnly.toString());
     }
