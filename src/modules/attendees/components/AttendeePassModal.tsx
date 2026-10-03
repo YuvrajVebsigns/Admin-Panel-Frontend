@@ -50,14 +50,21 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
     typeof event === 'object' && event ? event.location?.address || 'Online Venue' : 'Online Venue';
 
   // Compute dynamic agenda passcode URL: https://[website-domain]/events/[event-slug]/#event-agenda?passcode=[passCode]
+  const regDetailWebsite = attendee?.registrationDetails?.websiteId;
+  const regDetailDomain =
+    typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
+      ? regDetailWebsite.domain
+      : undefined;
+
   const websiteDomain =
+    (typeof attendee?.websiteId === 'object' && attendee?.websiteId?.domain) ||
+    regDetailDomain ||
     (typeof event === 'object' &&
       event?.websites &&
       event.websites.length > 0 &&
       typeof event.websites[0] === 'object' &&
       'domain' in event.websites[0] &&
       (event.websites[0] as { domain?: string }).domain) ||
-    (typeof attendee?.websiteId === 'object' && attendee?.websiteId?.domain) ||
     'core-mediagroup.com';
   const eventSlug = typeof event === 'object' && event ? event.slug || '' : '';
   const cleanDomain = String(websiteDomain)
