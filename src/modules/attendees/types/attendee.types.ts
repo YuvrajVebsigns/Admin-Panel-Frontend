@@ -15,10 +15,12 @@ export interface Attendee {
         id: string;
         _id?: string;
         title: string;
+        slug?: string;
         type: string;
         startDate: string;
         endDate: string;
         location?: { address: string };
+        websites?: Array<string | { id?: string; _id?: string; name?: string; domain?: string }>;
       };
   name: string;
   email: string;
