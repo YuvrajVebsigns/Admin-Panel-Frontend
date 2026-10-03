@@ -83,10 +83,7 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
   useEffect(() => {
     if (!attendee) return;
 
-    if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
-      setDynamicQrUrl(attendee.qrCode);
-    } else if (passCode) {
-      // Generate QR Code data URL dynamically from dynamic target URL
+    if (agendaPasscodeUrl) {
       QRCode.toDataURL(agendaPasscodeUrl, {
         margin: 1,
         width: 400,
@@ -96,9 +93,19 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
         },
       })
         .then((url) => setDynamicQrUrl(url))
-        .catch(() => setDynamicQrUrl(''));
+        .catch(() => {
+          if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+            setDynamicQrUrl(attendee.qrCode);
+          } else {
+            setDynamicQrUrl('');
+          }
+        });
+    } else if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+      setDynamicQrUrl(attendee.qrCode);
+    } else {
+      setDynamicQrUrl('');
     }
-  }, [attendee, passCode, agendaPasscodeUrl]);
+  }, [attendee, agendaPasscodeUrl]);
 
   if (!isOpen || !attendee) return null;
 

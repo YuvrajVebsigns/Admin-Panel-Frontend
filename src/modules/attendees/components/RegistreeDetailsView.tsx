@@ -114,48 +114,54 @@ export const RegistreeDetailsView: React.FC = () => {
       return;
     }
 
-    if (selectedPass.qrCode && selectedPass.qrCode.startsWith('data:image')) {
+    const passEvent = getMatchEvent(selectedPass);
+    const passWebsiteDomain =
+      (typeof selectedPass.websiteId === 'object' &&
+        'domain' in selectedPass.websiteId &&
+        selectedPass.websiteId.domain) ||
+      (typeof registree?.websiteId === 'object' &&
+        'domain' in registree.websiteId &&
+        registree.websiteId.domain) ||
+      (passEvent?.websites &&
+        passEvent.websites.length > 0 &&
+        typeof passEvent.websites[0] === 'object' &&
+        'domain' in passEvent.websites[0] &&
+        (passEvent.websites[0] as { domain?: string }).domain) ||
+      'core-mediagroup.com';
+    const passEventSlug = passEvent?.slug || '';
+    const cleanPassDomain = String(passWebsiteDomain)
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/+$/, '')
+      .trim();
+    const cleanPassSlug = String(passEventSlug)
+      .replace(/^\/+|\/+$/g, '')
+      .trim();
+    const rawPassCode = selectedPass.passCode || '';
+    const agendaPasscodeUrl = cleanPassSlug
+      ? `https://${cleanPassDomain}/events/${cleanPassSlug}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`
+      : `https://${cleanPassDomain}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`;
+
+    if (agendaPasscodeUrl) {
+      QRCode.toDataURL(agendaPasscodeUrl, {
+        margin: 1,
+        width: 350,
+        color: {
+          dark: '#1e1b4b',
+          light: '#ffffff',
+        },
+      })
+        .then((url) => setPassQrDataUrl(url))
+        .catch(() => {
+          if (selectedPass.qrCode && selectedPass.qrCode.startsWith('data:image')) {
+            setPassQrDataUrl(selectedPass.qrCode);
+          } else {
+            setPassQrDataUrl('');
+          }
+        });
+    } else if (selectedPass.qrCode && selectedPass.qrCode.startsWith('data:image')) {
       setPassQrDataUrl(selectedPass.qrCode);
     } else {
-      const passEvent = getMatchEvent(selectedPass);
-      const passWebsiteDomain =
-        (typeof selectedPass.websiteId === 'object' &&
-          'domain' in selectedPass.websiteId &&
-          selectedPass.websiteId.domain) ||
-        (typeof registree?.websiteId === 'object' &&
-          'domain' in registree.websiteId &&
-          registree.websiteId.domain) ||
-        (passEvent?.websites &&
-          passEvent.websites.length > 0 &&
-          typeof passEvent.websites[0] === 'object' &&
-          'domain' in passEvent.websites[0] &&
-          (passEvent.websites[0] as { domain?: string }).domain) ||
-        'core-mediagroup.com';
-      const passEventSlug = passEvent?.slug || '';
-      const cleanPassDomain = String(passWebsiteDomain)
-        .replace(/^https?:\/\//i, '')
-        .replace(/\/+$/, '')
-        .trim();
-      const cleanPassSlug = String(passEventSlug)
-        .replace(/^\/+|\/+$/g, '')
-        .trim();
-      const rawPassCode = selectedPass.passCode || '';
-      const agendaPasscodeUrl = cleanPassSlug
-        ? `https://${cleanPassDomain}/events/${cleanPassSlug}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`
-        : `https://${cleanPassDomain}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`;
-
-      if (rawPassCode) {
-        QRCode.toDataURL(agendaPasscodeUrl, {
-          margin: 1,
-          width: 350,
-          color: {
-            dark: '#1e1b4b',
-            light: '#ffffff',
-          },
-        })
-          .then((url) => setPassQrDataUrl(url))
-          .catch(() => setPassQrDataUrl(''));
-      }
+      setPassQrDataUrl('');
     }
   }, [selectedPass, registree]);
 
