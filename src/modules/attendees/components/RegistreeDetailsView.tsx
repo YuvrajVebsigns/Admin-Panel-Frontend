@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { useParams, useRouter } from 'next/navigation';
 import {
   useRegistree,
@@ -93,6 +94,7 @@ export const RegistreeDetailsView: React.FC = () => {
 
   // Pass and message modal states
   const [selectedPass, setSelectedPass] = useState<RegistreeHistoryItem | null>(null);
+  const [passQrDataUrl, setPassQrDataUrl] = useState<string>('');
   const [selectedMessage, setSelectedMessage] = useState<{
     title: string;
     message: string;
@@ -105,6 +107,57 @@ export const RegistreeDetailsView: React.FC = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  useEffect(() => {
+    if (!selectedPass) {
+      setPassQrDataUrl('');
+      return;
+    }
+
+    if (selectedPass.qrCode && selectedPass.qrCode.startsWith('data:image')) {
+      setPassQrDataUrl(selectedPass.qrCode);
+    } else {
+      const passEvent = getMatchEvent(selectedPass);
+      const passWebsiteDomain =
+        (typeof selectedPass.websiteId === 'object' &&
+          'domain' in selectedPass.websiteId &&
+          selectedPass.websiteId.domain) ||
+        (typeof registree?.websiteId === 'object' &&
+          'domain' in registree.websiteId &&
+          registree.websiteId.domain) ||
+        (passEvent?.websites &&
+          passEvent.websites.length > 0 &&
+          typeof passEvent.websites[0] === 'object' &&
+          'domain' in passEvent.websites[0] &&
+          (passEvent.websites[0] as { domain?: string }).domain) ||
+        'core-mediagroup.com';
+      const passEventSlug = passEvent?.slug || '';
+      const cleanPassDomain = String(passWebsiteDomain)
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/+$/, '')
+        .trim();
+      const cleanPassSlug = String(passEventSlug)
+        .replace(/^\/+|\/+$/g, '')
+        .trim();
+      const rawPassCode = selectedPass.passCode || '';
+      const agendaPasscodeUrl = cleanPassSlug
+        ? `https://${cleanPassDomain}/events/${cleanPassSlug}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`
+        : `https://${cleanPassDomain}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`;
+
+      if (rawPassCode) {
+        QRCode.toDataURL(agendaPasscodeUrl, {
+          margin: 1,
+          width: 350,
+          color: {
+            dark: '#1e1b4b',
+            light: '#ffffff',
+          },
+        })
+          .then((url) => setPassQrDataUrl(url))
+          .catch(() => setPassQrDataUrl(''));
+      }
+    }
+  }, [selectedPass, registree]);
 
   // Safe date formatters
   const formatDate = (dateStr?: string | Date, options?: Intl.DateTimeFormatOptions) => {
@@ -817,6 +870,12 @@ export const RegistreeDetailsView: React.FC = () => {
             (() => {
               const passEvent = getMatchEvent(selectedPass);
               const passWebsiteDomain =
+                (typeof selectedPass.websiteId === 'object' &&
+                  'domain' in selectedPass.websiteId &&
+                  selectedPass.websiteId.domain) ||
+                (typeof registree?.websiteId === 'object' &&
+                  'domain' in registree.websiteId &&
+                  registree.websiteId.domain) ||
                 (passEvent?.websites &&
                   passEvent.websites.length > 0 &&
                   typeof passEvent.websites[0] === 'object' &&
@@ -968,9 +1027,9 @@ export const RegistreeDetailsView: React.FC = () => {
                     <div className="p-5 pt-2 space-y-5 text-center">
                       {/* QR Code Frame */}
                       <div className="relative group mx-auto w-44 h-44 bg-white p-3 rounded-2xl border border-gray-150 shadow-md transition-all hover:scale-105 duration-300">
-                        {selectedPass.qrCode ? (
+                        {passQrDataUrl || selectedPass.qrCode ? (
                           <img
-                            src={selectedPass.qrCode}
+                            src={passQrDataUrl || selectedPass.qrCode}
                             alt="Admission Pass QR"
                             className="w-full h-full object-contain"
                           />
