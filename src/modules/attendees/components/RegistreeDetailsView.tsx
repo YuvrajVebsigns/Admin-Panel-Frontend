@@ -32,6 +32,8 @@ import {
   Copy,
   Check,
   Printer,
+  Download,
+  ExternalLink,
   X,
   Ban,
 } from 'lucide-react';
@@ -814,6 +816,25 @@ export const RegistreeDetailsView: React.FC = () => {
           {selectedPass &&
             (() => {
               const passEvent = getMatchEvent(selectedPass);
+              const passWebsiteDomain =
+                (passEvent?.websites &&
+                  passEvent.websites.length > 0 &&
+                  typeof passEvent.websites[0] === 'object' &&
+                  'domain' in passEvent.websites[0] &&
+                  (passEvent.websites[0] as { domain?: string }).domain) ||
+                'core-mediagroup.com';
+              const passEventSlug = passEvent?.slug || '';
+              const cleanPassDomain = String(passWebsiteDomain)
+                .replace(/^https?:\/\//i, '')
+                .replace(/\/+$/, '')
+                .trim();
+              const cleanPassSlug = String(passEventSlug)
+                .replace(/^\/+|\/+$/g, '')
+                .trim();
+              const rawPassCode = selectedPass.passCode || '';
+              const agendaPasscodeUrl = cleanPassSlug
+                ? `https://${cleanPassDomain}/events/${cleanPassSlug}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`
+                : `https://${cleanPassDomain}/#event-agenda?passcode=${encodeURIComponent(rawPassCode)}`;
 
               return (
                 <div className="p-6 text-center space-y-6">
@@ -1024,6 +1045,39 @@ export const RegistreeDetailsView: React.FC = () => {
                         </span>
                       </div>
 
+                      {/* Dynamic Agenda Passcode Link */}
+                      <div className="bg-indigo-50/70 dark:bg-navy-900/80 rounded-xl p-2.5 border border-indigo-100 dark:border-navy-700 text-left space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+                            <Globe size={11} /> Dynamic Agenda Pass Link
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(agendaPasscodeUrl);
+                                toast.success('Agenda link copied to clipboard');
+                              }}
+                              className="text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded hover:bg-white dark:hover:bg-navy-800 transition-colors"
+                              title="Copy Agenda Link"
+                            >
+                              <Copy size={12} />
+                            </button>
+                            <a
+                              href={agendaPasscodeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded hover:bg-white dark:hover:bg-navy-800 transition-colors"
+                              title="Open Agenda Link"
+                            >
+                              <ExternalLink size={12} />
+                            </a>
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-mono text-gray-600 dark:text-gray-300 truncate">
+                          {agendaPasscodeUrl}
+                        </p>
+                      </div>
+
                       {/* Footer Attendee Info */}
                       <div className="pt-4 border-t border-gray-100 dark:border-navy-750/50 text-left grid grid-cols-2 gap-3 text-[10px]">
                         <div>
@@ -1048,13 +1102,31 @@ export const RegistreeDetailsView: React.FC = () => {
 
                   {/* Control Actions */}
                   <div className="flex items-center gap-3 pt-2">
+                    {selectedPass.qrCode && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = selectedPass.qrCode!;
+                          link.download = `${(selectedPass.name || registree.name || 'Attendee').replace(/\s+/g, '_')}_Pass_QR.png`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          toast.success('QR Code downloaded');
+                        }}
+                        className="flex-1 rounded-2xl font-bold py-2.5 flex items-center justify-center gap-1.5 text-xs text-gray-700 dark:text-gray-200 border-gray-200 dark:border-navy-700 hover:bg-gray-50 dark:hover:bg-navy-950 transition-colors"
+                      >
+                        <Download size={13} />
+                        <span>Download QR</span>
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       onClick={() => window.print()}
                       className="flex-1 rounded-2xl font-bold py-2.5 flex items-center justify-center gap-1.5 text-xs text-gray-700 dark:text-gray-200 border-gray-200 dark:border-navy-700 hover:bg-gray-50 dark:hover:bg-navy-950 transition-colors"
                     >
                       <Printer size={13} />
-                      <span>Print Ticket</span>
+                      <span>Print Pass</span>
                     </Button>
                     <Button
                       onClick={() => {

@@ -9,6 +9,7 @@ export interface RegistreeEvent {
   endDate?: string;
   bannerImage?: string;
   location?: { address: string };
+  websites?: Array<string | { id?: string; _id?: string; name?: string; domain?: string }>;
 }
 
 export interface RegistreeHistoryItem {
