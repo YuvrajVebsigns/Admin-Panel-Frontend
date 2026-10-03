@@ -18,6 +18,7 @@ import {
   Building2,
   Search,
   Printer,
+  Loader2,
 } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
 import {
@@ -29,6 +30,8 @@ import {
 import { useEventAttendees, useEventAttendeeCount } from '@/modules/attendees/hooks/useAttendees';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
+import toast from 'react-hot-toast';
+import { attendeeService } from '@/services/attendee.service';
 import { EventStatus, EventType, EventMeeting, EventScheduledEmail } from '../types/event.types';
 import { Attendee } from '@/modules/attendees/types/attendee.types';
 import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
@@ -42,6 +45,7 @@ export const EventDetailsView: React.FC = () => {
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
   const [isScheduledEmailModalOpen, setIsScheduledEmailModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<EventMeeting | null>(null);
+  const [isGeneratingPassSheets, setIsGeneratingPassSheets] = useState(false);
 
   // Fetch event and attendee data
   const { data: event, isLoading: isEventLoading } = useEvent(id as string);
@@ -78,6 +82,22 @@ export const EventDetailsView: React.FC = () => {
       } catch (err) {
         // error handled by hook
       }
+    }
+  };
+
+  const handleDownload12x18Passes = async () => {
+    if (!id || !event) return;
+    setIsGeneratingPassSheets(true);
+    const toastId = toast.loading(`Generating 12x18 Pass Sheets for ${event.title}...`);
+
+    try {
+      await attendeeService.downloadBulkPassSheets(id as string, event.title);
+      toast.success('12x18 Pass Sheets downloaded successfully!', { id: toastId });
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || 'Failed to download 12x18 pass sheets', { id: toastId });
+    } finally {
+      setIsGeneratingPassSheets(false);
     }
   };
 
@@ -280,6 +300,19 @@ export const EventDetailsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleDownload12x18Passes}
+            disabled={isGeneratingPassSheets}
+            className="bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
+          >
+            {isGeneratingPassSheets ? (
+              <Loader2 size={16} className="mr-2 animate-spin" />
+            ) : (
+              <Printer size={16} className="mr-2" />
+            )}
+            12x18 Pass Sheets
+          </Button>
           <Button
             variant="outline"
             onClick={handleBookMeeting}
@@ -844,6 +877,22 @@ export const EventDetailsView: React.FC = () => {
                 <Users size={18} className="text-brand-500" />
                 Registrations ({totalAttendees})
               </h3>
+              {totalAttendees > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload12x18Passes}
+                  disabled={isGeneratingPassSheets}
+                  className="text-xs px-2.5 py-1 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/40 hover:bg-indigo-50/50 flex items-center gap-1.5"
+                >
+                  {isGeneratingPassSheets ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Printer size={12} />
+                  )}
+                  <span>12x18 Sheets</span>
+                </Button>
+              )}
             </div>
 
             {/* Attendee search */}

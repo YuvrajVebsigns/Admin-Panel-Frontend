@@ -22,12 +22,17 @@ import {
   Mic,
   Calendar,
   Clock,
+  Printer,
+  Loader2,
+  Layers,
+  X,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
 import toast from 'react-hot-toast';
 import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
+import { attendeeService } from '@/services/attendee.service';
 import { PERMISSIONS } from '@/constants/permissions';
 
 interface AttendeeTableProps {
@@ -53,8 +58,39 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
     search: '',
   });
 
+  const [isBulkPassModalOpen, setIsBulkPassModalOpen] = useState(false);
+  const [selectedBulkEventId, setSelectedBulkEventId] = useState<string>('');
+  const [isGeneratingBulkPdf, setIsGeneratingBulkPdf] = useState(false);
+
   const { data, isLoading } = useAttendees(params);
   const { events } = useEvents();
+
+  const handleDownloadBulkPasses = async (targetEventId?: string) => {
+    const eventIdToUse = targetEventId || params.eventId || selectedBulkEventId;
+    if (!eventIdToUse) {
+      setIsBulkPassModalOpen(true);
+      return;
+    }
+
+    const selectedEv = events.find((e) => e.id === eventIdToUse);
+    const eventTitle = selectedEv?.title || 'Event';
+
+    setIsGeneratingBulkPdf(true);
+    const toastId = toast.loading(`Generating 12x18 Bulk Pass Sheets for ${eventTitle}...`);
+
+    try {
+      await attendeeService.downloadBulkPassSheets(eventIdToUse, eventTitle);
+      toast.success(`12x18 Pass Sheets for ${eventTitle} downloaded successfully!`, {
+        id: toastId,
+      });
+      setIsBulkPassModalOpen(false);
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || 'Failed to generate bulk pass sheets.', { id: toastId });
+    } finally {
+      setIsGeneratingBulkPdf(false);
+    }
+  };
 
   const deleteMutation = useDeleteAttendee();
   const checkInMutation = useCheckInAttendee();
@@ -600,6 +636,19 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
             onExport={(filters) => dataExportService.exportAttendees(filters)}
           />
           <Button
+            variant="outline"
+            onClick={() => handleDownloadBulkPasses()}
+            disabled={isGeneratingBulkPdf}
+            className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
+          >
+            {isGeneratingBulkPdf ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Printer size={16} />
+            )}
+            <span>12x18 Bulk Passes</span>
+          </Button>
+          <Button
             onClick={onCreateNew}
             className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
           >
@@ -624,6 +673,112 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
         onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
         searchPlaceholder="Search attendee by name, email, passcode..."
       />
+
+      {/* Event Selection Modal for Bulk 12x18 Pass Sheets */}
+      {isBulkPassModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <Printer size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Bulk 12x18 Pass Sheets
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    6 invitation passes per 12x18 press sheet
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsBulkPassModalOpen(false)}
+                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                Select Event for Bulk Pass Printing
+              </label>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {events.map((ev) => (
+                  <div
+                    key={ev.id}
+                    onClick={() => setSelectedBulkEventId(ev.id)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                      selectedBulkEventId === ev.id
+                        ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200 shadow-sm'
+                        : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-800 text-gray-800 dark:text-gray-200'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-3">
+                      <p className="text-sm font-bold truncate">{ev.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {ev.startDate
+                          ? new Date(ev.startDate).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : 'Date TBD'}{' '}
+                        •{' '}
+                        {typeof ev.location === 'object' && ev.location?.city
+                          ? ev.location.city
+                          : 'Venue'}
+                      </p>
+                    </div>
+                    <div
+                      className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 ${
+                        selectedBulkEventId === ev.id
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-gray-300 dark:border-navy-600'
+                      }`}
+                    >
+                      {selectedBulkEventId === ev.id && <CheckCircle size={12} />}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-800 border border-gray-100 dark:border-navy-700 flex items-start gap-3">
+              <Layers className="text-indigo-500 shrink-0 mt-0.5" size={18} />
+              <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                Generates a multi-page PDF formatted precisely for 12&quot; x 18&quot; (305 x 457
+                mm) commercial press paper sheets with crop marks and dynamic attendance agenda QR
+                codes.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkPassModalOpen(false)}
+                className="rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleDownloadBulkPasses(selectedBulkEventId)}
+                disabled={!selectedBulkEventId || isGeneratingBulkPdf}
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+              >
+                {isGeneratingBulkPdf ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Printer size={16} />
+                )}
+                Download 12x18 PDF
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
