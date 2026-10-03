@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { useParams, useRouter } from 'next/navigation';
 import { useAttendee, useCheckInAttendee } from '../hooks/useAttendees';
 import { AttendeeStatus } from '../types/attendee.types';
@@ -79,16 +80,21 @@ export const AttendeeDetailsView: React.FC = () => {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        width: element.offsetWidth,
+        height: element.offsetHeight,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdfWidth = 100; // mm
+      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth; // mm (exact aspect ratio, 0 margin)
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: [90, 140], // standard pocket wallet ticket format
+        format: [pdfWidth, pdfHeight],
       });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, 90, 140);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       const blob = pdf.output('blob');
       const blobUrl = URL.createObjectURL(blob);
 
@@ -188,6 +194,101 @@ export const AttendeeDetailsView: React.FC = () => {
   const attendeeWebsite = attendee.websiteId || attendee.registrationDetails?.websiteId;
   const attendeeRegisteredAt =
     attendee.registeredAt || attendee.registrationDetails?.registeredAt || attendee.createdAt;
+
+  // Dynamic Website & QR Code calculation for print card
+  const regDetailWebsite = attendee.registrationDetails?.websiteId;
+  const regDetailDomain =
+    typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
+      ? regDetailWebsite.domain
+      : undefined;
+
+  const firstFullEventSite =
+    typeof fullEvent === 'object' && fullEvent?.websites && fullEvent.websites.length > 0
+      ? fullEvent.websites[0]
+      : null;
+  const firstEventSite =
+    typeof event === 'object' && event?.websites && event.websites.length > 0
+      ? event.websites[0]
+      : null;
+
+  const fullEventSiteDomain =
+    typeof firstFullEventSite === 'object' && firstFullEventSite && 'domain' in firstFullEventSite
+      ? (firstFullEventSite as { domain?: string }).domain
+      : undefined;
+  const eventSiteDomain =
+    typeof firstEventSite === 'object' && firstEventSite && 'domain' in firstEventSite
+      ? (firstEventSite as { domain?: string }).domain
+      : undefined;
+
+  const fullEventSiteName =
+    typeof firstFullEventSite === 'object' && firstFullEventSite && 'name' in firstFullEventSite
+      ? (firstFullEventSite as { name?: string }).name
+      : undefined;
+  const eventSiteName =
+    typeof firstEventSite === 'object' && firstEventSite && 'name' in firstEventSite
+      ? (firstEventSite as { name?: string }).name
+      : undefined;
+
+  const websiteDomain =
+    (typeof attendee.websiteId === 'object' && attendee.websiteId?.domain) ||
+    regDetailDomain ||
+    fullEventSiteDomain ||
+    eventSiteDomain ||
+    'core-mediagroup.com';
+
+  const websiteName =
+    (typeof attendee.websiteId === 'object' && attendee.websiteId?.name) ||
+    (typeof regDetailWebsite === 'object' && regDetailWebsite && 'name' in regDetailWebsite
+      ? regDetailWebsite.name
+      : undefined) ||
+    fullEventSiteName ||
+    eventSiteName ||
+    '';
+
+  const eventSlug =
+    (typeof fullEvent === 'object' && fullEvent?.slug) ||
+    (typeof event === 'object' && event ? event.slug || '' : '');
+
+  const cleanDomain = String(websiteDomain)
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '')
+    .trim();
+  const cleanSlug = String(eventSlug)
+    .replace(/^\/+|\/+$/g, '')
+    .trim();
+  const passCode = attendee.passCode || '';
+
+  const agendaPasscodeUrl = cleanSlug
+    ? `https://${cleanDomain}/events/${cleanSlug}/#event-agenda?passcode=${encodeURIComponent(passCode)}`
+    : `https://${cleanDomain}/#event-agenda?passcode=${encodeURIComponent(passCode)}`;
+
+  const [printQrDataUrl, setPrintQrDataUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (!attendee) return;
+    if (agendaPasscodeUrl) {
+      QRCode.toDataURL(agendaPasscodeUrl, {
+        margin: 1,
+        width: 400,
+        color: {
+          dark: '#1e1b4b',
+          light: '#ffffff',
+        },
+      })
+        .then((url) => setPrintQrDataUrl(url))
+        .catch(() => {
+          if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+            setPrintQrDataUrl(attendee.qrCode);
+          } else {
+            setPrintQrDataUrl('');
+          }
+        });
+    } else if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+      setPrintQrDataUrl(attendee.qrCode);
+    } else {
+      setPrintQrDataUrl('');
+    }
+  }, [attendee, agendaPasscodeUrl]);
 
   return (
     <div className="space-y-6">
@@ -493,66 +594,96 @@ export const AttendeeDetailsView: React.FC = () => {
               </div>
             )
           )}{' '}
-          {/* Off-screen Ticket Pass for canvas rendering/printing */}
+          {/* Off-screen Ticket Pass for canvas rendering/printing (Full-page Invitation Pass Card) */}
           <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
             <div
               id="print-pass-area"
-              className="bg-white text-gray-900 border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col items-center p-5 max-w-[280px] w-[280px] text-center"
-              style={{ fontFamily: 'sans-serif' }}
+              className="bg-white text-gray-900 overflow-hidden flex flex-col justify-between items-center w-[380px] h-[580px] text-center"
+              style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
             >
-              <div className="w-full bg-brand-600 p-4 text-center text-white rounded-t-lg relative">
-                <h4 className="text-[9px] font-bold tracking-widest uppercase text-brand-200">
-                  Official Event Pass
-                </h4>
-                <h2 className="text-sm font-extrabold mt-1 line-clamp-1">{eventTitle}</h2>
+              {/* Header Banner (Full width edge-to-edge) */}
+              <div className="w-full bg-brand-600 px-6 py-5 text-center text-white relative">
+                <p className="text-[9.5px] font-extrabold tracking-[0.2em] uppercase text-brand-200">
+                  Official Event Admission Pass
+                </p>
+                <h2 className="text-lg font-extrabold mt-1 tracking-tight text-white leading-tight">
+                  {eventTitle}
+                </h2>
+                {eventDate && (
+                  <p className="text-[10.5px] text-brand-100 font-medium mt-1">{eventDate}</p>
+                )}
               </div>
 
-              <div className="w-full border-t-2 border-dashed border-gray-200 my-4" />
+              {/* Perforation Divider Line */}
+              <div className="w-full border-t-2 border-dashed border-gray-300 relative">
+                <div className="absolute -left-3 -top-2.5 h-5 w-5 rounded-full bg-gray-100" />
+                <div className="absolute -right-3 -top-2.5 h-5 w-5 rounded-full bg-gray-100" />
+              </div>
 
-              <div className="w-full flex flex-col items-center">
-                <div className="relative h-28 w-28 border border-gray-200 rounded-lg bg-gray-50 p-2 flex items-center justify-center">
-                  {attendee.qrCode ? (
+              {/* Main Card Body */}
+              <div className="w-full px-6 flex-1 flex flex-col items-center justify-center py-3">
+                {/* QR Code Container */}
+                <div className="h-40 w-40 border border-gray-200 rounded-2xl bg-white p-2.5 shadow-sm flex items-center justify-center">
+                  {printQrDataUrl || attendee.qrCode ? (
                     <img
-                      src={attendee.qrCode}
-                      alt="QR Code"
+                      src={printQrDataUrl || attendee.qrCode}
+                      alt="Event Pass QR Code"
                       className="object-contain w-full h-full"
                     />
                   ) : (
-                    <div className="text-gray-400 text-[10px]">QR Code unavailable</div>
+                    <div className="text-gray-400 text-xs">QR Code unavailable</div>
                   )}
                 </div>
 
-                <div className="mt-4">
-                  <h3 className="text-sm font-bold text-gray-900">{attendee.name}</h3>
-                  <p className="text-[10px] font-medium text-gray-505 mt-0.5">{attendee.email}</p>
-                  {attendee.organization && (
-                    <div className="inline-block mt-1 text-[10px] text-brand-600 font-bold bg-brand-50 px-2 py-0.5 rounded-full">
-                      {attendee.organization}
+                {/* Attendee Info */}
+                <div className="mt-3">
+                  <h3 className="text-lg font-bold text-gray-900 tracking-tight">{attendeeName}</h3>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">{attendeeEmail}</p>
+                  {(attendeeOrg || attendeeJobTitle) && (
+                    <div className="inline-block mt-1.5 text-xs text-brand-700 font-bold bg-brand-50 border border-brand-200 px-3 py-1 rounded-full">
+                      {[attendeeJobTitle, attendeeOrg].filter(Boolean).join(' • ')}
                     </div>
                   )}
                 </div>
 
-                <div className="w-full mt-4 bg-gray-50 rounded-xl p-3 space-y-2 text-left border border-gray-150 text-[11px]">
-                  <div>
-                    <p className="text-[8px] uppercase tracking-wider text-gray-400 font-bold">
-                      Date & Time
-                    </p>
-                    <p className="font-semibold text-gray-700">{eventDate || 'Scheduled Event'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] uppercase tracking-wider text-gray-400 font-bold">
-                      Venue Address
-                    </p>
-                    <p className="font-semibold text-gray-700 line-clamp-2">{eventLocation}</p>
-                  </div>
+                {/* Date & Location Details Box */}
+                <div className="w-full mt-3 bg-gray-50 rounded-xl p-3 space-y-1.5 text-left border border-gray-200 text-xs">
+                  {eventDate && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-20 shrink-0">
+                        Date & Time:
+                      </span>
+                      <span className="font-semibold text-gray-800 truncate">{eventDate}</span>
+                    </div>
+                  )}
+                  {eventLocation && (
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-20 shrink-0">
+                        Venue:
+                      </span>
+                      <span className="font-semibold text-gray-800 line-clamp-2">
+                        {eventLocation}
+                      </span>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <div className="mt-5 flex flex-col items-center gap-1 w-full">
-                  <div className="h-8 w-full bg-[repeating-linear-gradient(90deg,#9ca3af,#9ca3af_2px,transparent_2px,transparent_6px)] opacity-60 rounded" />
-                  <span className="text-[8px] font-mono tracking-widest text-gray-505 font-bold uppercase">
-                    PASS-{attendee.passCode}
+              {/* Footer Passcode & Barcode / Branding */}
+              <div className="w-full px-6 pb-4 pt-1 flex flex-col items-center">
+                <div className="w-full flex flex-col items-center gap-1">
+                  <div className="h-6 w-48 bg-[repeating-linear-gradient(90deg,#374151,#374151_2px,transparent_2px,transparent_6px)] opacity-70 rounded" />
+                  <span className="text-[11px] font-mono tracking-[0.25em] text-gray-800 font-bold uppercase bg-gray-100 px-3 py-0.5 rounded border border-gray-200">
+                    PASS-{passCode || 'VERIFIED'}
                   </span>
                 </div>
+                <p className="text-[8.5px] font-extrabold tracking-[0.15em] text-brand-600 uppercase mt-2">
+                  {websiteName
+                    ? websiteName.toUpperCase()
+                    : cleanDomain
+                      ? cleanDomain.toUpperCase()
+                      : 'CORE MEDIA GROUP'}
+                </p>
               </div>
             </div>
           </div>
