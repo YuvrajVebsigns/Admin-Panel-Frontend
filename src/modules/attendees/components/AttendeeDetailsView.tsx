@@ -109,21 +109,36 @@ export const AttendeeDetailsView: React.FC = () => {
     const loadingToast = toast.loading('Generating ticket PDF...');
 
     try {
-      // Small timeout to allow styling painting
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Ensure all custom web fonts (Inter, etc.) are fully loaded before rendering canvas
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        await document.fonts.ready;
+      }
+      // Small timeout to allow DOM layout reflow
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const renderWidth = element.offsetWidth || 380;
+      const renderHeight = element.offsetHeight || 580;
 
       const canvas = await html2canvas(element, {
         scale: 3, // High scale for clear text and barcodes
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: element.offsetWidth || 380,
-        height: element.offsetHeight || 580,
+        width: renderWidth,
+        height: renderHeight,
+        windowWidth: 1200,
+        onclone: (clonedDoc) => {
+          const clonedEl = clonedDoc.getElementById('print-pass-area');
+          if (clonedEl) {
+            clonedEl.style.transform = 'none';
+            clonedEl.style.boxSizing = 'border-box';
+          }
+        },
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdfWidth = 100; // mm
-      const pdfHeight = ((element.offsetHeight || 580) * pdfWidth) / (element.offsetWidth || 380); // mm (exact aspect ratio, 0 margin)
+      const pdfHeight = (renderHeight * pdfWidth) / renderWidth; // mm (exact aspect ratio, 0 margin)
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -633,8 +648,11 @@ export const AttendeeDetailsView: React.FC = () => {
           <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
             <div
               id="print-pass-area"
-              className="bg-white text-gray-900 overflow-hidden flex flex-col justify-between items-center w-[380px] h-[580px] text-center"
-              style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
+              className="bg-white text-gray-900 flex flex-col items-center w-[380px] min-h-[580px] text-center"
+              style={{
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                boxSizing: 'border-box',
+              }}
             >
               {/* Header Banner (Full width edge-to-edge) */}
               <div className="w-full bg-brand-600 px-6 py-5 text-center text-white relative">
@@ -656,7 +674,7 @@ export const AttendeeDetailsView: React.FC = () => {
               </div>
 
               {/* Main Card Body */}
-              <div className="w-full px-6 flex-1 flex flex-col items-center justify-center py-3">
+              <div className="w-full px-6 flex flex-col items-center justify-start pt-4 pb-2">
                 {/* QR Code Container */}
                 <div className="h-40 w-40 border border-gray-200 rounded-2xl bg-white p-2.5 shadow-sm flex items-center justify-center">
                   {printQrDataUrl || attendee.qrCode ? (
@@ -671,32 +689,38 @@ export const AttendeeDetailsView: React.FC = () => {
                 </div>
 
                 {/* Attendee Info */}
-                <div className="mt-3">
-                  <h3 className="text-lg font-bold text-gray-900 tracking-tight">{attendeeName}</h3>
-                  <p className="text-xs font-medium text-gray-500 mt-0.5">{attendeeEmail}</p>
+                <div className="mt-3.5 w-full">
+                  <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug">
+                    {attendeeName}
+                  </h3>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5 leading-normal">
+                    {attendeeEmail}
+                  </p>
                   {(attendeeOrg || attendeeJobTitle) && (
-                    <div className="inline-block mt-1.5 text-xs text-brand-700 font-bold bg-brand-50 border border-brand-200 px-3 py-1 rounded-full">
+                    <div className="inline-block mt-2 text-xs text-brand-700 font-bold bg-brand-50 border border-brand-200 px-3 py-1 rounded-full leading-normal">
                       {[attendeeJobTitle, attendeeOrg].filter(Boolean).join(' • ')}
                     </div>
                   )}
                 </div>
 
                 {/* Date & Location Details Box */}
-                <div className="w-full mt-3 bg-gray-50 rounded-xl p-3 space-y-1.5 text-left border border-gray-200 text-xs">
+                <div className="w-full mt-3.5 bg-gray-50/90 rounded-2xl p-3.5 space-y-2 text-left border border-gray-200/80">
                   {eventDate && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-20 shrink-0">
+                    <div className="flex items-start gap-2 text-xs leading-relaxed">
+                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-24 shrink-0 pt-0.5">
                         Date & Time:
                       </span>
-                      <span className="font-semibold text-gray-800 truncate">{eventDate}</span>
+                      <span className="font-semibold text-gray-800 flex-1 leading-normal">
+                        {eventDate}
+                      </span>
                     </div>
                   )}
                   {eventLocation && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-20 shrink-0">
+                    <div className="flex items-start gap-2 text-xs leading-relaxed">
+                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-24 shrink-0 pt-0.5">
                         Venue:
                       </span>
-                      <span className="font-semibold text-gray-800 line-clamp-2">
+                      <span className="font-semibold text-gray-800 flex-1 leading-normal break-words">
                         {eventLocation}
                       </span>
                     </div>
@@ -705,14 +729,60 @@ export const AttendeeDetailsView: React.FC = () => {
               </div>
 
               {/* Footer Passcode & Barcode / Branding */}
-              <div className="w-full px-6 pb-4 pt-1 flex flex-col items-center">
-                <div className="w-full flex flex-col items-center gap-1">
-                  <div className="h-6 w-48 bg-[repeating-linear-gradient(90deg,#374151,#374151_2px,transparent_2px,transparent_6px)] opacity-70 rounded" />
-                  <span className="text-[11px] font-mono tracking-[0.25em] text-gray-800 font-bold uppercase bg-gray-100 px-3 py-0.5 rounded border border-gray-200">
-                    PASS-{passCode || 'VERIFIED'}
-                  </span>
+              <div className="w-full px-6 pb-5 pt-2 flex flex-col items-center gap-1.5 mt-auto">
+                {/* Crisp Vector Barcode */}
+                <div className="flex items-center justify-center h-6 w-48">
+                  <svg
+                    viewBox="0 0 160 22"
+                    className="h-5 w-44 opacity-80"
+                    fill="#1e293b"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="0" y="0" width="2" height="22" />
+                    <rect x="4" y="0" width="1" height="22" />
+                    <rect x="7" y="0" width="3" height="22" />
+                    <rect x="12" y="0" width="2" height="22" />
+                    <rect x="16" y="0" width="1" height="22" />
+                    <rect x="19" y="0" width="4" height="22" />
+                    <rect x="25" y="0" width="2" height="22" />
+                    <rect x="29" y="0" width="1" height="22" />
+                    <rect x="32" y="0" width="3" height="22" />
+                    <rect x="37" y="0" width="2" height="22" />
+                    <rect x="41" y="0" width="1" height="22" />
+                    <rect x="44" y="0" width="4" height="22" />
+                    <rect x="50" y="0" width="2" height="22" />
+                    <rect x="54" y="0" width="1" height="22" />
+                    <rect x="57" y="0" width="3" height="22" />
+                    <rect x="62" y="0" width="2" height="22" />
+                    <rect x="66" y="0" width="1" height="22" />
+                    <rect x="69" y="0" width="3" height="22" />
+                    <rect x="74" y="0" width="2" height="22" />
+                    <rect x="78" y="0" width="4" height="22" />
+                    <rect x="84" y="0" width="1" height="22" />
+                    <rect x="87" y="0" width="3" height="22" />
+                    <rect x="92" y="0" width="2" height="22" />
+                    <rect x="96" y="0" width="1" height="22" />
+                    <rect x="99" y="0" width="4" height="22" />
+                    <rect x="105" y="0" width="2" height="22" />
+                    <rect x="109" y="0" width="1" height="22" />
+                    <rect x="112" y="0" width="3" height="22" />
+                    <rect x="117" y="0" width="2" height="22" />
+                    <rect x="121" y="0" width="1" height="22" />
+                    <rect x="124" y="0" width="4" height="22" />
+                    <rect x="130" y="0" width="2" height="22" />
+                    <rect x="134" y="0" width="1" height="22" />
+                    <rect x="137" y="0" width="3" height="22" />
+                    <rect x="142" y="0" width="2" height="22" />
+                    <rect x="146" y="0" width="1" height="22" />
+                    <rect x="149" y="0" width="4" height="22" />
+                    <rect x="155" y="0" width="2" height="22" />
+                    <rect x="158" y="0" width="2" height="22" />
+                  </svg>
                 </div>
-                <p className="text-[8.5px] font-extrabold tracking-[0.15em] text-brand-600 uppercase mt-2">
+                <span className="text-[11px] font-mono tracking-[0.25em] text-gray-800 font-bold uppercase bg-gray-100 px-3 py-0.5 rounded border border-gray-200">
+                  PASS-{passCode || 'VERIFIED'}
+                </span>
+                <p className="text-[9px] font-extrabold tracking-[0.15em] text-brand-600 uppercase mt-1">
                   {websiteName
                     ? websiteName.toUpperCase()
                     : cleanDomain

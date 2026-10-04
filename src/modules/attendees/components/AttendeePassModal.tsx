@@ -285,8 +285,54 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
           </div>
 
           {/* Passcode representation & barcode */}
-          <div className="mt-5 flex flex-col items-center gap-1 w-full">
-            <div className="h-9 w-full bg-[repeating-linear-gradient(90deg,currentColor,currentColor_2px,transparent_2px,transparent_6px)] text-gray-400 dark:text-navy-700 opacity-60 rounded-md" />
+          <div className="mt-5 flex flex-col items-center gap-1.5 w-full">
+            <div className="flex items-center justify-center h-7 w-full">
+              <svg
+                viewBox="0 0 160 22"
+                className="h-6 w-52 opacity-80 fill-current text-gray-700 dark:text-navy-300"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect x="0" y="0" width="2" height="22" />
+                <rect x="4" y="0" width="1" height="22" />
+                <rect x="7" y="0" width="3" height="22" />
+                <rect x="12" y="0" width="2" height="22" />
+                <rect x="16" y="0" width="1" height="22" />
+                <rect x="19" y="0" width="4" height="22" />
+                <rect x="25" y="0" width="2" height="22" />
+                <rect x="29" y="0" width="1" height="22" />
+                <rect x="32" y="0" width="3" height="22" />
+                <rect x="37" y="0" width="2" height="22" />
+                <rect x="41" y="0" width="1" height="22" />
+                <rect x="44" y="0" width="4" height="22" />
+                <rect x="50" y="0" width="2" height="22" />
+                <rect x="54" y="0" width="1" height="22" />
+                <rect x="57" y="0" width="3" height="22" />
+                <rect x="62" y="0" width="2" height="22" />
+                <rect x="66" y="0" width="1" height="22" />
+                <rect x="69" y="0" width="3" height="22" />
+                <rect x="74" y="0" width="2" height="22" />
+                <rect x="78" y="0" width="4" height="22" />
+                <rect x="84" y="0" width="1" height="22" />
+                <rect x="87" y="0" width="3" height="22" />
+                <rect x="92" y="0" width="2" height="22" />
+                <rect x="96" y="0" width="1" height="22" />
+                <rect x="99" y="0" width="4" height="22" />
+                <rect x="105" y="0" width="2" height="22" />
+                <rect x="109" y="0" width="1" height="22" />
+                <rect x="112" y="0" width="3" height="22" />
+                <rect x="117" y="0" width="2" height="22" />
+                <rect x="121" y="0" width="1" height="22" />
+                <rect x="124" y="0" width="4" height="22" />
+                <rect x="130" y="0" width="2" height="22" />
+                <rect x="134" y="0" width="1" height="22" />
+                <rect x="137" y="0" width="3" height="22" />
+                <rect x="142" y="0" width="2" height="22" />
+                <rect x="146" y="0" width="1" height="22" />
+                <rect x="149" y="0" width="4" height="22" />
+                <rect x="155" y="0" width="2" height="22" />
+                <rect x="158" y="0" width="2" height="22" />
+              </svg>
+            </div>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs font-mono tracking-widest text-gray-800 dark:text-white font-bold bg-gray-100 dark:bg-navy-900 px-3 py-1 rounded-lg border border-gray-200 dark:border-navy-700">
                 PASS-{passCode || '—'}
