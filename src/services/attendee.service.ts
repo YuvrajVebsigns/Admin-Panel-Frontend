@@ -8,10 +8,15 @@ import {
 } from '@/modules/attendees/types/attendee.types';
 
 export const attendeeService = {
-  downloadBulkPassSheets: async (eventId: string, eventTitle?: string): Promise<void> => {
-    const blob = await apiFetchBlob(`/admin/attendees/event/${eventId}/bulk-pass-pdf`);
+  downloadBulkPassSheets: async (
+    eventId: string,
+    eventTitle?: string,
+    cardsPerRow: number = 3,
+  ): Promise<void> => {
+    const query = cardsPerRow ? `?cardsPerRow=${cardsPerRow}` : '';
+    const blob = await apiFetchBlob(`/admin/attendees/event/${eventId}/bulk-pass-pdf${query}`);
     const safeTitle = (eventTitle || 'Event').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `${safeTitle}_12x18_Pass_Sheets.pdf`;
+    const filename = `${safeTitle}_12x18_${cardsPerRow}x3_Pass_Sheets.pdf`;
     triggerFileDownload(blob, filename);
   },
   getAttendeesByEvent: async (eventId: string): Promise<Attendee[]> => {
