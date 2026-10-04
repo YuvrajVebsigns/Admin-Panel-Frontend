@@ -35,7 +35,7 @@ import { AttendeePassModal } from './AttendeePassModal';
 export const AttendeeDetailsView: React.FC = () => {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = (params?.id as string) || '';
 
   const { data: attendee, isLoading, error } = useAttendee(id);
   const checkInMutation = useCheckInAttendee();
@@ -46,16 +46,53 @@ export const AttendeeDetailsView: React.FC = () => {
   // Extract primary event assigned ID
   const primaryEventId =
     attendee && typeof attendee.eventId === 'object' && attendee.eventId
-      ? attendee.eventId.id
-      : (attendee?.eventId as string);
+      ? attendee.eventId.id || (attendee.eventId as { _id?: string })._id || ''
+      : (attendee?.eventId as string) || '';
 
   // Query full event details mapped to this registration
   const { data: fullEvent, isLoading: isEventLoading } = useEvent(primaryEventId || '');
 
+  const formatDateTime = (dateStr?: string | Date, options?: Intl.DateTimeFormatOptions) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString(
+        undefined,
+        options || {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        },
+      );
+    } catch {
+      return '—';
+    }
+  };
+
+  const formatDateOnly = (dateStr?: string | Date) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString([], {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return '';
+    }
+  };
+
   const handleCheckIn = async (passCode: string, name: string) => {
     try {
       await checkInMutation.mutateAsync(passCode);
-      toast.success(`${name} has been successfully checked in!`);
+      toast.success(`${name || 'Attendee'} has been successfully checked in!`);
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || 'Failed to check in attendee');
@@ -80,13 +117,13 @@ export const AttendeeDetailsView: React.FC = () => {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        width: element.offsetWidth || 380,
+        height: element.offsetHeight || 580,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdfWidth = 100; // mm
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth; // mm (exact aspect ratio, 0 margin)
+      const pdfHeight = ((element.offsetHeight || 580) * pdfWidth) / (element.offsetWidth || 380); // mm (exact aspect ratio, 0 margin)
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -111,7 +148,7 @@ export const AttendeeDetailsView: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: AttendeeStatus) => {
+  const getStatusColor = (status?: AttendeeStatus) => {
     switch (status) {
       case AttendeeStatus.CHECKED_IN:
         return 'success';
@@ -120,6 +157,7 @@ export const AttendeeDetailsView: React.FC = () => {
       case AttendeeStatus.INVITED:
         return 'warning';
       case AttendeeStatus.BLOCKED:
+      case AttendeeStatus.REJECTED:
         return 'error';
       default:
         return 'light';
@@ -155,16 +193,9 @@ export const AttendeeDetailsView: React.FC = () => {
   }
 
   const event = attendee.eventId;
-  const eventTitle = typeof event === 'object' && event ? event.title : 'Event';
+  const eventTitle = typeof event === 'object' && event ? event.title || 'Event' : 'Event';
   const eventDate =
-    typeof event === 'object' && event
-      ? new Date(event.startDate).toLocaleDateString([], {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-      : '';
+    typeof event === 'object' && event && event.startDate ? formatDateOnly(event.startDate) : '';
   const eventLocation =
     typeof event === 'object' && event ? event.location?.address || 'Online Venue' : 'Online Venue';
 
@@ -173,7 +204,7 @@ export const AttendeeDetailsView: React.FC = () => {
   const attendeeOrg = attendee.organization || attendee.registrationDetails?.organization;
   const attendeeRegType =
     attendee.registrationType || attendee.registrationDetails?.registrationType;
-  const attendeeEmail = attendee.email || attendee.registrationDetails?.email;
+  const attendeeEmail = attendee.email || attendee.registrationDetails?.email || '—';
   const attendeePersonalEmail =
     attendee.personalEmail || attendee.registrationDetails?.personalEmail;
   const attendeeCountryCode =
@@ -199,7 +230,7 @@ export const AttendeeDetailsView: React.FC = () => {
   const regDetailWebsite = attendee.registrationDetails?.websiteId;
   const regDetailDomain =
     typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
-      ? regDetailWebsite.domain
+      ? (regDetailWebsite as { domain?: string }).domain
       : undefined;
 
   const firstFullEventSite =
@@ -239,7 +270,7 @@ export const AttendeeDetailsView: React.FC = () => {
   const websiteName =
     (typeof attendee.websiteId === 'object' && attendee.websiteId?.name) ||
     (typeof regDetailWebsite === 'object' && regDetailWebsite && 'name' in regDetailWebsite
-      ? regDetailWebsite.name
+      ? (regDetailWebsite as { name?: string }).name
       : undefined) ||
     fullEventSiteName ||
     eventSiteName ||
@@ -249,11 +280,11 @@ export const AttendeeDetailsView: React.FC = () => {
     (typeof fullEvent === 'object' && fullEvent?.slug) ||
     (typeof event === 'object' && event ? event.slug || '' : '');
 
-  const cleanDomain = String(websiteDomain)
+  const cleanDomain = String(websiteDomain || 'core-mediagroup.com')
     .replace(/^https?:\/\//i, '')
     .replace(/\/+$/, '')
     .trim();
-  const cleanSlug = String(eventSlug)
+  const cleanSlug = String(eventSlug || '')
     .replace(/^\/+|\/+$/g, '')
     .trim();
   const passCode = attendee.passCode || '';
@@ -318,7 +349,8 @@ export const AttendeeDetailsView: React.FC = () => {
             Print Pass (PDF)
           </Button>
           {attendee.status !== AttendeeStatus.CHECKED_IN &&
-            attendee.status !== AttendeeStatus.BLOCKED && (
+            attendee.status !== AttendeeStatus.BLOCKED &&
+            attendee.status !== AttendeeStatus.REJECTED && (
               <Button
                 onClick={() => handleCheckIn(attendee.passCode, attendeeName)}
                 className="flex items-center gap-2 rounded-xl text-xs py-2"
@@ -366,7 +398,7 @@ export const AttendeeDetailsView: React.FC = () => {
 
               <div className="mt-4">
                 <Badge color={getStatusColor(attendee.status)} variant="light">
-                  {attendee.status.replace('_', ' ')}
+                  {String(attendee.status || 'INVITED').replace(/_/g, ' ')}
                 </Badge>
               </div>
             </div>
@@ -494,7 +526,7 @@ export const AttendeeDetailsView: React.FC = () => {
                     Pass Code
                   </p>
                   <p className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
-                    {attendee.passCode}
+                    {attendee.passCode || '—'}
                   </p>
                 </div>
               </div>
@@ -508,7 +540,7 @@ export const AttendeeDetailsView: React.FC = () => {
                     Registration Date
                   </p>
                   <p className="text-xs font-semibold text-gray-800 dark:text-white line-clamp-1">
-                    {new Date(attendeeRegisteredAt).toLocaleString(undefined, {
+                    {formatDateTime(attendeeRegisteredAt, {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -553,10 +585,12 @@ export const AttendeeDetailsView: React.FC = () => {
                   <p className="text-xs font-semibold text-gray-800 dark:text-white mt-1">
                     {attendee.checkedInBy ? (
                       <span>
-                        {attendee.checkedInBy.name} ({attendee.checkedInBy.email})
+                        {typeof attendee.checkedInBy === 'object' && attendee.checkedInBy !== null
+                          ? `${attendee.checkedInBy.name || 'Admin'} ${attendee.checkedInBy.email ? `(${attendee.checkedInBy.email})` : ''}`.trim()
+                          : String(attendee.checkedInBy)}
                       </span>
                     ) : (
-                      <span className="text-gray-505 font-medium">Self / QR Pass Scan</span>
+                      <span className="text-gray-500 font-medium">Self / QR Pass Scan</span>
                     )}
                   </p>
                 </div>
@@ -566,14 +600,15 @@ export const AttendeeDetailsView: React.FC = () => {
                       Check-in Time
                     </p>
                     <p className="text-xs font-semibold text-gray-800 dark:text-white mt-1">
-                      {new Date(attendee.checkedInAt).toLocaleString()}
+                      {formatDateTime(attendee.checkedInAt)}
                     </p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            attendee.status !== AttendeeStatus.BLOCKED && (
+            attendee.status !== AttendeeStatus.BLOCKED &&
+            attendee.status !== AttendeeStatus.REJECTED && (
               <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs relative overflow-hidden space-y-4">
                 <div className="absolute top-0 inset-x-0 h-1.5 bg-brand-500" />
                 <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -585,7 +620,7 @@ export const AttendeeDetailsView: React.FC = () => {
                   your admin details in the audit log.
                 </p>
                 <Button
-                  onClick={() => handleCheckIn(attendee.passCode, attendee.name)}
+                  onClick={() => handleCheckIn(attendee.passCode, attendeeName)}
                   className="w-full flex items-center justify-center gap-2 rounded-xl text-xs py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold"
                 >
                   <CheckCircle size={15} />
@@ -703,18 +738,22 @@ export const AttendeeDetailsView: React.FC = () => {
               </div>
               {fullEvent && (
                 <div className="flex items-center gap-2">
-                  <Badge
-                    color={fullEvent.type === 'ONLINE' ? 'success' : 'primary'}
-                    variant="light"
-                  >
-                    {fullEvent.type}
-                  </Badge>
-                  <Badge
-                    color={fullEvent.status === 'ON_GOING' ? 'success' : 'primary'}
-                    variant="light"
-                  >
-                    {fullEvent.status.replace('_', ' ')}
-                  </Badge>
+                  {fullEvent.type && (
+                    <Badge
+                      color={fullEvent.type === 'ONLINE' ? 'success' : 'primary'}
+                      variant="light"
+                    >
+                      {fullEvent.type}
+                    </Badge>
+                  )}
+                  {fullEvent.status && (
+                    <Badge
+                      color={fullEvent.status === 'ON_GOING' ? 'success' : 'primary'}
+                      variant="light"
+                    >
+                      {String(fullEvent.status).replace(/_/g, ' ')}
+                    </Badge>
+                  )}
                 </div>
               )}
             </div>
@@ -735,10 +774,10 @@ export const AttendeeDetailsView: React.FC = () => {
               <div className="space-y-6">
                 {/* Event Banner */}
                 {fullEvent.bannerImage?.original && (
-                  <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-gray-150 dark:border-navy-750">
+                  <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-gray-150 dark:border-navy-755">
                     <img
                       src={fullEvent.bannerImage.original}
-                      alt={fullEvent.title}
+                      alt={fullEvent.title || 'Event Banner'}
                       className="object-cover w-full h-full hover:scale-[1.02] transition-transform duration-500"
                     />
                   </div>
@@ -766,28 +805,14 @@ export const AttendeeDetailsView: React.FC = () => {
                         Date & Time
                       </span>
                     </div>
-                    <div className="text-xs text-gray-705 dark:text-gray-300 space-y-2 font-medium">
+                    <div className="text-xs text-gray-700 dark:text-gray-300 space-y-2 font-medium">
                       <p>
                         <span className="text-gray-400">Start:</span>{' '}
-                        {new Date(fullEvent.startDate).toLocaleString(undefined, {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatDateTime(fullEvent.startDate)}
                       </p>
                       <p>
                         <span className="text-gray-400">End:</span>{' '}
-                        {new Date(fullEvent.endDate).toLocaleString(undefined, {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatDateTime(fullEvent.endDate)}
                       </p>
                     </div>
                   </div>
@@ -828,7 +853,7 @@ export const AttendeeDetailsView: React.FC = () => {
                             Location Venue
                           </span>
                         </div>
-                        <div className="text-xs text-gray-705 dark:text-gray-300 space-y-1 font-medium">
+                        <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1 font-medium">
                           <p className="font-bold text-gray-900 dark:text-white">
                             {fullEvent.location?.city || 'Venue'}
                           </p>
