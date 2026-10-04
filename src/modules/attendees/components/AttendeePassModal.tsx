@@ -36,15 +36,24 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
   const [dynamicQrUrl, setDynamicQrUrl] = useState<string>('');
 
   const event = attendee?.eventId;
-  const eventTitle = typeof event === 'object' && event ? event.title : 'Event';
+  const eventTitle = typeof event === 'object' && event ? event.title || 'Event' : 'Event';
   const eventDate =
     typeof event === 'object' && event && event.startDate
-      ? new Date(event.startDate).toLocaleDateString([], {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
+      ? (() => {
+          try {
+            const d = new Date(event.startDate);
+            return isNaN(d.getTime())
+              ? ''
+              : d.toLocaleDateString([], {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                });
+          } catch {
+            return '';
+          }
+        })()
       : '';
   const eventLocation =
     typeof event === 'object' && event ? event.location?.address || 'Online Venue' : 'Online Venue';
@@ -53,7 +62,7 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
   const regDetailWebsite = attendee?.registrationDetails?.websiteId;
   const regDetailDomain =
     typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
-      ? regDetailWebsite.domain
+      ? (regDetailWebsite as { domain?: string }).domain
       : undefined;
 
   const websiteDomain =
@@ -67,11 +76,11 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
       (event.websites[0] as { domain?: string }).domain) ||
     'core-mediagroup.com';
   const eventSlug = typeof event === 'object' && event ? event.slug || '' : '';
-  const cleanDomain = String(websiteDomain)
+  const cleanDomain = String(websiteDomain || 'core-mediagroup.com')
     .replace(/^https?:\/\//i, '')
     .replace(/\/+$/, '')
     .trim();
-  const cleanSlug = String(eventSlug)
+  const cleanSlug = String(eventSlug || '')
     .replace(/^\/+|\/+$/g, '')
     .trim();
   const passCode = attendee?.passCode || '';
@@ -139,9 +148,13 @@ export const AttendeePassModal: React.FC<AttendeePassModalProps> = ({
       toast.error('QR code not available for download');
       return;
     }
+    const safeName = (attendee.name || attendee.registrationDetails?.name || 'Attendee').replace(
+      /\s+/g,
+      '_',
+    );
     const link = document.createElement('a');
     link.href = qrSrc;
-    link.download = `${attendee.name.replace(/\s+/g, '_')}_Pass_QR.png`;
+    link.download = `${safeName}_Pass_QR.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

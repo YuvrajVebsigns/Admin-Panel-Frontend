@@ -75,11 +75,11 @@ export default function EditAttendeePage() {
     if (attendee) {
       const evId =
         typeof attendee.eventId === 'object' && attendee.eventId
-          ? attendee.eventId.id
+          ? attendee.eventId.id || (attendee.eventId as { _id?: string })._id
           : attendee.eventId;
       const webId =
         typeof attendee.websiteId === 'object' && attendee.websiteId
-          ? attendee.websiteId.id
+          ? attendee.websiteId.id || (attendee.websiteId as { _id?: string })._id
           : attendee.websiteId;
 
       reset({
