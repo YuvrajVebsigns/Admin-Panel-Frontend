@@ -27,7 +27,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { useEvent } from '@/modules/events/hooks/useEvents';
 import { AttendeePassModal } from './AttendeePassModal';
@@ -648,35 +648,57 @@ export const AttendeeDetailsView: React.FC = () => {
           <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
             <div
               id="print-pass-area"
-              className="bg-white text-gray-900 flex flex-col items-center w-[380px] min-h-[580px] text-center"
+              className="flex flex-col items-center w-[380px] min-h-[580px] text-center"
               style={{
                 fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
                 boxSizing: 'border-box',
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
               }}
             >
               {/* Header Banner (Full width edge-to-edge) */}
-              <div className="w-full bg-brand-600 px-6 py-5 text-center text-white relative">
-                <p className="text-[9.5px] font-extrabold tracking-[0.2em] uppercase text-brand-200">
+              <div
+                className="w-full px-6 py-5 text-center relative"
+                style={{ backgroundColor: '#c1161c', color: '#ffffff' }}
+              >
+                <p
+                  className="text-[9.5px] font-extrabold tracking-[0.2em] uppercase"
+                  style={{ color: '#fee2e2' }}
+                >
                   Official Event Admission Pass
                 </p>
-                <h2 className="text-lg font-extrabold mt-1 tracking-tight text-white leading-tight">
+                <h2 className="text-lg font-extrabold mt-1 tracking-tight leading-tight text-white">
                   {eventTitle}
                 </h2>
                 {eventDate && (
-                  <p className="text-[10.5px] text-brand-100 font-medium mt-1">{eventDate}</p>
+                  <p className="text-[10.5px] font-medium mt-1" style={{ color: '#fee2e2' }}>
+                    {eventDate}
+                  </p>
                 )}
               </div>
 
               {/* Perforation Divider Line */}
-              <div className="w-full border-t-2 border-dashed border-gray-300 relative">
-                <div className="absolute -left-3 -top-2.5 h-5 w-5 rounded-full bg-gray-100" />
-                <div className="absolute -right-3 -top-2.5 h-5 w-5 rounded-full bg-gray-100" />
+              <div
+                className="w-full border-t-2 border-dashed relative"
+                style={{ borderColor: '#cbd5e1' }}
+              >
+                <div
+                  className="absolute -left-3 -top-2.5 h-5 w-5 rounded-full"
+                  style={{ backgroundColor: '#ffffff' }}
+                />
+                <div
+                  className="absolute -right-3 -top-2.5 h-5 w-5 rounded-full"
+                  style={{ backgroundColor: '#ffffff' }}
+                />
               </div>
 
               {/* Main Card Body */}
               <div className="w-full px-6 flex flex-col items-center justify-start pt-4 pb-2">
                 {/* QR Code Container */}
-                <div className="h-40 w-40 border border-gray-200 rounded-2xl bg-white p-2.5 shadow-sm flex items-center justify-center">
+                <div
+                  className="h-40 w-40 rounded-2xl p-2.5 shadow-sm flex items-center justify-center border"
+                  style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+                >
                   {printQrDataUrl || attendee.qrCode ? (
                     <img
                       src={printQrDataUrl || attendee.qrCode}
@@ -684,43 +706,73 @@ export const AttendeeDetailsView: React.FC = () => {
                       className="object-contain w-full h-full"
                     />
                   ) : (
-                    <div className="text-gray-400 text-xs">QR Code unavailable</div>
+                    <div className="text-xs" style={{ color: '#94a3b8' }}>
+                      QR Code unavailable
+                    </div>
                   )}
                 </div>
 
                 {/* Attendee Info */}
                 <div className="mt-3.5 w-full">
-                  <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug">
+                  <h3
+                    className="text-lg font-bold tracking-tight leading-snug"
+                    style={{ color: '#0f172a' }}
+                  >
                     {attendeeName}
                   </h3>
-                  <p className="text-xs font-medium text-gray-500 mt-0.5 leading-normal">
+                  <p
+                    className="text-xs font-medium mt-0.5 leading-normal"
+                    style={{ color: '#64748b' }}
+                  >
                     {attendeeEmail}
                   </p>
                   {(attendeeOrg || attendeeJobTitle) && (
-                    <div className="inline-block mt-2 text-xs text-brand-700 font-bold bg-brand-50 border border-brand-200 px-3 py-1 rounded-full leading-normal">
+                    <div
+                      className="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full leading-normal border"
+                      style={{
+                        backgroundColor: '#fee2e2',
+                        borderColor: '#fca5a5',
+                        color: '#991b1b',
+                      }}
+                    >
                       {[attendeeJobTitle, attendeeOrg].filter(Boolean).join(' • ')}
                     </div>
                   )}
                 </div>
 
                 {/* Date & Location Details Box */}
-                <div className="w-full mt-3.5 bg-gray-50/90 rounded-2xl p-3.5 space-y-2 text-left border border-gray-200/80">
+                <div
+                  className="w-full mt-3.5 rounded-2xl p-3.5 space-y-2 text-left border"
+                  style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+                >
                   {eventDate && (
                     <div className="flex items-start gap-2 text-xs leading-relaxed">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-24 shrink-0 pt-0.5">
+                      <span
+                        className="text-[10px] uppercase tracking-wider font-bold w-24 shrink-0 pt-0.5"
+                        style={{ color: '#94a3b8' }}
+                      >
                         Date & Time:
                       </span>
-                      <span className="font-semibold text-gray-800 flex-1 leading-normal">
+                      <span
+                        className="font-semibold flex-1 leading-normal"
+                        style={{ color: '#1e293b' }}
+                      >
                         {eventDate}
                       </span>
                     </div>
                   )}
                   {eventLocation && (
                     <div className="flex items-start gap-2 text-xs leading-relaxed">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold w-24 shrink-0 pt-0.5">
+                      <span
+                        className="text-[10px] uppercase tracking-wider font-bold w-24 shrink-0 pt-0.5"
+                        style={{ color: '#94a3b8' }}
+                      >
                         Venue:
                       </span>
-                      <span className="font-semibold text-gray-800 flex-1 leading-normal break-words">
+                      <span
+                        className="font-semibold flex-1 leading-normal break-words"
+                        style={{ color: '#1e293b' }}
+                      >
                         {eventLocation}
                       </span>
                     </div>
@@ -779,10 +831,20 @@ export const AttendeeDetailsView: React.FC = () => {
                     <rect x="158" y="0" width="2" height="22" />
                   </svg>
                 </div>
-                <span className="text-[11px] font-mono tracking-[0.25em] text-gray-800 font-bold uppercase bg-gray-100 px-3 py-0.5 rounded border border-gray-200">
+                <span
+                  className="text-[11px] font-mono tracking-[0.25em] font-bold uppercase px-3 py-0.5 rounded border"
+                  style={{
+                    backgroundColor: '#f1f5f9',
+                    borderColor: '#e2e8f0',
+                    color: '#0f172a',
+                  }}
+                >
                   PASS-{passCode || 'VERIFIED'}
                 </span>
-                <p className="text-[9px] font-extrabold tracking-[0.15em] text-brand-600 uppercase mt-1">
+                <p
+                  className="text-[9px] font-extrabold tracking-[0.15em] uppercase mt-1"
+                  style={{ color: '#c1161c' }}
+                >
                   {websiteName
                     ? websiteName.toUpperCase()
                     : cleanDomain

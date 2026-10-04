@@ -60,6 +60,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
 
   const [isBulkPassModalOpen, setIsBulkPassModalOpen] = useState(false);
   const [selectedBulkEventId, setSelectedBulkEventId] = useState<string>('');
+  const [bulkCardsPerRow, setBulkCardsPerRow] = useState<number>(3);
   const [isGeneratingBulkPdf, setIsGeneratingBulkPdf] = useState(false);
 
   const { data, isLoading } = useAttendees(params);
@@ -79,7 +80,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
     const toastId = toast.loading(`Generating 12x18 Bulk Pass Sheets for ${eventTitle}...`);
 
     try {
-      await attendeeService.downloadBulkPassSheets(eventIdToUse, eventTitle);
+      await attendeeService.downloadBulkPassSheets(eventIdToUse, eventTitle, bulkCardsPerRow);
       toast.success(`12x18 Pass Sheets for ${eventTitle} downloaded successfully!`, {
         id: toastId,
       });
@@ -688,7 +689,9 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                     Bulk 12x18 Pass Sheets
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    6 invitation passes per 12x18 press sheet
+                    {bulkCardsPerRow === 3
+                      ? '3 cards/row • 9 neck-hanging badges per 12x18 sheet'
+                      : '2 cards/row • 6 wide passes per 12x18 sheet'}
                   </p>
                 </div>
               </div>
@@ -700,12 +703,58 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
               </button>
             </div>
 
+            {/* Sheet Layout Selection */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                Sheet Layout & Card Format
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  onClick={() => setBulkCardsPerRow(3)}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    bulkCardsPerRow === 3
+                      ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-950 dark:text-indigo-200 ring-2 ring-indigo-500/20 shadow-sm'
+                      : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold">3 Cards / Row</span>
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand-50 text-brand-600 border border-brand-200">
+                      9 per sheet
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-snug">
+                    Standard Neck-Hanging Badge / Lanyard Card (3.68&quot; × 5.59&quot;)
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setBulkCardsPerRow(2)}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    bulkCardsPerRow === 2
+                      ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-950 dark:text-indigo-200 ring-2 ring-indigo-500/20 shadow-sm'
+                      : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold">2 Cards / Row</span>
+                    <span className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-gray-300">
+                      6 per sheet
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-snug">
+                    Wide Invitation Pass Format (5.44&quot; × 5.47&quot;)
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-4">
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Select Event for Bulk Pass Printing
               </label>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {events.map((ev) => (
                   <div
                     key={ev.id}
@@ -773,7 +822,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                 ) : (
                   <Printer size={16} />
                 )}
-                Download 12x18 PDF
+                Download 12x18 PDF ({bulkCardsPerRow * 3} Passes/Sheet)
               </Button>
             </div>
           </div>
