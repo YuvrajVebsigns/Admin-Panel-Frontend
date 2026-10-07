@@ -26,10 +26,12 @@ import {
   Sparkles,
   Mic,
   UserCheck,
+  UploadCloud,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import toast from 'react-hot-toast';
 import { ExportButton } from '@/components/common/ExportButton';
+import { RegistrationBulkUploadModal } from './RegistrationBulkUploadModal';
 import { dataExportService } from '@/services/dataExport.service';
 import { PERMISSIONS } from '@/constants/permissions';
 
@@ -49,7 +51,9 @@ export const RegistreeTable: React.FC = () => {
     eventOnly: true,
   });
 
-  const { data, isLoading } = useRegistrees(params);
+  const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
+
+  const { data, isLoading, refetch } = useRegistrees(params);
   const { events } = useEvents();
 
   const deleteMutation = useDeleteRegistree();
@@ -718,47 +722,58 @@ export const RegistreeTable: React.FC = () => {
           </div>
         </div>
 
-        <ExportButton
-          permission={PERMISSIONS.REGISTRATIONS_EXPORT}
-          exportTitle="Export Registrees Directory"
-          exportDescription="Generate an analytical spreadsheet of event registrations, approval statuses, corporate affiliations, and registration types."
-          showStatusFilter={true}
-          statusOptions={[
-            { value: 'approved', label: 'Approved' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'rejected', label: 'Rejected' },
-            { value: 'blocked', label: 'Blocked' },
-          ]}
-          customFilters={[
-            {
-              key: 'eventId',
-              label: 'Assigned Event',
-              placeholder: 'All Events',
-              options: events.map((ev) => ({
-                value: ev.id,
-                label: ev.title,
-              })),
-            },
-          ]}
-          sheetsInfo={[
-            {
-              sheet: 'Sheet 1: Analytics',
-              desc: 'KPI cards with total registrations, approvals, and breakdown.',
-            },
-            {
-              sheet: 'Sheet 2: Registrees Directory',
-              desc: 'Detailed table with name, designation, organization, email, registration type, and approval status.',
-            },
-          ]}
-          initialFilters={{
-            search: params.search,
-            eventId: params.eventId,
-            status: params.status,
-          }}
-          onExport={(filters) =>
-            dataExportService.exportRegistrees({ ...filters, eventOnly: true })
-          }
-        />
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+          <button
+            type="button"
+            onClick={() => setIsBulkUploadModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-theme-xs hover:shadow-theme-md transition-all cursor-pointer shrink-0"
+          >
+            <UploadCloud size={15} />
+            <span>Bulk Upload</span>
+          </button>
+
+          <ExportButton
+            permission={PERMISSIONS.REGISTRATIONS_EXPORT}
+            exportTitle="Export Registrees Directory"
+            exportDescription="Generate an analytical spreadsheet of event registrations, approval statuses, corporate affiliations, and registration types."
+            showStatusFilter={true}
+            statusOptions={[
+              { value: 'approved', label: 'Approved' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'rejected', label: 'Rejected' },
+              { value: 'blocked', label: 'Blocked' },
+            ]}
+            customFilters={[
+              {
+                key: 'eventId',
+                label: 'Assigned Event',
+                placeholder: 'All Events',
+                options: events.map((ev) => ({
+                  value: ev.id,
+                  label: ev.title,
+                })),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI cards with total registrations, approvals, and breakdown.',
+              },
+              {
+                sheet: 'Sheet 2: Registrees Directory',
+                desc: 'Detailed table with name, designation, organization, email, registration type, and approval status.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              eventId: params.eventId,
+              status: params.status,
+            }}
+            onExport={(filters) =>
+              dataExportService.exportRegistrees({ ...filters, eventOnly: true })
+            }
+          />
+        </div>
       </div>
 
       {/* Main DataTable */}
@@ -775,6 +790,13 @@ export const RegistreeTable: React.FC = () => {
         onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
         onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
         searchPlaceholder="Search by name, email, phone, passcode, organization, designation..."
+      />
+
+      {/* Bulk Upload Modal */}
+      <RegistrationBulkUploadModal
+        isOpen={isBulkUploadModalOpen}
+        onClose={() => setIsBulkUploadModalOpen(false)}
+        onSuccess={() => refetch()}
       />
     </div>
   );
