@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Clock,
   Eye,
+  QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
@@ -22,6 +23,7 @@ import { Modal } from '@/components/ui/modal';
 import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
 import { PERMISSIONS } from '@/constants/permissions';
+import { EventQrPosterModal } from './EventQrPosterModal';
 
 interface EventTableProps {
   websiteId?: string;
@@ -32,6 +34,9 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
   const router = useRouter();
   const { events, isLoading, deleteEvent } = useEvents({ websiteId });
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
+  const [selectedPosterEvent, setSelectedPosterEvent] = React.useState<EventManagement | null>(
+    null,
+  );
 
   const stats = React.useMemo(() => {
     const total = events.length;
@@ -133,6 +138,13 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
       header: 'Actions',
       accessor: (event) => (
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSelectedPosterEvent(event)}
+            className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 transition-colors"
+            title="Generate Registration QR Poster"
+          >
+            <QrCode size={18} />
+          </button>
           <button
             onClick={() => router.push(`/events/${event.id}/view`)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-navy-700 rounded-lg text-gray-500 hover:text-brand-500 transition-colors"
@@ -289,6 +301,14 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
           </div>
         </div>
       </Modal>
+
+      {selectedPosterEvent && (
+        <EventQrPosterModal
+          isOpen={!!selectedPosterEvent}
+          onClose={() => setSelectedPosterEvent(null)}
+          event={selectedPosterEvent}
+        />
+      )}
     </div>
   );
 };
