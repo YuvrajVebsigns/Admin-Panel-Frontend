@@ -38,6 +38,9 @@ export interface Attendee {
   message?: string;
   sponsorConsent?: boolean;
   status: AttendeeStatus;
+  registrationSource?: string;
+  isOffline?: boolean;
+  offlineKey?: string;
   passCode: string;
   qrCode?: string;
   websiteId?:

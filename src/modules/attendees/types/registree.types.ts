@@ -36,6 +36,9 @@ export interface RegistreeHistoryItem {
   passCode?: string;
   qrCode?: string;
   status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'BLOCKED';
+  registrationSource?: string;
+  isOffline?: boolean;
+  offlineKey?: string;
   attended?: boolean;
   attendedAt?: string;
   savedAt?: string;

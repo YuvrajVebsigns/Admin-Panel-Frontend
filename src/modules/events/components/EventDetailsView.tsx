@@ -19,6 +19,7 @@ import {
   Search,
   Printer,
   Loader2,
+  QrCode,
 } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
 import {
@@ -37,13 +38,18 @@ import { Attendee } from '@/modules/attendees/types/attendee.types';
 import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
 import { EventMeetingModal } from './EventMeetingModal';
 import { EventScheduledEmailModal } from './EventScheduledEmailModal';
+import { EventQrPosterModal } from './EventQrPosterModal';
 
 export const EventDetailsView: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
   const [attendeeSearch, setAttendeeSearch] = useState('');
+  const [attendeeSourceFilter, setAttendeeSourceFilter] = useState<'all' | 'offline' | 'online'>(
+    'all',
+  );
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
   const [isScheduledEmailModalOpen, setIsScheduledEmailModalOpen] = useState(false);
+  const [isQrPosterModalOpen, setIsQrPosterModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<EventMeeting | null>(null);
   const [isGeneratingPassSheets, setIsGeneratingPassSheets] = useState(false);
 
@@ -236,10 +242,14 @@ export const EventDetailsView: React.FC = () => {
     );
   }
 
-  // Calculate attendee check-in counts
+  // Calculate attendee check-in counts and offline vs online
   const totalAttendees = attendees?.length || 0;
   const checkedInAttendees =
     attendees?.filter((a: Attendee) => a.status === 'CHECKED_IN').length || 0;
+  const offlineAttendeesCount = (attendees || []).filter(
+    (a: Attendee) => Boolean(a.isOffline) || a.registrationSource?.toLowerCase() === 'offline',
+  ).length;
+  const onlineAttendeesCount = totalAttendees - offlineAttendeesCount;
 
   // Try to read count from the count API response, or fall back
   const registrationCount =
@@ -249,14 +259,19 @@ export const EventDetailsView: React.FC = () => {
         : attendeeCountData
       : event.totalRegistrations || totalAttendees;
 
-  // Filter attendees list
+  // Filter attendees list with search and source filter
   const filteredAttendees = (attendees || []).filter((a: Attendee) => {
     const term = attendeeSearch.toLowerCase();
-    return (
+    const matchesTerm =
       a.name.toLowerCase().includes(term) ||
       a.email.toLowerCase().includes(term) ||
-      (a.status || '').toLowerCase().includes(term)
-    );
+      (a.status || '').toLowerCase().includes(term);
+    if (!matchesTerm) return false;
+
+    const isOff = Boolean(a.isOffline) || a.registrationSource?.toLowerCase() === 'offline';
+    if (attendeeSourceFilter === 'offline') return isOff;
+    if (attendeeSourceFilter === 'online') return !isOff;
+    return true;
   });
 
   return (
@@ -300,6 +315,14 @@ export const EventDetailsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsQrPosterModalOpen(true)}
+            className="bg-white dark:bg-navy-800 border-purple-200 dark:border-purple-900/50 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-semibold"
+          >
+            <QrCode size={16} className="mr-2 text-purple-500" />
+            Registration QR Poster
+          </Button>
           <Button
             variant="outline"
             onClick={handleDownload12x18Passes}
@@ -895,6 +918,47 @@ export const EventDetailsView: React.FC = () => {
               )}
             </div>
 
+            {/* Source filter tabs */}
+            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setAttendeeSourceFilter('all')}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap',
+                  attendeeSourceFilter === 'all'
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-gray-100 dark:bg-navy-900 text-gray-500 hover:text-gray-900 dark:hover:text-white',
+                )}
+              >
+                All ({totalAttendees})
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttendeeSourceFilter('offline')}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 whitespace-nowrap',
+                  attendeeSourceFilter === 'offline'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40',
+                )}
+              >
+                <QrCode size={10} />
+                Offline Campus ({offlineAttendeesCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttendeeSourceFilter('online')}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap',
+                  attendeeSourceFilter === 'online'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-gray-100 dark:bg-navy-900 text-gray-500 hover:text-gray-900 dark:hover:text-white',
+                )}
+              >
+                Online ({onlineAttendeesCount})
+              </button>
+            </div>
+
             {/* Attendee search */}
             <div className="relative mb-4">
               <Search
@@ -929,18 +993,26 @@ export const EventDetailsView: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col items-end shrink-0 gap-1">
-                      <span
-                        className={cn(
-                          'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md',
-                          attendee.status === 'CHECKED_IN'
-                            ? 'bg-success-50 dark:bg-success-500/10 text-success-600'
-                            : attendee.status === 'REGISTERED'
-                              ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600'
-                              : 'bg-gray-100 dark:bg-navy-850 text-gray-500',
+                      <div className="flex items-center gap-1">
+                        {(attendee.isOffline ||
+                          attendee.registrationSource?.toLowerCase() === 'offline') && (
+                          <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40">
+                            Offline
+                          </span>
                         )}
-                      >
-                        {attendee.status || 'INVITED'}
-                      </span>
+                        <span
+                          className={cn(
+                            'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md',
+                            attendee.status === 'CHECKED_IN'
+                              ? 'bg-success-50 dark:bg-success-500/10 text-success-600'
+                              : attendee.status === 'REGISTERED'
+                                ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600'
+                                : 'bg-gray-100 dark:bg-navy-850 text-gray-500',
+                          )}
+                        >
+                          {attendee.status || 'INVITED'}
+                        </span>
+                      </div>
                       {attendee.checkedInAt && (
                         <span className="text-[8px] text-gray-400">
                           {new Date(attendee.checkedInAt).toLocaleDateString([], {
@@ -976,6 +1048,11 @@ export const EventDetailsView: React.FC = () => {
         onClose={() => setIsScheduledEmailModalOpen(false)}
         event={event}
         onSave={handleSaveScheduledEmails}
+      />
+      <EventQrPosterModal
+        isOpen={isQrPosterModalOpen}
+        onClose={() => setIsQrPosterModalOpen(false)}
+        event={event}
       />
     </div>
   );
