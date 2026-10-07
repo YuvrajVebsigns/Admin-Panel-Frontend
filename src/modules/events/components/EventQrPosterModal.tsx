@@ -284,10 +284,10 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
       <div className="flex flex-col h-[88vh] max-h-[850px] bg-white dark:bg-navy-900">
         {/* Modal Header: Fixed top bar with brand accent and safe spacing away from close button */}
         <div className="relative px-6 py-4 border-b border-gray-100 dark:border-navy-800 shrink-0 bg-white dark:bg-navy-900 pr-16">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 via-brand-500 to-indigo-500" />
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-500/10 text-brand-500 dark:text-brand-400 flex items-center justify-center shrink-0">
                 <QrCode size={20} />
               </div>
               <div>
@@ -295,7 +295,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                     Event Registration QR Poster
                   </h2>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/50">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-500/20">
                     Offline Auto-Approval
                   </span>
                 </div>
@@ -404,16 +404,16 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
               </div>
 
               {/* URL Query Key-Value Parameters (Core auto-approval mechanism) */}
-              <div className="bg-purple-50/50 dark:bg-purple-950/20 p-4 rounded-2xl border border-purple-100 dark:border-purple-900/40 space-y-3">
+              <div className="bg-brand-50/40 dark:bg-brand-500/5 p-4 rounded-2xl border border-brand-100 dark:border-brand-500/20 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-300">
-                    <Sparkles size={14} className="text-purple-500" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+                    <Sparkles size={14} className="text-brand-500" />
                     <span>Custom URL Query Pair</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setQueryValue(generateNewToken())}
-                    className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 flex items-center gap-1 bg-white dark:bg-navy-900 px-2 py-1 rounded-lg border border-purple-200 dark:border-purple-800/60 shadow-xs"
+                    className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 flex items-center gap-1 bg-white dark:bg-navy-900 px-2 py-1 rounded-lg border border-brand-200 dark:border-brand-500/30 shadow-xs hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors"
                   >
                     <RefreshCw size={10} />
                     New Token
@@ -430,7 +430,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                       value={queryKey}
                       onChange={(e) => setQueryKey(e.target.value)}
                       placeholder="offlineKey"
-                      className="w-full text-xs font-mono py-2 px-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-purple-700 dark:text-purple-300 font-semibold"
+                      className="w-full text-xs font-mono py-2 px-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                     />
                   </div>
                   <div>
@@ -442,31 +442,31 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                       value={queryValue}
                       onChange={(e) => setQueryValue(e.target.value)}
                       placeholder="CAMPUS_PASS_01"
-                      className="w-full text-xs font-mono py-2 px-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-purple-700 dark:text-purple-300 font-semibold truncate"
+                      className="w-full text-xs font-mono py-2 px-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-900 dark:text-white font-semibold truncate focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                     />
                   </div>
                 </div>
 
                 <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">
                   When attendees scan this QR code, the frontend extracts{' '}
-                  <code className="text-purple-600 dark:text-purple-400 font-bold">
+                  <code className="text-brand-600 dark:text-brand-400 font-bold">
                     {queryKey || 'offlineKey'}
                   </code>{' '}
                   and submits it with the registration payload for immediate auto-approval.
                 </p>
 
                 {/* Query Toggles */}
-                <div className="pt-2 border-t border-purple-100 dark:border-purple-900/30 space-y-2">
+                <div className="pt-2 border-t border-brand-100 dark:border-brand-500/20 space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-gray-300 select-none">
                     <input
                       type="checkbox"
                       checked={includeEventId}
                       onChange={(e) => setIncludeEventId(e.target.checked)}
-                      className="rounded text-purple-600 focus:ring-purple-500"
+                      className="rounded text-brand-500 focus:ring-brand-500 cursor-pointer"
                     />
                     <span>
                       Pre-select event
-                      <code className="ml-1.5 px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-[10px] font-mono text-purple-700 dark:text-purple-300 font-bold">
+                      <code className="ml-1.5 px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-500/10 text-[10px] font-mono text-brand-700 dark:text-brand-300 font-bold border border-brand-200/50 dark:border-brand-500/20">
                         eventId={event.id ? event.id.slice(-6) : 'auto'}...
                       </code>
                     </span>
@@ -476,11 +476,11 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                       type="checkbox"
                       checked={includeMode}
                       onChange={(e) => setIncludeMode(e.target.checked)}
-                      className="rounded text-purple-600 focus:ring-purple-500"
+                      className="rounded text-brand-500 focus:ring-brand-500 cursor-pointer"
                     />
                     <span>
                       Explicit offline flag
-                      <code className="ml-1.5 px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-[10px] font-mono text-purple-700 dark:text-purple-300 font-bold">
+                      <code className="ml-1.5 px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-500/10 text-[10px] font-mono text-brand-700 dark:text-brand-300 font-bold border border-brand-200/50 dark:border-brand-500/20">
                         mode=offline
                       </code>
                     </span>
@@ -505,7 +505,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                   </button>
                 </div>
                 <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-navy-800">
-                  <p className="text-[11px] font-mono text-purple-700 dark:text-purple-300 font-medium break-all select-all leading-relaxed">
+                  <p className="text-[11px] font-mono text-gray-800 dark:text-gray-200 font-medium break-all select-all leading-relaxed">
                     {finalRegistrationUrl}
                   </p>
                 </div>
@@ -553,7 +553,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
               <div className="w-full bg-gray-50/70 dark:bg-navy-950/60 rounded-2xl border border-gray-100 dark:border-navy-800/80 p-4 sm:p-5 flex flex-col items-center justify-center">
                 <div className="w-full flex items-center justify-between mb-3 text-xs text-gray-500 dark:text-gray-400 px-1">
                   <span className="font-semibold flex items-center gap-1.5">
-                    <Eye size={13} className="text-purple-500" /> Live Poster Preview
+                    <Eye size={13} className="text-brand-500" /> Live Poster Preview
                   </span>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-gray-200/50 dark:bg-navy-900">
                     {posterTheme === 'luxury-dark' ? 'Executive Dark' : 'Print Light'}
@@ -589,8 +589,8 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                         }`}
                       />
                       <div className="absolute top-3 left-4 z-10">
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-purple-600 text-white shadow-lg shadow-purple-600/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                           OFFLINE CAMPUS ACCESS
                         </span>
                       </div>
@@ -600,21 +600,21 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                     <div
                       className={`relative h-24 w-full overflow-hidden p-4 flex flex-col justify-between ${
                         posterTheme === 'luxury-dark'
-                          ? 'bg-gradient-to-br from-purple-950/70 via-navy-900 to-[#0b0f19]'
-                          : 'bg-gradient-to-br from-purple-100 via-indigo-50 to-white'
+                          ? 'bg-gradient-to-br from-brand-950/60 via-navy-900 to-[#0b0f19]'
+                          : 'bg-gradient-to-br from-brand-50 via-gray-50 to-white'
                       }`}
                     >
-                      <div className="absolute -right-4 -bottom-4 w-28 h-28 rounded-full blur-2xl pointer-events-none opacity-40 bg-purple-500" />
+                      <div className="absolute -right-4 -bottom-4 w-28 h-28 rounded-full blur-2xl pointer-events-none opacity-30 bg-brand-500" />
                       <div className="relative z-10 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-purple-600 text-white shadow-md shadow-purple-600/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-brand-500 text-white shadow-md shadow-brand-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                           OFFLINE CAMPUS ACCESS
                         </span>
                         <span
                           className={`text-[9px] font-bold tracking-wider uppercase ${
                             posterTheme === 'luxury-dark'
-                              ? 'text-purple-300/80'
-                              : 'text-purple-700/80'
+                              ? 'text-brand-300/90'
+                              : 'text-brand-600/90'
                           }`}
                         >
                           OFFICIAL PASS
@@ -627,7 +627,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                   <div className="px-5 pt-3 pb-2 text-center space-y-1.5">
                     <p
                       className={`text-[10px] font-bold uppercase tracking-wider ${
-                        posterTheme === 'luxury-dark' ? 'text-purple-400' : 'text-purple-600'
+                        posterTheme === 'luxury-dark' ? 'text-brand-400' : 'text-brand-600'
                       }`}
                     >
                       {event.type || 'In-Person'} Event Registration
@@ -650,7 +650,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                           : 'bg-gray-100 border border-gray-200 text-gray-700'
                       }`}
                     >
-                      <Calendar size={12} className="text-purple-500 shrink-0" />
+                      <Calendar size={12} className="text-brand-500 shrink-0" />
                       <span>{formattedDate}</span>
                     </div>
 
@@ -662,7 +662,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                             : 'bg-gray-100 border border-gray-200 text-gray-700'
                         }`}
                       >
-                        <MapPin size={12} className="text-purple-500 shrink-0" />
+                        <MapPin size={12} className="text-brand-500 shrink-0" />
                         <span className="max-w-[180px] truncate">
                           {event.location?.address || event.location?.city}
                         </span>
@@ -694,7 +694,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                       )}
 
                       <div className="mt-2.5 text-center">
-                        <span className="inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-md bg-purple-600 text-white shadow-sm">
+                        <span className="inline-block text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-lg bg-brand-500 text-white shadow-sm shadow-brand-500/30">
                           SCAN TO REGISTER
                         </span>
                       </div>
@@ -711,13 +711,13 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2 text-[10px]">
-                        <span className="w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                        <span className="w-4 h-4 rounded-full bg-brand-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
                           1
                         </span>
                         <span>Scan with any smartphone camera or QR scanner.</span>
                       </div>
                       <div className="flex items-center gap-2 text-[10px]">
-                        <span className="w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                        <span className="w-4 h-4 rounded-full bg-brand-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
                           2
                         </span>
                         <span>Enter attendee details on the on-campus portal.</span>
@@ -753,7 +753,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
               variant="primary"
               onClick={handleDownloadPosterPng}
               disabled={isExporting || !qrDataUrl}
-              className="text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl shadow-md shadow-purple-600/20"
+              className="text-xs font-bold bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl shadow-md shadow-brand-500/25 transition-all"
             >
               <Download size={14} />
               <span>Poster (PNG)</span>
@@ -763,7 +763,7 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
               variant="outline"
               onClick={handleDownloadPosterPdf}
               disabled={isExporting || !qrDataUrl}
-              className="text-xs font-bold border-purple-200 dark:border-purple-900/50 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl"
+              className="text-xs font-bold border-brand-200 dark:border-brand-500/30 hover:bg-brand-50 dark:hover:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl transition-all"
             >
               <FileText size={14} />
               <span>Poster (PDF)</span>
