@@ -3,20 +3,21 @@ import { websitePageService } from '@/services/website-page.service';
 import { WebsitePage, SeoMeta } from '../types/cms.types';
 import toast from 'react-hot-toast';
 
-export const useWebsitePages = (params: {
-  siteId: string;
-  search?: string;
-  status?: string;
-  pageType?: string;
-  page?: number;
-  limit?: number;
-}) => {
+export const useWebsitePages = (
+  params: {
+    siteId?: string;
+    search?: string;
+    status?: string;
+    pageType?: string;
+    page?: number;
+    limit?: number;
+  } = {},
+) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['website-pages', params],
     queryFn: () => websitePageService.getPages(params),
-    enabled: !!params.siteId,
   });
 
   const createPageMutation = useMutation({

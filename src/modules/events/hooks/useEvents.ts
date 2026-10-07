@@ -6,6 +6,7 @@ import {
   EventStatus,
   CreateEventMeetingInput,
   UpdateEventMeetingInput,
+  EventManagement,
 } from '../types/event.types';
 import toast from 'react-hot-toast';
 
@@ -55,8 +56,16 @@ export const useEvents = (filters: { websiteId?: string; status?: EventStatus } 
     },
   });
 
+  const rawData = events as unknown;
+  const normalizedEvents: EventManagement[] = Array.isArray(rawData)
+    ? (rawData as EventManagement[])
+    : Array.isArray((rawData as { data?: EventManagement[] })?.data)
+      ? (rawData as { data: EventManagement[] }).data
+      : [];
+
   return {
-    events: events || [],
+    events: normalizedEvents,
+    meta: (rawData as { meta?: unknown })?.meta,
     isLoading,
     error,
     createEvent: createMutation.mutateAsync,

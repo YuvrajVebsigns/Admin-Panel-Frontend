@@ -40,7 +40,7 @@ export default function DashboardPage() {
     const counts: Record<string, number> = {};
     if (allEvents) {
       allEvents.forEach((event) => {
-        event.websites?.forEach((w) => {
+        event.websites?.forEach((w: unknown) => {
           if (typeof w === 'string') {
             if (w) counts[w] = (counts[w] || 0) + 1;
           } else if (w && typeof w === 'object') {

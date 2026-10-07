@@ -42,6 +42,7 @@ export const AttendeeDetailsView: React.FC = () => {
 
   // Pass modal open state
   const [isPassOpen, setIsPassOpen] = useState(false);
+  const [printQrDataUrl, setPrintQrDataUrl] = useState<string>('');
 
   // Extract primary event assigned ID
   const primaryEventId =
@@ -51,6 +52,108 @@ export const AttendeeDetailsView: React.FC = () => {
 
   // Query full event details mapped to this registration
   const { data: fullEvent, isLoading: isEventLoading } = useEvent(primaryEventId || '');
+
+  // Dynamic Website & QR Code calculation for print card
+  const regDetailWebsite = attendee?.registrationDetails?.websiteId;
+  const regDetailDomain =
+    typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
+      ? (regDetailWebsite as { domain?: string }).domain
+      : undefined;
+
+  const firstFullEventSite =
+    typeof fullEvent === 'object' && fullEvent?.websites && fullEvent.websites.length > 0
+      ? fullEvent.websites[0]
+      : null;
+  const firstEventSite =
+    typeof attendee?.eventId === 'object' &&
+    attendee?.eventId &&
+    'websites' in attendee.eventId &&
+    Array.isArray((attendee.eventId as { websites?: unknown[] }).websites) &&
+    (attendee.eventId as { websites?: unknown[] }).websites!.length > 0
+      ? (attendee.eventId as { websites?: unknown[] }).websites![0]
+      : null;
+
+  const fullEventSiteDomain =
+    typeof firstFullEventSite === 'object' && firstFullEventSite && 'domain' in firstFullEventSite
+      ? (firstFullEventSite as { domain?: string }).domain
+      : undefined;
+  const eventSiteDomain =
+    typeof firstEventSite === 'object' && firstEventSite && 'domain' in firstEventSite
+      ? (firstEventSite as { domain?: string }).domain
+      : undefined;
+
+  const fullEventSiteName =
+    typeof firstFullEventSite === 'object' && firstFullEventSite && 'name' in firstFullEventSite
+      ? (firstFullEventSite as { name?: string }).name
+      : undefined;
+  const eventSiteName =
+    typeof firstEventSite === 'object' && firstEventSite && 'name' in firstEventSite
+      ? (firstEventSite as { name?: string }).name
+      : undefined;
+
+  const websiteDomain =
+    (typeof attendee?.websiteId === 'object' &&
+      (attendee.websiteId as { domain?: string })?.domain) ||
+    regDetailDomain ||
+    fullEventSiteDomain ||
+    eventSiteDomain ||
+    'core-mediagroup.com';
+
+  const websiteName =
+    (typeof attendee?.websiteId === 'object' && (attendee.websiteId as { name?: string })?.name) ||
+    (typeof regDetailWebsite === 'object' && regDetailWebsite && 'name' in regDetailWebsite
+      ? (regDetailWebsite as { name?: string }).name
+      : undefined) ||
+    fullEventSiteName ||
+    eventSiteName ||
+    '';
+
+  const eventSlug =
+    (typeof fullEvent === 'object' && fullEvent?.slug) ||
+    (typeof attendee?.eventId === 'object' && (attendee.eventId as { slug?: string })?.slug
+      ? (attendee.eventId as { slug?: string }).slug
+      : '');
+
+  const cleanDomain = String(websiteDomain || 'core-mediagroup.com')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '')
+    .trim();
+  const cleanSlug = String(eventSlug || '')
+    .replace(/^\/+|\/+$/g, '')
+    .trim();
+  const passCode = attendee?.passCode || '';
+
+  const agendaPasscodeUrl = passCode
+    ? cleanSlug
+      ? `https://${cleanDomain}/events/${cleanSlug}/#event-agenda?passcode=${encodeURIComponent(passCode)}`
+      : `https://${cleanDomain}/#event-agenda?passcode=${encodeURIComponent(passCode)}`
+    : '';
+
+  useEffect(() => {
+    if (!attendee) return;
+    if (agendaPasscodeUrl) {
+      QRCode.toDataURL(agendaPasscodeUrl, {
+        margin: 1,
+        width: 400,
+        color: {
+          dark: '#1e1b4b',
+          light: '#ffffff',
+        },
+      })
+        .then((url) => setPrintQrDataUrl(url))
+        .catch(() => {
+          if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+            setPrintQrDataUrl(attendee.qrCode);
+          } else {
+            setPrintQrDataUrl('');
+          }
+        });
+    } else if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
+      setPrintQrDataUrl(attendee.qrCode);
+    } else {
+      setPrintQrDataUrl('');
+    }
+  }, [attendee, agendaPasscodeUrl]);
 
   const formatDateTime = (dateStr?: string | Date, options?: Intl.DateTimeFormatOptions) => {
     if (!dateStr) return '—';
@@ -240,101 +343,6 @@ export const AttendeeDetailsView: React.FC = () => {
   const attendeeWebsite = attendee.websiteId || attendee.registrationDetails?.websiteId;
   const attendeeRegisteredAt =
     attendee.registeredAt || attendee.registrationDetails?.registeredAt || attendee.createdAt;
-
-  // Dynamic Website & QR Code calculation for print card
-  const regDetailWebsite = attendee.registrationDetails?.websiteId;
-  const regDetailDomain =
-    typeof regDetailWebsite === 'object' && regDetailWebsite && 'domain' in regDetailWebsite
-      ? (regDetailWebsite as { domain?: string }).domain
-      : undefined;
-
-  const firstFullEventSite =
-    typeof fullEvent === 'object' && fullEvent?.websites && fullEvent.websites.length > 0
-      ? fullEvent.websites[0]
-      : null;
-  const firstEventSite =
-    typeof event === 'object' && event?.websites && event.websites.length > 0
-      ? event.websites[0]
-      : null;
-
-  const fullEventSiteDomain =
-    typeof firstFullEventSite === 'object' && firstFullEventSite && 'domain' in firstFullEventSite
-      ? (firstFullEventSite as { domain?: string }).domain
-      : undefined;
-  const eventSiteDomain =
-    typeof firstEventSite === 'object' && firstEventSite && 'domain' in firstEventSite
-      ? (firstEventSite as { domain?: string }).domain
-      : undefined;
-
-  const fullEventSiteName =
-    typeof firstFullEventSite === 'object' && firstFullEventSite && 'name' in firstFullEventSite
-      ? (firstFullEventSite as { name?: string }).name
-      : undefined;
-  const eventSiteName =
-    typeof firstEventSite === 'object' && firstEventSite && 'name' in firstEventSite
-      ? (firstEventSite as { name?: string }).name
-      : undefined;
-
-  const websiteDomain =
-    (typeof attendee.websiteId === 'object' && attendee.websiteId?.domain) ||
-    regDetailDomain ||
-    fullEventSiteDomain ||
-    eventSiteDomain ||
-    'core-mediagroup.com';
-
-  const websiteName =
-    (typeof attendee.websiteId === 'object' && attendee.websiteId?.name) ||
-    (typeof regDetailWebsite === 'object' && regDetailWebsite && 'name' in regDetailWebsite
-      ? (regDetailWebsite as { name?: string }).name
-      : undefined) ||
-    fullEventSiteName ||
-    eventSiteName ||
-    '';
-
-  const eventSlug =
-    (typeof fullEvent === 'object' && fullEvent?.slug) ||
-    (typeof event === 'object' && event ? event.slug || '' : '');
-
-  const cleanDomain = String(websiteDomain || 'core-mediagroup.com')
-    .replace(/^https?:\/\//i, '')
-    .replace(/\/+$/, '')
-    .trim();
-  const cleanSlug = String(eventSlug || '')
-    .replace(/^\/+|\/+$/g, '')
-    .trim();
-  const passCode = attendee.passCode || '';
-
-  const agendaPasscodeUrl = cleanSlug
-    ? `https://${cleanDomain}/events/${cleanSlug}/#event-agenda?passcode=${encodeURIComponent(passCode)}`
-    : `https://${cleanDomain}/#event-agenda?passcode=${encodeURIComponent(passCode)}`;
-
-  const [printQrDataUrl, setPrintQrDataUrl] = useState<string>('');
-
-  useEffect(() => {
-    if (!attendee) return;
-    if (agendaPasscodeUrl) {
-      QRCode.toDataURL(agendaPasscodeUrl, {
-        margin: 1,
-        width: 400,
-        color: {
-          dark: '#1e1b4b',
-          light: '#ffffff',
-        },
-      })
-        .then((url) => setPrintQrDataUrl(url))
-        .catch(() => {
-          if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
-            setPrintQrDataUrl(attendee.qrCode);
-          } else {
-            setPrintQrDataUrl('');
-          }
-        });
-    } else if (attendee.qrCode && attendee.qrCode.startsWith('data:image')) {
-      setPrintQrDataUrl(attendee.qrCode);
-    } else {
-      setPrintQrDataUrl('');
-    }
-  }, [attendee, agendaPasscodeUrl]);
 
   return (
     <div className="space-y-6">
