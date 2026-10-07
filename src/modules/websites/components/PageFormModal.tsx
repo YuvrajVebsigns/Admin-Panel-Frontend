@@ -52,10 +52,12 @@ const pageSchema = z.object({
 
 type PageFormData = z.input<typeof pageSchema>;
 
+import { useWebsites } from '../hooks/useWebsites';
+
 interface PageFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  siteId: string;
+  siteId?: string;
   pageData?: WebsitePage | null;
 }
 
@@ -93,8 +95,19 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   pageData,
 }) => {
   const isEdit = !!pageData;
+  const { websites } = useWebsites({ limit: 100 });
+  const rawPageSiteId =
+    typeof pageData?.siteId === 'object' && pageData?.siteId !== null
+      ? (pageData.siteId as { id?: string; _id?: string }).id ||
+        (pageData.siteId as { id?: string; _id?: string })._id ||
+        ''
+      : pageData?.siteId || '';
+
+  const [formSiteId, setFormSiteId] = useState<string>(siteId || rawPageSiteId || '');
+  const effectiveSiteId = siteId || formSiteId || rawPageSiteId;
+
   const { createPage, updatePage, silentCreatePage, silentUpdatePage, isCreating, isUpdating } =
-    useWebsitePages({ siteId });
+    useWebsitePages({ siteId: effectiveSiteId });
   const [activeTab, setActiveTab] = useState<'info' | 'editor' | 'seo'>('info');
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,6 +174,11 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
+
+    const defaultSite =
+      siteId || rawPageSiteId || (websites && websites.length > 0 ? websites[0]?.id || '' : '');
+    setFormSiteId(defaultSite);
+
     if (pageData) {
       setValue('title', pageData.title);
       setValue('slug', pageData.slug);
@@ -220,7 +238,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       setEditorContent(null);
     }
     setActiveTab('info');
-  }, [pageData, setValue, isOpen]);
+  }, [pageData, setValue, isOpen, siteId, rawPageSiteId, websites]);
 
   // Generate slug dynamically from title
   useEffect(() => {
@@ -293,6 +311,10 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       return;
     }
 
+    if (!effectiveSiteId) {
+      return;
+    }
+
     const payload: Partial<WebsitePage> = {
       title: currentValues.title,
       slug: currentValues.slug,
@@ -300,7 +322,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       status: currentValues.status,
       isHomepage: currentValues.isHomepage,
       shortDescription: currentValues.shortDescription || '',
-      siteId,
+      siteId: effectiveSiteId,
       content: editorContent,
       sections: editorContent?.blocks
         ? (editorContent.blocks as { type: string; data: Record<string, unknown> }[]).map(
@@ -347,7 +369,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      if (titleValue && titleValue.length >= 3 && slugVal) {
+      if (titleValue && titleValue.length >= 3 && slugVal && effectiveSiteId) {
         performAutoSave();
       }
     }, 2000); // 2-second debounce
@@ -358,7 +380,16 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
         debounceTimerRef.current = null;
       }
     };
-  }, [titleValue, slugVal, pageTypeVal, statusVal, isHomepageVal, shortDescriptionVal, isOpen]);
+  }, [
+    titleValue,
+    slugVal,
+    pageTypeVal,
+    statusVal,
+    isHomepageVal,
+    shortDescriptionVal,
+    isOpen,
+    effectiveSiteId,
+  ]);
 
   const handleTabChange = async (tab: 'info' | 'editor' | 'seo') => {
     if (activeTab === 'info' && tab !== 'info') {
@@ -377,6 +408,12 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
 
+    if (!effectiveSiteId) {
+      setApiError('Please select a target website for this page.');
+      isSubmittingRef.current = false;
+      return;
+    }
+
     // Cancel any pending debounced auto-save
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -385,7 +422,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
 
     const payload: Partial<WebsitePage> = {
       ...data,
-      siteId,
+      siteId: effectiveSiteId,
       content: editorContent,
       seo: {
         ...data.seo,
@@ -501,6 +538,31 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {activeTab === 'info' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {!siteId && (
+                  <div className="col-span-2 flex flex-col space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="targetWebsite">
+                        Target Website <span className="text-error-500">*</span>
+                      </Label>
+                      <Tooltip content="The website platform to which this page belongs." />
+                    </div>
+                    <select
+                      id="targetWebsite"
+                      value={formSiteId}
+                      onChange={(e) => setFormSiteId(e.target.value)}
+                      disabled={isEdit}
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-navy-400 dark:bg-[#0b1a32] dark:text-white"
+                    >
+                      <option value="">Select a website...</option>
+                      {websites.map((w) => (
+                        <option key={w.id} value={w.id}>
+                          {w.name} ({w.domain})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="col-span-2 flex flex-col space-y-2">
                   <div className="flex items-center">
                     <Label htmlFor="pageTitle">

@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { useWebsitePages } from '../hooks/useWebsitePages';
-import { WebsitePage, PageStatus } from '../types/cms.types';
+import { useWebsites } from '../hooks/useWebsites';
+import { WebsitePage, PageStatus, PageType } from '../types/cms.types';
 import { DataTable } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
@@ -10,12 +11,14 @@ import { Edit, Trash2, Copy, Globe, Lock, Plus, Search, Loader2 } from 'lucide-r
 import { useAuthStore } from '@/store/auth.store';
 
 interface PageManagerProps {
-  siteId: string;
+  siteId?: string;
 }
 
 export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
+  const [selectedSiteId, setSelectedSiteId] = useState<string>(siteId || '');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [pageType, setPageType] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,11 +27,16 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
+  const { websites: allWebsites } = useWebsites({ limit: 100 });
+
+  const effectiveSiteId = siteId || selectedSiteId || undefined;
+
   const { pages, meta, isLoading, deletePage, publishPage, unpublishPage, duplicatePage } =
     useWebsitePages({
-      siteId,
+      siteId: effectiveSiteId,
       search,
       status: status || undefined,
+      pageType: pageType || undefined,
       page,
       limit,
     });
@@ -82,6 +90,29 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
         </div>
       ),
     },
+    ...(!siteId
+      ? [
+          {
+            header: 'WEBSITE',
+            accessor: (item: WebsitePage) => {
+              const siteObj =
+                typeof item.siteId === 'object' && item.siteId !== null
+                  ? (item.siteId as { name?: string; domain?: string })
+                  : allWebsites.find((w) => w.id === item.siteId);
+              return (
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                    {siteObj?.name || '—'}
+                  </span>
+                  {siteObj?.domain && (
+                    <span className="text-[11px] text-gray-400 font-medium">{siteObj.domain}</span>
+                  )}
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     {
       header: 'PAGE TEMPLATE',
       accessor: (item: WebsitePage) => (
@@ -179,9 +210,9 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
   return (
     <div className="space-y-6">
       {/* Search and Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50 dark:bg-navy-900/30 p-4 rounded-2xl border border-gray-100 dark:border-navy-700">
-        <div className="flex flex-1 items-center gap-3 w-full sm:w-auto">
-          <div className="relative group flex-1 max-w-md">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-gray-50/50 dark:bg-navy-900/30 p-4 rounded-2xl border border-gray-100 dark:border-navy-700">
+        <div className="flex flex-1 flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="relative group flex-1 min-w-[200px] max-w-md">
             <Search
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-500 transition-colors"
               size={18}
@@ -190,10 +221,31 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
               type="text"
               placeholder="Search website pages..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="w-full pl-11 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 transition-all dark:bg-navy-900 dark:border-navy-700 dark:text-white"
             />
           </div>
+
+          {!siteId && (
+            <select
+              value={selectedSiteId}
+              onChange={(e) => {
+                setSelectedSiteId(e.target.value);
+                setPage(1);
+              }}
+              className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm dark:bg-navy-900 dark:border-navy-700 dark:text-white"
+            >
+              <option value="">All Websites</option>
+              {allWebsites.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          )}
 
           <select
             value={status}
@@ -204,14 +256,29 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
             className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm dark:bg-navy-900 dark:border-navy-700 dark:text-white"
           >
             <option value="">All Statuses</option>
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="ARCHIVED">Archived</option>
+            <option value={PageStatus.DRAFT}>Draft</option>
+            <option value={PageStatus.PUBLISHED}>Published</option>
+            <option value={PageStatus.ARCHIVED}>Archived</option>
+          </select>
+
+          <select
+            value={pageType}
+            onChange={(e) => {
+              setPageType(e.target.value);
+              setPage(1);
+            }}
+            className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm dark:bg-navy-900 dark:border-navy-700 dark:text-white"
+          >
+            <option value="">All Templates</option>
+            <option value={PageType.STATIC_PAGE}>Static Content Page</option>
+            <option value={PageType.BLOG_PAGE}>Blog Landing Page</option>
+            <option value={PageType.LANDING_PAGE}>Featured Landing Page</option>
+            <option value={PageType.CUSTOM_PAGE}>Custom Schema Page</option>
           </select>
         </div>
 
         {isSuperAdmin && (
-          <Button variant="primary" onClick={handleCreate} className="w-full sm:w-auto">
+          <Button variant="primary" onClick={handleCreate} className="w-full lg:w-auto shrink-0">
             <Plus size={18} className="mr-2" />
             Create Page
           </Button>
@@ -256,7 +323,7 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
       <PageFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        siteId={siteId}
+        siteId={effectiveSiteId}
         pageData={selectedPage}
       />
     </div>

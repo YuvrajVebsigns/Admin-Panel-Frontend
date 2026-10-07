@@ -3,16 +3,18 @@ import { PaginatedResponse } from '@/types/api.types';
 import { WebsitePage, SeoMeta } from '../modules/websites/types/cms.types';
 
 export const websitePageService = {
-  getPages: async (params: {
-    siteId: string;
-    search?: string;
-    status?: string;
-    pageType?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<PaginatedResponse<WebsitePage>> => {
+  getPages: async (
+    params: {
+      siteId?: string;
+      search?: string;
+      status?: string;
+      pageType?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+  ): Promise<PaginatedResponse<WebsitePage>> => {
     const queryParams = new URLSearchParams();
-    queryParams.append('siteId', params.siteId);
+    if (params.siteId) queryParams.append('siteId', params.siteId);
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.pageType) queryParams.append('pageType', params.pageType);
