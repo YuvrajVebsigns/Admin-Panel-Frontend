@@ -10,7 +10,10 @@ import {
 } from '../types/event.types';
 import toast from 'react-hot-toast';
 
-export const useEvents = (filters: { websiteId?: string; status?: EventStatus } = {}) => {
+export const useEvents = (
+  filters: { websiteId?: string; status?: EventStatus } = {},
+  options?: { enabled?: boolean },
+) => {
   const queryClient = useQueryClient();
 
   const {
@@ -20,6 +23,7 @@ export const useEvents = (filters: { websiteId?: string; status?: EventStatus } 
   } = useQuery({
     queryKey: ['events', filters],
     queryFn: () => eventService.getEvents(filters),
+    enabled: options?.enabled,
   });
 
   const createMutation = useMutation({

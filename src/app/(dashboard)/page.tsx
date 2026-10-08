@@ -12,16 +12,42 @@ import {
   CalendarCheck,
   Loader2,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth.store';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 import { useEvents } from '@/modules/events/hooks/useEvents';
 
 export default function DashboardPage() {
-  const { websites, meta, isLoading } = useWebsites({ limit: 100 });
+  const router = useRouter();
+  const roleKey = useAuthStore((state) => state.roleKey);
+  const isEventStaff = roleKey === 'event_staff';
 
-  const { meta: blogsMeta, blogs: allBlogs } = useBlogs({ limit: 1000 });
+  React.useEffect(() => {
+    if (isEventStaff) {
+      router.replace('/attendance');
+    }
+  }, [isEventStaff, router]);
 
-  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
+  const { websites, meta, isLoading } = useWebsites({ limit: 100 }, { enabled: !isEventStaff });
+
+  const { meta: blogsMeta, blogs: allBlogs } = useBlogs(
+    { limit: 1000 },
+    { enabled: !isEventStaff },
+  );
+
+  const { events: allEvents, isLoading: isEventsLoading } = useEvents(
+    {},
+    { enabled: !isEventStaff },
+  );
+
+  if (isEventStaff) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+      </div>
+    );
+  }
 
   const blogCountsByWebsite = React.useMemo(() => {
     const counts: Record<string, number> = {};

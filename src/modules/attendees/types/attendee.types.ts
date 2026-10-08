@@ -58,6 +58,7 @@ export interface Attendee {
     userId: string;
     name: string;
     email: string;
+    role?: string;
   };
   registrationDetails?: {
     name?: string;

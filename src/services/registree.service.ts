@@ -98,6 +98,7 @@ export const registreeService = {
       state?: string;
       country?: string;
       registrationType?: string;
+      status?: string;
       sponsorConsent?: string | boolean;
       message?: string;
     }>;

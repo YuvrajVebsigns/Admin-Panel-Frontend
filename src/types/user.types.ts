@@ -15,6 +15,7 @@ export interface User {
   isActive: boolean;
   acceptTerms: boolean;
   profileImage?: string;
+  assignedEvents?: Array<string | { id?: string; _id?: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +26,7 @@ export interface AuthUser {
   fullName: string;
   role: Role;
   profileImage?: string;
+  assignedEvents?: Array<string | { id?: string; _id?: string }>;
 }
 
 export interface LoginCredentials {

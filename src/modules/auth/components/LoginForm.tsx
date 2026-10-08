@@ -50,8 +50,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     if (!validate()) return;
 
     try {
-      await login({ email, password });
-      window.location.replace('/'); // Redirect to dashboard on success
+      const res = await login({ email, password });
+      const userRoleKey = res?.user?.role?.roleKey;
+      if (userRoleKey === 'event_staff') {
+        window.location.replace('/attendance');
+      } else {
+        window.location.replace('/'); // Redirect to dashboard on success
+      }
     } catch (error) {
       const apiError = error as ApiError;
       setErrors({
