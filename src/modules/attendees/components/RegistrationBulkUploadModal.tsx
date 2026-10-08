@@ -240,8 +240,14 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
             'workEmail',
             'email',
             'Official Email',
-          ]).toLowerCase();
-          const personalEmail = getVal(['Personal Email', 'personalEmail']).toLowerCase();
+          ])
+            .replace(/\\+/g, '')
+            .trim()
+            .toLowerCase();
+          const personalEmail = getVal(['Personal Email', 'personalEmail'])
+            .replace(/\\+/g, '')
+            .trim()
+            .toLowerCase();
           const countryCode = getVal(['Country Code', 'countryCode']) || '+91';
           const phoneNumber = getVal([
             'Phone / Mobile Number',
@@ -298,7 +304,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
           }
 
           // 2. Validate Work Email
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
           if (!workEmail) {
             errors.push('Work Email is required');
           } else if (!emailRegex.test(workEmail)) {
