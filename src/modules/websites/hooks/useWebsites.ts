@@ -3,12 +3,13 @@ import { websitesService } from '@/services/websites.service';
 import { WebsiteQueryParams, Website } from '../types/website.types';
 import toast from 'react-hot-toast';
 
-export const useWebsites = (params: WebsiteQueryParams = {}) => {
+export const useWebsites = (params: WebsiteQueryParams = {}, options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['websites', params],
     queryFn: () => websitesService.getWebsites(params),
+    enabled: options?.enabled,
   });
 
   const createWebsiteMutation = useMutation({

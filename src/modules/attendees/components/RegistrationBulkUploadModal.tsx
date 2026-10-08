@@ -50,6 +50,7 @@ interface ParsedBulkRow {
   state?: string;
   country?: string;
   registrationType?: string;
+  status?: string;
   sponsorConsent?: string | boolean;
   message?: string;
   errors: string[];
@@ -274,6 +275,13 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
           const state = getVal(['State', 'state']);
           const country = getVal(['Country', 'country']);
           const registrationType = getVal(['Registration Type', 'registrationType']) || 'Delegate';
+          const status =
+            getVal([
+              'Status of Registree',
+              'Registration Status',
+              'Status',
+              'status',
+            ]).toUpperCase() || 'PENDING';
           const sponsorConsent = getVal(['Sponsor Consent', 'sponsorConsent']) || 'No';
           const message = getVal(['Message / Notes', 'Message', 'message', 'notes']);
 
@@ -338,6 +346,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
             state,
             country,
             registrationType,
+            status,
             sponsorConsent,
             message,
             errors,
@@ -436,6 +445,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
           state: r.state,
           country: r.country,
           registrationType: r.registrationType,
+          status: r.status || 'PENDING',
           sponsorConsent: r.sponsorConsent,
           message: r.message,
         })),
@@ -921,7 +931,8 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                           <thead className="bg-gray-50 dark:bg-navy-950 border-b border-gray-200 dark:border-navy-700 text-gray-500 font-semibold sticky top-0">
                             <tr>
                               <th className="px-3 py-2">Row</th>
-                              <th className="px-3 py-2">Status</th>
+                              <th className="px-3 py-2">Valid</th>
+                              <th className="px-3 py-2">Reg. Status</th>
                               <th className="px-3 py-2">Full Name</th>
                               <th className="px-3 py-2">Work Email</th>
                               <th className="px-3 py-2">Organization</th>
@@ -956,6 +967,21 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                                       ERROR
                                     </span>
                                   )}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span
+                                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      r.status === 'APPROVED'
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                        : r.status === 'REJECTED'
+                                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                                          : r.status === 'BLOCKED'
+                                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                    }`}
+                                  >
+                                    {r.status || 'PENDING'}
+                                  </span>
                                 </td>
                                 <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
                                   {r.fullName || <span className="text-red-400">Missing</span>}

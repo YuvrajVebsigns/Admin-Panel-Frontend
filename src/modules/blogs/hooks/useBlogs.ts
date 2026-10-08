@@ -3,7 +3,7 @@ import { blogService } from '@/services/blog.service';
 import { BlogQueryParams, CreateBlogDto, UpdateBlogDto } from '../types/blog.types';
 import toast from 'react-hot-toast';
 
-export const useBlogs = (params: BlogQueryParams = {}) => {
+export const useBlogs = (params: BlogQueryParams = {}, options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
 
   const {
@@ -13,6 +13,7 @@ export const useBlogs = (params: BlogQueryParams = {}) => {
   } = useQuery({
     queryKey: ['blogs', params],
     queryFn: () => blogService.getBlogs(params),
+    enabled: options?.enabled,
   });
 
   const createMutation = useMutation({

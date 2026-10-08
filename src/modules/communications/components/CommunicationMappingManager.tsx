@@ -85,6 +85,12 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
     if (!isEdit || !editData) return;
     setEvent(editData.event);
     setIsActive(editData.isActive);
+    if (editData.event?.startsWith('slug:')) {
+      setTriggerMode('scheduled');
+      setTemplateSlug(editData.event.replace(/^slug:/, ''));
+    } else {
+      setTriggerMode('system_event');
+    }
 
     if (editData.triggers?.length) {
       setTriggers(
@@ -208,8 +214,12 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
     e.preventDefault();
     setError('');
 
-    if (triggerMode === 'system_event' && !event.trim()) {
+    if (triggerMode === 'system_event' && !event.trim() && !(isEdit && editData?.event)) {
       setError('System Event Name is required');
+      return;
+    }
+    if (triggerMode === 'scheduled' && !templateSlug.trim()) {
+      setError('Template Slug Key is required for scheduled trigger mode');
       return;
     }
     if (triggers.length === 0) {
@@ -241,8 +251,18 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
       seenTriggers.add(comboKey);
     }
 
+    const resolvedEvent =
+      triggerMode === 'system_event'
+        ? event.trim() || (isEdit && editData?.event ? editData.event : '')
+        : `slug:${templateSlug.trim()}`;
+
+    if (!resolvedEvent.trim()) {
+      setError('Event key cannot be empty');
+      return;
+    }
+
     const payload: CreateEventTemplateMappingDto = {
-      event: triggerMode === 'system_event' ? event.trim() : `slug:${templateSlug}`,
+      event: resolvedEvent,
       isActive,
       triggers: triggers.map((t) => ({
         websiteId: t.websiteId?.trim() || undefined,
@@ -386,6 +406,12 @@ export const CommunicationMappingManager: React.FC<Props> = ({ mappingId }) => {
                     className="w-full pl-9 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer appearance-none"
                   >
                     <option value="">— Select System Event —</option>
+                    {event &&
+                      !Object.values(categories)
+                        .flat()
+                        .some((evt) => evt.value === event) && (
+                        <option value={event}>{event}</option>
+                      )}
                     {Object.entries(categories).map(([cat, events]) => (
                       <optgroup key={cat} label={cat.replace(/_/g, ' ').toUpperCase()}>
                         {events.map((evt) => (

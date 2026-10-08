@@ -121,6 +121,7 @@ export const EventMappingsTab: React.FC = () => {
     if (!isAuthorized) return;
     try {
       await communicationService.updateEventMapping(mapping.id, {
+        event: mapping.event,
         isActive: !mapping.isActive,
       });
       toast.success(`Mapping status updated successfully`);
@@ -155,6 +156,7 @@ export const EventMappingsTab: React.FC = () => {
       });
 
       const updated = await communicationService.updateEventMapping(mapping.id, {
+        event: mapping.event,
         triggers: updatedTriggers as unknown as EventMappingTrigger[],
       });
 

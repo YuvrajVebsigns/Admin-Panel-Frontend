@@ -10,6 +10,7 @@ import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import { User } from '@/types/user.types';
 import { useRoles } from '@/modules/roles/hooks/useRoles';
+import { useEvents } from '@/modules/events/hooks/useEvents';
 import Button from '@/components/ui/button/Button';
 import { useSystemUsers } from '../hooks/useSystemUsers';
 
@@ -18,6 +19,7 @@ const baseSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   role: z.string().min(1, 'Role is required'),
   isActive: z.boolean(),
+  assignedEvents: z.array(z.string()).optional(),
 });
 
 interface UserFormData {
@@ -26,6 +28,7 @@ interface UserFormData {
   role: string;
   isActive: boolean;
   password?: string;
+  assignedEvents?: string[];
   [key: string]: unknown;
 }
 
@@ -38,6 +41,7 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
   const isEdit = !!initialData;
   const [showPassword, setShowPassword] = useState(false);
   const { roles, isLoading: isLoadingRoles } = useRoles();
+  const { events, isLoading: isLoadingEvents } = useEvents();
   const { createUser, updateUser, isCreating, isUpdating } = useSystemUsers();
 
   const userSchema = React.useMemo(
@@ -65,6 +69,9 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           fullName: initialData.fullName,
           role: initialData.role?.id || '',
           isActive: initialData.isActive,
+          assignedEvents: (initialData.assignedEvents || [])
+            .map((e) => (typeof e === 'object' && e ? e.id || e._id || '' : e))
+            .filter(Boolean),
         }
       : {
           email: '',
@@ -72,12 +79,17 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           role: '',
           password: '',
           isActive: true,
+          assignedEvents: [],
         },
   });
 
   useEffect(() => {
     if (initialData) {
       setValue('role', initialData.role?.id || '');
+      const eventIds = (initialData.assignedEvents || [])
+        .map((e) => (typeof e === 'object' && e ? e.id || e._id || '' : e))
+        .filter(Boolean);
+      setValue('assignedEvents', eventIds);
     }
   }, [initialData, setValue]);
 
@@ -216,6 +228,55 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
                 disabled={isLoadingRoles}
               />
               {errors.role && <p className="mt-1 text-xs text-error-500">{errors.role.message}</p>}
+            </div>
+
+            {/* Event Assignment for On-Premises Attendance / Event Staff */}
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="assignedEvents">
+                  Assigned Events (On-Premises Attendance Scoping)
+                </Label>
+                <span className="text-xs text-gray-400">
+                  Restricts user to viewing & checking in attendees only for selected event(s)
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto p-3 border border-gray-200 dark:border-navy-700 rounded-2xl bg-gray-50/50 dark:bg-navy-900/50">
+                {isLoadingEvents ? (
+                  <p className="text-xs text-gray-400">Loading events...</p>
+                ) : events && events.length > 0 ? (
+                  events.map((ev) => {
+                    const currentAssigned = watch('assignedEvents') || [];
+                    const isChecked = currentAssigned.includes(ev.id);
+                    return (
+                      <label
+                        key={ev.id}
+                        className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                          isChecked
+                            ? 'bg-brand-50/50 border-brand-500/30 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 font-semibold'
+                            : 'border-gray-200/70 dark:border-navy-700/70 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-navy-800'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const updated = e.target.checked
+                              ? [...currentAssigned, ev.id]
+                              : currentAssigned.filter((id) => id !== ev.id);
+                            setValue('assignedEvents', updated);
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 accent-brand-500 focus:ring-brand-500"
+                        />
+                        <span className="truncate" title={ev.title}>
+                          {ev.title}
+                        </span>
+                      </label>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-400">No events found.</p>
+                )}
+              </div>
             </div>
           </div>
 

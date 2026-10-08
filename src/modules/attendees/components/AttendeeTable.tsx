@@ -34,6 +34,7 @@ import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
 import { attendeeService } from '@/services/attendee.service';
 import { PERMISSIONS } from '@/constants/permissions';
+import { useAuthStore } from '@/store/auth.store';
 
 interface AttendeeTableProps {
   onEdit: (attendee: Attendee) => void;
@@ -46,6 +47,10 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
   onViewPass,
   onCreateNew,
 }) => {
+  const roleKey = useAuthStore((state) => state.roleKey);
+  const currentUser = useAuthStore((state) => state.user);
+  const isEventStaff = roleKey === 'event_staff';
+
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -57,6 +62,19 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
     limit: 10,
     search: '',
   });
+
+  React.useEffect(() => {
+    if (isEventStaff && currentUser?.assignedEvents && currentUser.assignedEvents.length > 0) {
+      const firstEvent = currentUser.assignedEvents[0];
+      const eventIdStr =
+        typeof firstEvent === 'object' && firstEvent !== null
+          ? firstEvent.id || firstEvent._id
+          : firstEvent;
+      if (eventIdStr && !params.eventId) {
+        setParams((prev) => ({ ...prev, eventId: eventIdStr }));
+      }
+    }
+  }, [isEventStaff, currentUser]);
 
   const [isBulkPassModalOpen, setIsBulkPassModalOpen] = useState(false);
   const [selectedBulkEventId, setSelectedBulkEventId] = useState<string>('');
@@ -381,11 +399,29 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
           Boolean(attendee.checkedInAt) ||
           attendee.registrationDetails?.attended;
 
+        const checkInTime = attendee.checkedInAt || attendee.registrationDetails?.attendedAt;
+        const checkedBy = attendee.checkedInBy;
+
         return isCheckedIn ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-            <CheckCircle size={11} />
-            Checked In
-          </span>
+          <div className="space-y-0.5 min-w-[110px]">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+              <CheckCircle size={11} />
+              Checked In
+            </span>
+            {checkInTime && (
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                {formatDate(checkInTime)} {formatTime(checkInTime)}
+              </p>
+            )}
+            {checkedBy?.name && (
+              <p
+                className="text-[9px] text-gray-400 dark:text-navy-400 truncate max-w-[130px]"
+                title={`By ${checkedBy.name} (${checkedBy.role || 'Staff'})`}
+              >
+                by {checkedBy.name}
+              </p>
+            )}
+          </div>
         ) : (
           <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-navy-900 px-2 py-0.5 rounded-full whitespace-nowrap">
             <Clock size={11} />
@@ -463,21 +499,25 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
             <QrCode size={14} />
           </button>
 
-          <button
-            onClick={() => onEdit(attendee)}
-            title="Edit Registration"
-            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
-          >
-            <Edit size={14} />
-          </button>
+          {!isEventStaff && (
+            <>
+              <button
+                onClick={() => onEdit(attendee)}
+                title="Edit Registration"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
+              >
+                <Edit size={14} />
+              </button>
 
-          <button
-            onClick={() => handleDelete(attendee)}
-            title="Delete Registration"
-            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
-          >
-            <Trash2 size={14} />
-          </button>
+              <button
+                onClick={() => handleDelete(attendee)}
+                title="Delete Registration"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-100 dark:border-navy-700 bg-white dark:bg-navy-900 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-all hover:scale-105"
+              >
+                <Trash2 size={14} />
+              </button>
+            </>
+          )}
         </div>
       ),
     },
@@ -636,26 +676,30 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
             }}
             onExport={(filters) => dataExportService.exportAttendees(filters)}
           />
-          <Button
-            variant="outline"
-            onClick={() => handleDownloadBulkPasses()}
-            disabled={isGeneratingBulkPdf}
-            className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
-          >
-            {isGeneratingBulkPdf ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Printer size={16} />
-            )}
-            <span>12x18 Bulk Passes</span>
-          </Button>
-          <Button
-            onClick={onCreateNew}
-            className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
-          >
-            <Users size={16} />
-            Register Attendee
-          </Button>
+          {!isEventStaff && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => handleDownloadBulkPasses()}
+                disabled={isGeneratingBulkPdf}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
+              >
+                {isGeneratingBulkPdf ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Printer size={16} />
+                )}
+                <span>12x18 Bulk Passes</span>
+              </Button>
+              <Button
+                onClick={onCreateNew}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
+              >
+                <Users size={16} />
+                Register Attendee
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

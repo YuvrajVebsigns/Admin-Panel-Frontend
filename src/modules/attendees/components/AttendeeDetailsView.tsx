@@ -609,7 +609,7 @@ export const AttendeeDetailsView: React.FC = () => {
                     {attendee.checkedInBy ? (
                       <span>
                         {typeof attendee.checkedInBy === 'object' && attendee.checkedInBy !== null
-                          ? `${attendee.checkedInBy.name || 'Admin'} ${attendee.checkedInBy.email ? `(${attendee.checkedInBy.email})` : ''}`.trim()
+                          ? `${attendee.checkedInBy.name || 'Staff'}${attendee.checkedInBy.role ? ` • ${attendee.checkedInBy.role.replace(/_/g, ' ')}` : ''} ${attendee.checkedInBy.email ? `(${attendee.checkedInBy.email})` : ''}`.trim()
                           : String(attendee.checkedInBy)}
                       </span>
                     ) : (
