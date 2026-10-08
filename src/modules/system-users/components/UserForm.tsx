@@ -69,7 +69,9 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           fullName: initialData.fullName,
           role: initialData.role?.id || '',
           isActive: initialData.isActive,
-          assignedEvents: initialData.assignedEvents || [],
+          assignedEvents: (initialData.assignedEvents || [])
+            .map((e) => (typeof e === 'object' && e ? e.id || e._id || '' : e))
+            .filter(Boolean),
         }
       : {
           email: '',
@@ -84,7 +86,10 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
   useEffect(() => {
     if (initialData) {
       setValue('role', initialData.role?.id || '');
-      setValue('assignedEvents', initialData.assignedEvents || []);
+      const eventIds = (initialData.assignedEvents || [])
+        .map((e) => (typeof e === 'object' && e ? e.id || e._id || '' : e))
+        .filter(Boolean);
+      setValue('assignedEvents', eventIds);
     }
   }, [initialData, setValue]);
 
