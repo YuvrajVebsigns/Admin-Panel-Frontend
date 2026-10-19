@@ -70,6 +70,10 @@ export default function DeliveryReportPage() {
     );
   };
 
+  if (isSendOpen) {
+    return <SendMessageModal isOpen onClose={() => setIsSendOpen(false)} />;
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
@@ -110,9 +114,6 @@ export default function DeliveryReportPage() {
       <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm p-6">
         <CommunicationLogsTable onViewDetails={handleViewLog} />
       </div>
-
-      {/* Modals */}
-      <SendMessageModal isOpen={isSendOpen} onClose={() => setIsSendOpen(false)} />
     </div>
   );
 }

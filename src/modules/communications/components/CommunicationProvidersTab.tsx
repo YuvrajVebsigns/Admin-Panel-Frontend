@@ -6,6 +6,7 @@ import { CommunicationProvider, BrevoSender } from '../types/communication.types
 import { ProviderFormModal } from './ProviderFormModal';
 import Button from '@/components/ui/button/Button';
 import Badge from '@/components/ui/badge/Badge';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import {
   Activity,
   Edit,
@@ -30,7 +31,9 @@ import {
 
 type TestResult = 'idle' | 'testing' | 'success' | 'failure';
 
-export const CommunicationProvidersTab: React.FC = () => {
+export const CommunicationProvidersTab: React.FC<{
+  onWorkspaceChange?: (isOpen: boolean) => void;
+}> = ({ onWorkspaceChange }) => {
   const {
     providers,
     isLoading,
@@ -123,11 +126,13 @@ export const CommunicationProvidersTab: React.FC = () => {
   const handleEdit = (provider: CommunicationProvider) => {
     setSelectedProvider(provider);
     setIsFormOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleCreate = () => {
     setSelectedProvider(null);
     setIsFormOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleToggleActive = async (provider: CommunicationProvider) => {
@@ -192,6 +197,19 @@ export const CommunicationProvidersTab: React.FC = () => {
     }
   };
 
+  if (isFormOpen) {
+    return (
+      <ProviderFormModal
+        isOpen
+        onClose={() => {
+          setIsFormOpen(false);
+          onWorkspaceChange?.(false);
+        }}
+        editData={selectedProvider}
+      />
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -201,27 +219,34 @@ export const CommunicationProvidersTab: React.FC = () => {
     );
   }
 
-  return (
+  const isIntegrationWorkspace = isBrevoExpanded || isSendersExpanded;
+  const visibleProviders = isIntegrationWorkspace
+    ? providers.filter((provider) => provider.id === selectedProvider?.id)
+    : providers;
+
+  const content = (
     <div className="space-y-6">
       {/* Header bar within tab */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-            Communication Providers
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Configure integration keys and priority settings for dynamic delivery channels.
-          </p>
+      {!isIntegrationWorkspace && (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              Communication Providers
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Configure integration keys and priority settings for dynamic delivery channels.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleCreate}
+            startIcon={<ShieldCheck size={14} />}
+          >
+            Add Provider
+          </Button>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleCreate}
-          startIcon={<ShieldCheck size={14} />}
-        >
-          Add Provider
-        </Button>
-      </div>
+      )}
 
       {providers.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-gray-50 dark:bg-navy-950 border border-dashed border-gray-200 dark:border-navy-800 rounded-3xl text-center">
@@ -235,166 +260,184 @@ export const CommunicationProvidersTab: React.FC = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {providers.map((provider) => {
+        <div
+          className={isIntegrationWorkspace ? 'min-w-0' : 'grid grid-cols-1 md:grid-cols-2 gap-6'}
+        >
+          {visibleProviders.map((provider) => {
             const isBrevo = provider.name.toLowerCase() === 'brevo';
             return (
               <div
                 key={provider.id}
-                className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                className={
+                  isIntegrationWorkspace
+                    ? 'min-w-0'
+                    : 'bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden'
+                }
               >
                 {/* Channel Indicator Badge */}
-                <div className="absolute top-6 right-6">
-                  {provider.channel === 'email' && (
-                    <Badge
-                      color="info"
-                      className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
-                    >
-                      <Mail size={10} /> Email
-                    </Badge>
-                  )}
-                  {provider.channel === 'sms' && (
-                    <Badge
-                      color="success"
-                      className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
-                    >
-                      <MessageSquare size={10} /> SMS
-                    </Badge>
-                  )}
-                  {provider.channel === 'push' && (
-                    <Badge
-                      color="warning"
-                      className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
-                    >
-                      <Bell size={10} /> Push
-                    </Badge>
-                  )}
-                </div>
+                {!isIntegrationWorkspace && (
+                  <div className="absolute top-6 right-6">
+                    {provider.channel === 'email' && (
+                      <Badge
+                        color="info"
+                        className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
+                      >
+                        <Mail size={10} /> Email
+                      </Badge>
+                    )}
+                    {provider.channel === 'sms' && (
+                      <Badge
+                        color="success"
+                        className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
+                      >
+                        <MessageSquare size={10} /> SMS
+                      </Badge>
+                    )}
+                    {provider.channel === 'push' && (
+                      <Badge
+                        color="warning"
+                        className="flex items-center gap-1 font-bold text-[10px] rounded-lg"
+                      >
+                        <Bell size={10} /> Push
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 {/* Body Content */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black uppercase text-xs">
-                      {provider.name.slice(0, 2)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-                        {provider.displayName}
-                      </h3>
-                      <p className="text-[11px] font-semibold text-gray-400 capitalize mt-0.5">
-                        Code: {provider.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Priority and Config info */}
-                  <div className="grid grid-cols-3 gap-4 py-3 border-y border-gray-50 dark:border-navy-950 text-xs">
-                    <div>
-                      <p className="text-gray-400 font-semibold mb-0.5">Priority</p>
-                      <span className="font-bold text-gray-800 dark:text-white flex items-center gap-1">
-                        <Star size={12} className="text-amber-500 fill-amber-500" />
-                        {provider.priority}
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-400 font-semibold mb-0.5">Sender Info</p>
-                      <span className="font-bold text-gray-700 dark:text-gray-300 truncate block max-w-full">
-                        {isBrevo
-                          ? `${provider.config?.senderName || 'Not Set'} (${provider.config?.senderEmail || 'Not Set'})`
-                          : 'Default settings'}
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-400 font-semibold mb-0.5">Admin Email</p>
-                      <span className="font-bold text-gray-700 dark:text-gray-300 truncate block max-w-full">
-                        {(provider.config?.adminEmail as string) || 'Not Set'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Test API Key Button */}
-                  <div className="pt-1">
-                    {(() => {
-                      const testState = testResults[provider.name] || 'idle';
-                      const isTesting = testState === 'testing';
-                      const isSuccess = testState === 'success';
-                      const isFailure = testState === 'failure';
-
-                      return (
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            disabled={isTesting}
-                            onClick={() => handleTestApiKey(provider)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-                              isTesting
-                                ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-500 cursor-wait'
-                                : isSuccess
-                                  ? 'bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400'
-                                  : isFailure
-                                    ? 'bg-error-50 dark:bg-error-500/10 text-error-600 dark:text-error-400'
-                                    : 'bg-gray-50 dark:bg-navy-950 text-gray-600 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400'
-                            } border ${
-                              isSuccess
-                                ? 'border-success-200 dark:border-success-500/20'
-                                : isFailure
-                                  ? 'border-error-200 dark:border-error-500/20'
-                                  : 'border-gray-100 dark:border-navy-800'
-                            }`}
-                          >
-                            {isTesting && <Loader2 size={13} className="animate-spin" />}
-                            {isSuccess && <CheckCircle size={13} />}
-                            {isFailure && <XCircle size={13} />}
-                            {testState === 'idle' && <Zap size={13} />}
-                            <span>
-                              {isTesting
-                                ? 'Testing Connection…'
-                                : isSuccess
-                                  ? 'API Key Verified'
-                                  : isFailure
-                                    ? 'Connection Failed'
-                                    : 'Test API Key'}
-                            </span>
-                          </button>
-
-                          {isSuccess && (
-                            <span className="text-[10px] font-semibold text-success-500 animate-pulse">
-                              ✓ API is reachable
-                            </span>
-                          )}
-                          {isFailure && testErrors[provider.name] && (
-                            <div className="mt-2 p-3 bg-error-50 dark:bg-error-500/5 border border-error-200 dark:border-error-500/20 rounded-xl">
-                              <div className="flex items-start gap-2">
-                                <AlertCircle size={14} className="text-error-500 shrink-0 mt-0.5" />
-                                <div className="space-y-1">
-                                  <p className="text-[11px] font-bold text-error-600 dark:text-error-400">
-                                    Connection Failed
-                                  </p>
-                                  <p className="text-[11px] text-error-600/80 dark:text-error-400/80 leading-relaxed break-words whitespace-pre-wrap">
-                                    {testErrors[provider.name]}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {isFailure && !testErrors[provider.name] && (
-                            <span className="text-[10px] font-semibold text-error-500">
-                              ✗ Check credentials and retry
-                            </span>
-                          )}
+                  {!isIntegrationWorkspace && (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black uppercase text-xs">
+                          {provider.name.slice(0, 2)}
                         </div>
-                      );
-                    })()}
-                  </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            {provider.displayName}
+                          </h3>
+                          <p className="text-[11px] font-semibold text-gray-400 capitalize mt-0.5">
+                            Code: {provider.name}
+                          </p>
+                        </div>
+                      </div>
 
-                  {isBrevo && (
+                      {/* Priority and Config info */}
+                      <div className="grid grid-cols-3 gap-4 py-3 border-y border-gray-50 dark:border-navy-950 text-xs">
+                        <div>
+                          <p className="text-gray-400 font-semibold mb-0.5">Priority</p>
+                          <span className="font-bold text-gray-800 dark:text-white flex items-center gap-1">
+                            <Star size={12} className="text-amber-500 fill-amber-500" />
+                            {provider.priority}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-gray-400 font-semibold mb-0.5">Sender Info</p>
+                          <span className="font-bold text-gray-700 dark:text-gray-300 truncate block max-w-full">
+                            {isBrevo
+                              ? `${provider.config?.senderName || 'Not Set'} (${provider.config?.senderEmail || 'Not Set'})`
+                              : 'Default settings'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-gray-400 font-semibold mb-0.5">Admin Email</p>
+                          <span className="font-bold text-gray-700 dark:text-gray-300 truncate block max-w-full">
+                            {(provider.config?.adminEmail as string) || 'Not Set'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Test API Key Button */}
+                      <div className="pt-1">
+                        {(() => {
+                          const testState = testResults[provider.name] || 'idle';
+                          const isTesting = testState === 'testing';
+                          const isSuccess = testState === 'success';
+                          const isFailure = testState === 'failure';
+
+                          return (
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                disabled={isTesting}
+                                onClick={() => handleTestApiKey(provider)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+                                  isTesting
+                                    ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-500 cursor-wait'
+                                    : isSuccess
+                                      ? 'bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400'
+                                      : isFailure
+                                        ? 'bg-error-50 dark:bg-error-500/10 text-error-600 dark:text-error-400'
+                                        : 'bg-gray-50 dark:bg-navy-950 text-gray-600 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400'
+                                } border ${
+                                  isSuccess
+                                    ? 'border-success-200 dark:border-success-500/20'
+                                    : isFailure
+                                      ? 'border-error-200 dark:border-error-500/20'
+                                      : 'border-gray-100 dark:border-navy-800'
+                                }`}
+                              >
+                                {isTesting && <Loader2 size={13} className="animate-spin" />}
+                                {isSuccess && <CheckCircle size={13} />}
+                                {isFailure && <XCircle size={13} />}
+                                {testState === 'idle' && <Zap size={13} />}
+                                <span>
+                                  {isTesting
+                                    ? 'Testing Connection…'
+                                    : isSuccess
+                                      ? 'API Key Verified'
+                                      : isFailure
+                                        ? 'Connection Failed'
+                                        : 'Test API Key'}
+                                </span>
+                              </button>
+
+                              {isSuccess && (
+                                <span className="text-[10px] font-semibold text-success-500 animate-pulse">
+                                  ✓ API is reachable
+                                </span>
+                              )}
+                              {isFailure && testErrors[provider.name] && (
+                                <div className="mt-2 p-3 bg-error-50 dark:bg-error-500/5 border border-error-200 dark:border-error-500/20 rounded-xl">
+                                  <div className="flex items-start gap-2">
+                                    <AlertCircle
+                                      size={14}
+                                      className="text-error-500 shrink-0 mt-0.5"
+                                    />
+                                    <div className="space-y-1">
+                                      <p className="text-[11px] font-bold text-error-600 dark:text-error-400">
+                                        Connection Failed
+                                      </p>
+                                      <p className="text-[11px] text-error-600/80 dark:text-error-400/80 leading-relaxed break-words whitespace-pre-wrap">
+                                        {testErrors[provider.name]}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {isFailure && !testErrors[provider.name] && (
+                                <span className="text-[10px] font-semibold text-error-500">
+                                  ✗ Check credentials and retry
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </>
+                  )}
+                  {isBrevo && !isSendersExpanded && (
                     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-navy-800 space-y-3">
                       <button
                         type="button"
-                        onClick={() => setIsBrevoExpanded(!isBrevoExpanded)}
-                        className="flex items-center justify-between w-full text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-brand-500 transition-colors"
+                        onClick={() => {
+                          setSelectedProvider(provider);
+                          setIsBrevoExpanded(!isBrevoExpanded);
+                          onWorkspaceChange?.(!isBrevoExpanded);
+                        }}
+                        className="flex min-h-11 items-center justify-between w-full text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-brand-500 transition-colors"
                       >
                         <span className="flex items-center gap-1.5">
                           <Globe size={13} className="text-brand-500" />
@@ -495,12 +538,16 @@ export const CommunicationProvidersTab: React.FC = () => {
                     </div>
                   )}
 
-                  {isBrevo && (
+                  {isBrevo && !isBrevoExpanded && (
                     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-navy-800 space-y-3">
                       <button
                         type="button"
-                        onClick={() => setIsSendersExpanded(!isSendersExpanded)}
-                        className="flex items-center justify-between w-full text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-brand-500 transition-colors"
+                        onClick={() => {
+                          setSelectedProvider(provider);
+                          setIsSendersExpanded(!isSendersExpanded);
+                          onWorkspaceChange?.(!isSendersExpanded);
+                        }}
+                        className="flex min-h-11 items-center justify-between w-full text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-brand-500 transition-colors"
                       >
                         <span className="flex items-center gap-1.5">
                           <UserPlus size={13} className="text-brand-500" />
@@ -537,7 +584,7 @@ export const CommunicationProvidersTab: React.FC = () => {
                               No senders registered yet.
                             </p>
                           ) : (
-                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <div className="space-y-2">
                               {senders.map((sender: BrevoSender) => (
                                 <div
                                   key={sender.id}
@@ -589,14 +636,15 @@ export const CommunicationProvidersTab: React.FC = () => {
                             <p className="text-[10px] font-bold text-gray-400 uppercase">
                               Add New Sender
                             </p>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <input
                                 type="text"
                                 value={newSenderName}
                                 onChange={(e) => setNewSenderName(e.target.value)}
                                 placeholder="Sender Name"
                                 required
-                                className="w-full bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 px-2.5 py-1.5 rounded-xl text-xs text-gray-800 dark:text-white focus:outline-none focus:border-brand-500 placeholder-gray-400"
+                                aria-label="Sender name"
+                                className="min-h-11 w-full bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 px-3 py-2 rounded-xl text-sm text-gray-800 dark:text-white focus:outline-none focus:border-brand-500 placeholder-gray-400"
                               />
                               <input
                                 type="email"
@@ -604,7 +652,8 @@ export const CommunicationProvidersTab: React.FC = () => {
                                 onChange={(e) => setNewSenderEmail(e.target.value)}
                                 placeholder="Sender Email"
                                 required
-                                className="w-full bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 px-2.5 py-1.5 rounded-xl text-xs text-gray-800 dark:text-white focus:outline-none focus:border-brand-500 placeholder-gray-400"
+                                aria-label="Sender email"
+                                className="min-h-11 w-full bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 px-3 py-2 rounded-xl text-sm text-gray-800 dark:text-white focus:outline-none focus:border-brand-500 placeholder-gray-400"
                               />
                             </div>
                             <Button
@@ -633,67 +682,84 @@ export const CommunicationProvidersTab: React.FC = () => {
 
                   {/* Status toggle & action triggers */}
 
-                  <div className="flex items-center justify-between pt-2">
-                    {/* Toggle Switch */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        disabled={togglingIds.has(provider.id)}
-                        onClick={() => handleToggleActive(provider)}
-                        className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${togglingIds.has(provider.id) ? 'opacity-60 cursor-wait' : ''} ${
-                          provider.isActive ? 'bg-brand-500' : 'bg-gray-200 dark:bg-navy-700'
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                            provider.isActive ? 'translate-x-4' : 'translate-x-0'
+                  {!isIntegrationWorkspace && (
+                    <div className="flex items-center justify-between pt-2">
+                      {/* Toggle Switch */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={togglingIds.has(provider.id)}
+                          onClick={() => handleToggleActive(provider)}
+                          className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${togglingIds.has(provider.id) ? 'opacity-60 cursor-wait' : ''} ${
+                            provider.isActive ? 'bg-brand-500' : 'bg-gray-200 dark:bg-navy-700'
                           }`}
-                        />
-                      </button>
-                      <span
-                        className={`text-xs font-bold ${
-                          provider.isActive
-                            ? 'text-brand-600 dark:text-brand-400'
-                            : 'text-gray-600 dark:text-gray-300'
-                        }`}
-                      >
-                        {provider.isActive ? 'Active' : 'Disabled'}
-                      </span>
-                    </div>
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                              provider.isActive ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span
+                          className={`text-xs font-bold ${
+                            provider.isActive
+                              ? 'text-brand-600 dark:text-brand-400'
+                              : 'text-gray-600 dark:text-gray-300'
+                          }`}
+                        >
+                          {provider.isActive ? 'Active' : 'Disabled'}
+                        </span>
+                      </div>
 
-                    {/* Button actions */}
-                    <div className="flex items-center gap-2">
-                      {/* Edit Button */}
-                      <button
-                        onClick={() => handleEdit(provider)}
-                        className="p-2 text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 bg-gray-50 dark:bg-navy-950 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-xl transition-all"
-                        title="Edit Settings"
-                      >
-                        <Edit size={14} />
-                      </button>
+                      {/* Button actions */}
+                      <div className="flex items-center gap-2">
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => handleEdit(provider)}
+                          className="p-2 text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 bg-gray-50 dark:bg-navy-950 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-xl transition-all"
+                          title="Edit Settings"
+                        >
+                          <Edit size={14} />
+                        </button>
 
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => handleDelete(provider)}
-                        className="p-2 text-gray-400 hover:text-error-500 bg-gray-50 dark:bg-navy-950 hover:bg-error-50 dark:hover:bg-error-500/10 rounded-xl transition-all"
-                        title="Delete Provider"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => handleDelete(provider)}
+                          className="p-2 text-gray-400 hover:text-error-500 bg-gray-50 dark:bg-navy-950 hover:bg-error-50 dark:hover:bg-error-500/10 rounded-xl transition-all"
+                          title="Delete Provider"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
-
-      {/* Form Modal */}
-      <ProviderFormModal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        editData={selectedProvider}
-      />
     </div>
   );
+
+  if (isIntegrationWorkspace) {
+    return (
+      <FormWorkspace
+        title={isBrevoExpanded ? 'Brevo Delivery Tracking Webhook' : 'Brevo Sender Management'}
+        description={
+          isBrevoExpanded
+            ? 'Register the callback endpoint used to track email delivery events.'
+            : 'Register sender identities and review their verification status.'
+        }
+        onClose={() => {
+          setIsBrevoExpanded(false);
+          setIsSendersExpanded(false);
+          onWorkspaceChange?.(false);
+        }}
+      >
+        {content}
+      </FormWorkspace>
+    );
+  }
+
+  return content;
 };

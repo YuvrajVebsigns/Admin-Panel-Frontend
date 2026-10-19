@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
-import { FileText, Upload, Search, X, Loader2 } from 'lucide-react';
-import { useGlobalModal } from '@/hooks/useGlobalModal';
+import React, { useRef, useState } from 'react';
+import { FileText, Upload, Search, X, ArrowLeft, Loader2 } from 'lucide-react';
 import { useFiles } from '@/modules/media/hooks/useFiles';
 import { FileBrowser } from '@/modules/media/components/FileBrowser';
 import { FileData } from '@/modules/media/types/file.types';
@@ -21,6 +20,9 @@ interface UniversalFilePickerProps {
   fileName?: string;
 }
 
+type PickerStep = 'closed' | 'selector' | 'library' | 'upload_details';
+
+/** Inline asset picker. Selection and metadata are kept in the current page flow. */
 export const UniversalFilePicker: React.FC<UniversalFilePickerProps> = ({
   value,
   onChange,
@@ -31,144 +33,55 @@ export const UniversalFilePicker: React.FC<UniversalFilePickerProps> = ({
   module = 'media',
   fileName,
 }) => {
-  const { openModal, closeModal } = useGlobalModal();
   const { uploadFile, isUploading } = useFiles();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<PickerStep>('closed');
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState('');
+  const [alt, setAlt] = useState('');
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [selectedModule, setSelectedModule] = useState(module);
+  const [visibility, setVisibility] = useState('public');
 
-  const openSourceSelector = () => {
-    const openExistingBrowser = () => {
-      openModal({
-        title: 'Browse Document Library',
-        size: '3xl',
-        content: (
-          <div className="max-h-[75vh] overflow-y-auto px-1">
-            <FileBrowser
-              initialFileType="document"
-              onSelect={(file: FileData) => {
-                onChange(file.url || '');
-                onSelect?.(file);
-                closeModal();
-              }}
-            />
-          </div>
-        ),
-      });
-    };
+  const resetPicker = () => {
+    setStep('closed');
+    setFile(null);
+    setUrl('');
+    setAlt('');
+    setKeywords([]);
+    setSelectedModule(module);
+    setVisibility('public');
+  };
 
-    const PickerModalContent = () => {
-      const [step, setStep] = React.useState<'selector' | 'upload_details'>('selector');
-      const [file, setFile] = React.useState<File | null>(null);
-      const [url, setUrl] = React.useState('');
-      const [alt, setAlt] = React.useState('');
-      const [keywords, setKeywords] = React.useState<string[]>([]);
-      const [modalModule, setModalModule] = React.useState(module);
-      const [visibility, setVisibility] = React.useState('public');
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setStep('upload_details');
+    }
+  };
 
-      const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-          setFile(selectedFile);
-          setStep('upload_details');
-        }
-      };
+  const handleSubmit = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    else return;
+    formData.append('module', selectedModule);
+    formData.append('visibility', visibility);
+    formData.append('alt', alt || file.name);
+    keywords.forEach((keyword) => formData.append('keywords[]', keyword));
+    formData.append('entityType', 'manual_upload');
+    formData.append('entityId', 'none');
 
-      const handleFinalSubmit = async () => {
-        const formData = new FormData();
-        if (step === 'upload_details' && file) {
-          formData.append('file', file);
-        } else {
-          return;
-        }
-
-        formData.append('module', modalModule);
-        formData.append('visibility', visibility);
-        formData.append('alt', alt || file.name);
-
-        keywords.forEach((k) => formData.append('keywords[]', k));
-
-        formData.append('entityType', 'manual_upload');
-        formData.append('entityId', 'none');
-
-        try {
-          const response = await uploadFile(formData);
-          onChange(response.url || '');
-          onSelect?.(response);
-          closeModal();
-          toast.success('Document uploaded successfully');
-        } catch (error) {
-          toast.error('Failed to upload document');
-        }
-      };
-
-      if (step === 'selector') {
-        return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-6">
-            <button
-              onClick={() => document.getElementById('picker-document-input')?.click()}
-              className="flex flex-col items-center gap-4 p-8 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-200 transition-all group text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
-                <Upload size={32} />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">Upload PDF/Doc</p>
-                <p className="text-xs text-gray-500 mt-1">From computer</p>
-              </div>
-              <input
-                id="picker-document-input"
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                onChange={handleFileSelect}
-              />
-            </button>
-
-            <button
-              onClick={openExistingBrowser}
-              className="flex flex-col items-center gap-4 p-8 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-200 transition-all group text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
-                <Search size={32} />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">Library</p>
-                <p className="text-xs text-gray-500 mt-1">Existing documents</p>
-              </div>
-            </button>
-          </div>
-        );
-      }
-
-      return (
-        <div className="py-6">
-          <AssetMetadataForm
-            step="upload"
-            file={file}
-            url={url}
-            setUrl={setUrl}
-            alt={alt}
-            setAlt={setAlt}
-            keywords={keywords}
-            setKeywords={setKeywords}
-            module={modalModule}
-            setModule={setModalModule}
-            visibility={visibility}
-            setVisibility={setVisibility}
-            onBack={() => setStep('selector')}
-            onSubmit={handleFinalSubmit}
-            isProcessing={isUploading}
-            submitLabel="Confirm & Add"
-          />
-        </div>
-      );
-    };
-
-    openModal({
-      title: 'Select Document Source',
-      description: 'Choose how you want to add a document',
-      size: 'lg',
-      hideFooter: true,
-      content: <PickerModalContent />,
-    });
+    try {
+      const response = await uploadFile(formData);
+      onChange(response.url || '');
+      onSelect?.(response);
+      resetPicker();
+      toast.success('Document added successfully');
+    } catch {
+      toast.error('Failed to upload document');
+    }
   };
 
   return (
@@ -176,67 +89,151 @@ export const UniversalFilePicker: React.FC<UniversalFilePickerProps> = ({
       {label && (
         <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</label>
       )}
-
-      <div
-        onClick={openSourceSelector}
-        className={cn(
-          'relative rounded-2xl border-2 border-dashed transition-all cursor-pointer group overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-navy-900/50 p-6',
-          value
-            ? 'border-brand-500/30 dark:border-brand-500/20 bg-brand-50/5 dark:bg-brand-500/5'
-            : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 hover:bg-brand-50/30 dark:hover:bg-brand-500/5',
-        )}
-      >
-        {value ? (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center shadow-md shadow-brand-500/10">
-                <FileText size={22} />
-              </div>
-              <div className="text-left max-w-[250px] sm:max-w-[400px]">
-                <p className="font-bold text-sm text-gray-900 dark:text-white truncate">
-                  {fileName || 'Document Selected'}
-                </p>
-                <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">{value}</p>
-              </div>
+      {value ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50/50 p-4 dark:border-brand-500/30 dark:bg-brand-500/5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
+              <FileText size={21} aria-hidden="true" />
             </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-gray-900 dark:text-white">
+                {fileName || 'Document selected'}
+              </p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">{value}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStep('selector')}
+              className="min-h-10 rounded-lg border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 hover:border-brand-500 dark:border-navy-700 dark:bg-navy-800 dark:text-gray-200"
+            >
+              Change file
+            </button>
+            <button
+              type="button"
+              aria-label="Remove selected document"
+              onClick={() => {
+                onChange('');
+                onSelect?.(null);
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-error-100 bg-error-50 text-error-600 hover:bg-error-100 dark:border-error-500/30 dark:bg-error-500/10"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setStep('selector')}
+          className="flex min-h-28 w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-5 text-center text-gray-500 transition-colors hover:border-brand-400 hover:bg-brand-50/30 hover:text-brand-600 dark:border-navy-700 dark:bg-navy-900/50 dark:hover:border-brand-500/60"
+        >
+          {isUploading ? (
+            <Loader2 size={24} className="animate-spin text-brand-500" />
+          ) : (
+            <Upload size={24} aria-hidden="true" />
+          )}
+          <span className="text-sm font-semibold">{placeholder}</span>
+        </button>
+      )}
 
-            <div className="flex items-center gap-2">
+      {step !== 'closed' && (
+        <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-navy-700 dark:bg-navy-950/40">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">Add a document</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                This workspace stays in the current form.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resetPicker}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-white hover:text-gray-700 dark:hover:bg-navy-800"
+              aria-label="Close document picker"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          {step === 'selector' && (
+            <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSourceSelector();
-                }}
-                className="px-3 py-1.5 bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 hover:border-brand-500 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-all shadow-sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
               >
-                Change File
+                <Upload className="text-brand-500" size={22} />
+                <span>
+                  <strong className="block text-sm text-gray-900 dark:text-white">
+                    Upload from device
+                  </strong>
+                  <small className="text-xs text-gray-500">PDF, document, or spreadsheet</small>
+                </span>
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange('');
-                  onSelect?.(null);
-                }}
-                className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 transition-colors"
+                onClick={() => setStep('library')}
+                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
               >
-                <X size={16} />
+                <Search className="text-brand-500" size={22} />
+                <span>
+                  <strong className="block text-sm text-gray-900 dark:text-white">
+                    Browse library
+                  </strong>
+                  <small className="text-xs text-gray-500">Choose an existing document</small>
+                </span>
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                onChange={handleFileSelect}
+              />
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3 text-gray-400 group-hover:text-brand-500 transition-colors">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-navy-800 shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:shadow-brand-500/20 transition-all">
-              {isUploading ? (
-                <Loader2 size={28} className="animate-spin text-brand-500" />
-              ) : (
-                <FileText size={28} />
-              )}
-            </div>
-            <p className="font-bold text-xs">{placeholder}</p>
-          </div>
-        )}
-      </div>
+          )}
+          {step === 'library' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep('selector')}
+                className="inline-flex min-h-9 items-center gap-2 text-xs font-bold text-brand-600"
+              >
+                <ArrowLeft size={15} /> Back to sources
+              </button>
+              <FileBrowser
+                initialFileType="document"
+                onSelect={(selected) => {
+                  onChange(selected.url || '');
+                  onSelect?.(selected);
+                  resetPicker();
+                }}
+              />
+            </>
+          )}
+          {step === 'upload_details' && (
+            <AssetMetadataForm
+              step="upload"
+              file={file}
+              url={url}
+              setUrl={setUrl}
+              alt={alt}
+              setAlt={setAlt}
+              keywords={keywords}
+              setKeywords={setKeywords}
+              module={selectedModule}
+              setModule={setSelectedModule}
+              visibility={visibility}
+              setVisibility={setVisibility}
+              onBack={() => setStep('selector')}
+              onSubmit={handleSubmit}
+              isProcessing={isUploading}
+              submitLabel="Add document"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

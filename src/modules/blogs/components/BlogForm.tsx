@@ -6,7 +6,6 @@ import * as z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft,
   Save,
   Globe,
   FileText,
@@ -58,6 +57,7 @@ import TagInput from '@/components/form/input/TagInput';
 import { UniversalImagePicker } from '@/components/form/UniversalImagePicker';
 import { Calendar, Clock } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 const getFileId = (file: unknown): string => {
   if (!file) return '';
   if (typeof file === 'string') return file;
@@ -107,7 +107,6 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams ? searchParams.get('from') || '/blogs' : '/blogs';
-  const backLabel = redirectUrl.includes('dashboard') ? 'Back to Dashboard' : 'Back to Blogs';
   const isEdit = !!initialData;
   const { websites } = useWebsites({ limit: 100 });
   const { createBlog, updateBlog, isCreating, isUpdating } = useBlogs();
@@ -367,19 +366,16 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
 
   return (
     <>
-      <div className="max-w-6xl mx-auto pb-20">
+      <FormWorkspace
+        title={isEdit ? 'Edit blog' : 'Create blog'}
+        description="Write your content, choose publication settings, and review search presentation before saving."
+        eyebrow="Content / Blogs"
+        context={isEdit ? 'Editing existing blog' : 'New blog draft'}
+        onClose={() => router.push(redirectUrl)}
+      >
         {/* Header Actions */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            type="button"
-            onClick={() => router.push(redirectUrl)}
-            className="flex items-center gap-2 text-gray-500 hover:text-brand-500 transition-colors font-medium group text-sm"
-          >
-            <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-            {backLabel}
-          </button>
-
-          <div className="flex items-center gap-3">
+        <div className="mb-8 border-b border-navy-100 pb-5 dark:border-navy-800">
+          <div className="flex flex-wrap items-center gap-3">
             <Badge
               color={
                 (initialData?.status || BlogStatus.DRAFT) === BlogStatus.PUBLISHED
@@ -600,13 +596,17 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
 
             {/* Content Editor Card */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
+              <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <FileText size={20} className="text-brand-500" />
                   Content Editor
                 </h3>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-navy-900 rounded-lg border border-gray-100 dark:border-navy-700">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-navy-900 rounded-lg border border-gray-100 dark:border-navy-700"
+                  >
                     {isAutoSaving ? (
                       <div className="flex items-center gap-2 text-[10px] font-bold text-brand-500 animate-pulse">
                         <RefreshCcw size={12} className="animate-spin" />
@@ -945,7 +945,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ initialData, defaultWebsiteI
             </div>
           </div>
         </div>
-      </div>
+      </FormWorkspace>
       <Modal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}

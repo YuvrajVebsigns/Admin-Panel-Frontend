@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Option {
   value: string;
@@ -31,6 +33,8 @@ const Select: React.FC<SelectProps> = ({
   error,
 }) => {
   const isControlled = value !== undefined;
+  const generatedId = useId();
+  const selectId = id ?? generatedId;
   const [internalValue, setInternalValue] = useState<string>(defaultValue);
 
   const currentValue = isControlled ? value : internalValue;
@@ -44,42 +48,63 @@ const Select: React.FC<SelectProps> = ({
   };
 
   return (
-    <div className="w-full space-y-1">
+    <div className="w-full space-y-2">
       {label && (
-        <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor={selectId}
+          className="block text-sm font-semibold text-navy-700 dark:text-navy-200"
+        >
           {label}
         </label>
       )}
-      <select
-        id={id}
-        aria-invalid={!!error}
-        className={`h-11 w-full appearance-none rounded-lg border px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 ${
-          error
-            ? 'border-error-500 focus:border-error-500 dark:border-error-500'
-            : 'border-gray-300 focus:border-brand-500 dark:border-navy-400 dark:focus:border-brand-500'
-        } ${disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-navy-900 opacity-60' : ''} ${
-          currentValue ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
-        } ${className}`}
-        value={currentValue}
-        onChange={handleChange}
-        disabled={disabled}
-      >
-        {/* Placeholder option */}
-        <option value="" disabled className="text-gray-700 dark:bg-navy-900 dark:text-gray-400">
-          {placeholder}
-        </option>
-        {/* Map over options */}
-        {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-            className="text-gray-700 dark:bg-navy-900 dark:text-gray-400"
-          >
-            {option.label}
+      <div className="relative">
+        <select
+          id={selectId}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${selectId}-error` : undefined}
+          className={cn(
+            `h-11 w-full appearance-none rounded-lg border bg-white px-3.5 py-2.5 pr-11 text-sm transition-colors focus:ring-3 focus:ring-brand-500/10 dark:bg-navy-900 dark:text-navy-100 ${
+              error
+                ? 'border-error-500 focus:border-error-500 dark:border-error-500'
+                : 'border-navy-200 focus:border-brand-500 dark:border-navy-700 dark:focus:border-brand-400'
+            } ${disabled ? 'bg-navy-50 cursor-not-allowed dark:bg-navy-950 opacity-60' : ''} ${
+              currentValue ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
+            }`,
+            className,
+          )}
+          value={currentValue}
+          onChange={handleChange}
+          disabled={disabled}
+        >
+          {/* Placeholder option */}
+          <option value="" disabled className="text-gray-700 dark:bg-navy-900 dark:text-gray-400">
+            {placeholder}
           </option>
-        ))}
-      </select>
-      {error && <p className="text-xs text-error-500 font-medium mt-1">{error}</p>}
+          {/* Map over options */}
+          {options.map((option) => (
+            <option
+              key={option.value}
+              value={option.value}
+              className="text-gray-700 dark:bg-navy-900 dark:text-gray-400"
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          size={18}
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-navy-400"
+        />
+      </div>
+      {error && (
+        <p
+          id={`${selectId}-error`}
+          className="text-xs font-medium text-error-600 dark:text-error-300"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 };

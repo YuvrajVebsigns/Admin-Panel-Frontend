@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AttendeeTable } from '@/modules/attendees/components/AttendeeTable';
 import { Attendee } from '@/modules/attendees/types/attendee.types';
 
-export default function AttendancePage() {
+function AttendancePage() {
   const router = useRouter();
 
   const handleEdit = (attendee: Attendee) => {
@@ -21,7 +21,7 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="min-w-0 space-y-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Event Attendance Console
@@ -39,3 +39,4 @@ export default function AttendancePage() {
     </div>
   );
 }
+export default AttendancePage;

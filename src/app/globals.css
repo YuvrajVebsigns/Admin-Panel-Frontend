@@ -4,6 +4,7 @@
 @source '../layout';
 @source '../icons';
 @source '../context';
+@source '../components';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -192,7 +193,22 @@
   }
 
   body {
-    @apply relative font-normal font-open-sans z-1 bg-gray-50 text-navy-500 dark:bg-navy-950 dark:text-white transition-colors duration-300;
+    @apply relative font-normal font-open-sans z-1 bg-navy-25 text-navy-700 antialiased dark:bg-navy-950 dark:text-navy-100;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-brand-500;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      @apply scroll-auto;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   h1,
@@ -221,6 +237,230 @@
   }
 }
 
+/* Opt-in dashboard contracts: route wrappers only fade, so fixed dialogs keep
+   their viewport containing block. No fill-forwards or persistent will-change. */
+@keyframes admin-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes admin-form-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.admin-workspace .admin-surface {
+  @apply border-navy-100 shadow-theme-xs dark:border-navy-800;
+}
+
+.admin-workspace .admin-surface:focus-within {
+  @apply border-brand-200 shadow-theme-sm dark:border-brand-500/40;
+}
+
+.admin-workspace .admin-section-heading::before {
+  content: '';
+  @apply mb-2.5 block h-0.5 w-6 rounded-full bg-brand-500;
+}
+
+.admin-workspace .admin-record-row:focus-within {
+  @apply bg-brand-25 dark:bg-brand-500/10;
+}
+
+.admin-workspace .admin-record-row:focus-within > td:first-child {
+  box-shadow: inset 2px 0 var(--color-brand-500);
+}
+
+.admin-workspace .admin-nav-submenu {
+  @apply grid grid-rows-[0fr];
+}
+
+.admin-workspace .admin-nav-submenu[data-open='true'] {
+  @apply grid-rows-[1fr];
+}
+
+.admin-workspace .sidebar-menu-item-active {
+  @apply bg-brand-25 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300;
+}
+
+.admin-workspace .sidebar-menu-item-active::before,
+.admin-workspace .sidebar-menu-dropdown-item-active::before {
+  content: '';
+  @apply absolute inset-y-3 left-0 w-0.5 rounded-full bg-brand-500;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .admin-workspace .admin-surface:hover {
+    @apply border-navy-200 shadow-theme-sm dark:border-navy-700;
+  }
+
+  .admin-workspace .admin-surface:focus-within:hover {
+    @apply border-brand-200 dark:border-brand-500/40;
+  }
+
+  .admin-workspace .admin-record-row:hover {
+    @apply bg-brand-25 dark:bg-brand-500/10;
+  }
+
+  .admin-workspace .admin-record-row:hover > td:first-child {
+    box-shadow: inset 2px 0 var(--color-brand-500);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-workspace .admin-page-enter,
+  .admin-workspace tbody.admin-records-enter {
+    @apply animate-[admin-fade-in_220ms_ease-out_backwards];
+  }
+
+  /* Only normal-flow form workspaces opt in to this local translation. */
+  .admin-workspace .admin-form-enter {
+    @apply animate-[admin-form-rise-in_280ms_cubic-bezier(0.22,1,0.36,1)_backwards];
+  }
+
+  .admin-workspace .admin-page-enter:focus-within,
+  .admin-workspace .admin-form-enter:focus-within,
+  .admin-workspace tbody.admin-records-enter:focus-within {
+    @apply animate-none;
+  }
+
+  .admin-workspace .admin-surface {
+    @apply transition-[border-color,box-shadow] duration-200;
+  }
+
+  .admin-workspace .admin-record-row {
+    @apply transition-colors duration-150;
+  }
+
+  .admin-workspace .admin-nav-submenu {
+    @apply transition-[grid-template-rows] duration-200 ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .admin-workspace .admin-action {
+    @apply transition-[color,background-color,border-color,box-shadow,scale] duration-150;
+  }
+
+  .admin-workspace
+    .admin-action:active:not(:disabled):not([aria-disabled='true']):not(:focus-visible) {
+    @apply scale-[0.98];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-workspace :is(.admin-page-enter, .admin-form-enter, .admin-records-enter, .admin-action),
+  .admin-workspace
+    :is(.admin-page-enter, .admin-form-enter, .admin-records-enter, .admin-action)::before,
+  .admin-workspace
+    :is(.admin-page-enter, .admin-form-enter, .admin-records-enter, .admin-action)::after {
+    @apply animate-none transform-none scale-none;
+  }
+
+  .admin-workspace :is(.admin-surface, .admin-record-row, .admin-action, .admin-nav-submenu),
+  .admin-workspace .admin-section-heading::before,
+  .admin-workspace .sidebar-menu-item-active::before,
+  .admin-workspace .sidebar-menu-dropdown-item-active::before {
+    @apply transition-none;
+  }
+}
+
+@keyframes dashboard-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-enter,
+.dashboard-card-list > * {
+  @apply animate-[dashboard-rise-in_360ms_cubic-bezier(0.22,1,0.36,1)_backwards];
+}
+
+.dashboard-delay-1 {
+  @apply [animation-delay:70ms];
+}
+
+.dashboard-delay-2 {
+  @apply [animation-delay:140ms];
+}
+
+.dashboard-delay-3 {
+  @apply [animation-delay:210ms];
+}
+
+.dashboard-card-list > :nth-child(1) {
+  @apply [animation-delay:35ms];
+}
+
+.dashboard-card-list > :nth-child(2) {
+  @apply [animation-delay:70ms];
+}
+
+.dashboard-card-list > :nth-child(3) {
+  @apply [animation-delay:105ms];
+}
+
+.dashboard-card-list > :nth-child(4) {
+  @apply [animation-delay:140ms];
+}
+
+.dashboard-card-list > :nth-child(5) {
+  @apply [animation-delay:175ms];
+}
+
+.dashboard-card-list > :nth-child(n + 6) {
+  @apply [animation-delay:210ms];
+}
+
+.dashboard-property-card {
+  @apply transition-[transform,box-shadow,border-color] duration-200 ease-[ease];
+}
+
+.dashboard-property-card:focus-within {
+  @apply border-brand-200/70 shadow-theme-md;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-property-card:hover {
+    @apply border-brand-200/70 shadow-theme-md;
+  }
+
+  .dashboard-property-card:hover:not(:focus-within) {
+    @apply transform-[translateY(-2px)];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-enter,
+  .dashboard-card-list > * {
+    @apply animate-none;
+  }
+
+  .dashboard-property-card,
+  .dashboard-property-card:hover,
+  .dashboard-property-card:hover:not(:focus-within),
+  .dashboard-property-card:focus-within {
+    @apply transition-none transform-none;
+  }
+}
+
 @utility btn-brand {
   @apply inline-flex items-center justify-center px-6 py-2.5 bg-brand-500 text-white font-bold rounded-lg transition-all duration-200 hover:bg-brand-600 hover:shadow-lg active:scale-95;
 }
@@ -230,15 +470,15 @@
 }
 
 @utility sidebar-menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  @apply relative flex items-center w-full gap-3 px-3 py-3 font-medium rounded-lg text-theme-sm transition-colors;
 }
 
 @utility sidebar-menu-item-active {
-  @apply bg-brand-500 text-white shadow-lg shadow-brand-500/20;
+  @apply bg-brand-500 text-white;
 }
 
 @utility sidebar-menu-item-inactive {
-  @apply text-gray-600 hover:bg-gray-50 hover:text-brand-500 dark:text-navy-300 dark:hover:bg-white/5 dark:hover:text-brand-400 transition-all;
+  @apply text-navy-600 hover:bg-navy-50 hover:text-navy-900 dark:text-navy-300 dark:hover:bg-navy-800 dark:hover:text-white transition-colors;
 }
 
 @utility sidebar-menu-item-icon {
@@ -266,11 +506,11 @@
 }
 
 @utility sidebar-menu-dropdown-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  @apply relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium transition-colors;
 }
 
 @utility sidebar-menu-dropdown-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.08] dark:text-brand-400;
+  @apply bg-brand-25 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300;
 }
 
 @utility sidebar-menu-dropdown-item-inactive {

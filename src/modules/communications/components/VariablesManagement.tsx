@@ -62,7 +62,9 @@ const CATEGORY_TABS = [
   { id: VariableCategoryGroup.OTHER, label: 'Other', icon: HelpCircle, defaultModel: 'Other' },
 ];
 
-export const VariablesManagement: React.FC = () => {
+export const VariablesManagement: React.FC<{ onWorkspaceChange?: (isOpen: boolean) => void }> = ({
+  onWorkspaceChange,
+}) => {
   const [activeTab, setActiveTab] = useState<VariableCategoryGroup>(
     VariableCategoryGroup.REGISTRATION,
   );
@@ -280,6 +282,19 @@ export const VariablesManagement: React.FC = () => {
     );
   }, [localVariables, searchQuery]);
 
+  if (isInspectorOpen) {
+    return (
+      <RawSchemaInspector
+        isOpen
+        onClose={() => {
+          setIsInspectorOpen(false);
+          onWorkspaceChange?.(false);
+        }}
+        onAddPath={handleAddPathFromSchema}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Search and control bar */}
@@ -297,10 +312,13 @@ export const VariablesManagement: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3 self-stretch md:self-auto">
+        <div className="flex flex-col gap-3 self-stretch sm:flex-row sm:flex-wrap md:self-auto">
           <Button
             variant="outline"
-            onClick={() => setIsInspectorOpen(true)}
+            onClick={() => {
+              setIsInspectorOpen(true);
+              onWorkspaceChange?.(true);
+            }}
             startIcon={<Database size={14} />}
             className="border-gray-250 dark:border-navy-800 text-gray-650 hover:bg-gray-50/50 hover:text-brand-500"
           >
@@ -545,13 +563,6 @@ export const VariablesManagement: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Raw Schema Inspector Drawer */}
-      <RawSchemaInspector
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        onAddPath={handleAddPathFromSchema}
-      />
     </div>
   );
 };

@@ -8,9 +8,14 @@ import { EyeCloseIcon, EyeIcon } from '@/icons';
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
-
-import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-// import { ConnectionStatus } from '../common/ConnectionStatus';
+import Link from 'next/link';
+import {
+  AuthWorkspace,
+  AuthError,
+  authButtonClassName,
+  authInputClassName,
+  authLinkClassName,
+} from './AuthWorkspace';
 
 export default function SignInForm() {
   const searchParams = useSearchParams();
@@ -22,7 +27,6 @@ export default function SignInForm() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
-  // ... (useEffect and validation stay the same)
   React.useEffect(() => {
     const savedData = localStorage.getItem('rememberMe');
     if (savedData) {
@@ -83,15 +87,10 @@ export default function SignInForm() {
   };
 
   return (
-    <AuthLayout title="Welcome Back" subtitle="Sign in to your administration dashboard">
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          {errors.general && (
-            <div className="p-4 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-              {errors.general}
-            </div>
-          )}
+    <AuthWorkspace title="Welcome back" subtitle="Sign in to manage your Core Media workspace.">
+      <form onSubmit={handleSubmit} aria-busy={isLoggingIn}>
+        <div className="space-y-5">
+          {errors.general && <AuthError>{errors.general}</AuthError>}
 
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
@@ -104,19 +103,14 @@ export default function SignInForm() {
               error={!!errors.email}
               hint={errors.email}
               autoComplete="username"
-              className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl"
+              aria-invalid={!!errors.email}
+              className={authInputClassName}
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              {/* <Link
-                href="/forgetpassword"
-                className="text-xs font-semibold text-brand-500 hover:text-brand-600 transition-colors"
-              >
-                Forgot password?
-              </Link> */}
             </div>
             <div className="relative">
               <Input
@@ -128,12 +122,15 @@ export default function SignInForm() {
                 error={!!errors.password}
                 hint={errors.password}
                 autoComplete="current-password"
-                className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl pr-12"
+                aria-invalid={!!errors.password}
+                className={`${authInputClassName} pr-12`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors z-10"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                className="absolute right-1 top-0 flex h-12 w-11 items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-gray-400 dark:hover:text-white"
               >
                 {showPassword ? (
                   <EyeIcon className="w-5 h-5 fill-current" />
@@ -144,46 +141,20 @@ export default function SignInForm() {
             </div>
           </div>
 
-          {/* <div className="flex items-center">
-            <div className="flex items-center gap-3">
-              <Checkbox
-                checked={isChecked}
-                onChange={(checked) => {
-                  setIsChecked(checked);
-                  if (!checked) {
-                    localStorage.removeItem('rememberMe');
-                  }
-                }}
-              />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 select-none">
-                Remember me for 30 days
-              </span>
-            </div>
-          </div> */}
-
-          <Button
-            className="w-full py-4 text-base font-bold shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 transition-all rounded-xl"
-            disabled={isLoggingIn}
-          >
-            {isLoggingIn ? 'Signing in...' : 'Sign In to Dashboard'}
+          <Button className={authButtonClassName} disabled={isLoggingIn}>
+            {isLoggingIn ? 'Signing in…' : 'Sign in'}
           </Button>
         </div>
       </form>
 
-      {/* <div className="mt-8 pt-8 border-t border-gray-50 dark:border-navy-700/50 text-center">
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-          Don&apos;t have an account yet? {''}
-          <Link
-            href="/signup"
-            className="text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 font-bold transition-colors"
-          >
-            Contact Administrator
-          </Link>
+      <div className="mt-5 border-t border-gray-100 pt-4 dark:border-navy-700">
+        <Link href="/forgetpassword" className={authLinkClassName}>
+          Forgot your password?
+        </Link>
+        <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          Use the account provided by your administrator.
         </p>
-      </div> */}
-      {/* <div className="mt-8 flex justify-center">
-        <ConnectionStatus />
-      </div> */}
-    </AuthLayout>
+      </div>
+    </AuthWorkspace>
   );
 }

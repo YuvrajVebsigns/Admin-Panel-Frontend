@@ -6,22 +6,23 @@ import { WebsitePage, PageStatus, PageType } from '../types/cms.types';
 import { DataTable } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
 import Button from '@/components/ui/button/Button';
-import { PageFormModal } from './PageFormModal';
+import { PageFormWorkspace } from './PageFormModal';
 import { Edit, Trash2, Copy, Globe, Lock, Plus, Search, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
 interface PageManagerProps {
   siteId?: string;
+  onWorkspaceChange?: (isOpen: boolean) => void;
 }
 
-export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
+export const PageManager: React.FC<PageManagerProps> = ({ siteId, onWorkspaceChange }) => {
   const [selectedSiteId, setSelectedSiteId] = useState<string>(siteId || '');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [pageType, setPageType] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WebsitePage | null>(null);
 
   const { user } = useAuthStore();
@@ -43,12 +44,14 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
 
   const handleEdit = (pageItem: WebsitePage) => {
     setSelectedPage(pageItem);
-    setIsModalOpen(true);
+    setIsWorkspaceOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleCreate = () => {
     setSelectedPage(null);
-    setIsModalOpen(true);
+    setIsWorkspaceOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -207,6 +210,19 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
     },
   ];
 
+  if (isWorkspaceOpen) {
+    return (
+      <PageFormWorkspace
+        onClose={() => {
+          setIsWorkspaceOpen(false);
+          onWorkspaceChange?.(false);
+        }}
+        siteId={effectiveSiteId}
+        pageData={selectedPage}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Search and Filters Bar */}
@@ -318,14 +334,6 @@ export const PageManager: React.FC<PageManagerProps> = ({ siteId }) => {
           }}
         />
       )}
-
-      {/* Page Form Modal */}
-      <PageFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        siteId={effectiveSiteId}
-        pageData={selectedPage}
-      />
     </div>
   );
 };

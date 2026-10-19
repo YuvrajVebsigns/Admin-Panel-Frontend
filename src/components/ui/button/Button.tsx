@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode; // Button text or content
   size?: 'sm' | 'md'; // Button size
   variant?: 'primary' | 'outline' | 'ghost' | 'error'; // Button variant
@@ -26,34 +27,45 @@ const Button: React.FC<ButtonProps> = ({
   isLoading = false,
   type = 'submit',
   title,
+  ...props
 }) => {
   // Size Classes
   const sizeClasses = {
-    sm: 'px-4 py-3 text-sm',
-    md: 'px-5 py-3.5 text-sm',
+    sm: 'min-h-11 px-4 py-2.5 text-sm',
+    md: 'min-h-11 px-5 py-3 text-sm',
   };
 
   // Variant Classes
   const variantClasses = {
-    primary: 'bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300',
+    primary: 'bg-brand-500 text-white hover:bg-brand-600',
     outline:
-      'bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300',
-    ghost: 'bg-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800',
-    error: 'bg-error-500 text-white hover:bg-error-600 shadow-theme-xs',
+      'border border-navy-200 bg-white text-navy-700 hover:bg-navy-50 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-200 dark:hover:bg-navy-800',
+    ghost:
+      'bg-transparent text-navy-600 hover:bg-navy-50 dark:text-navy-200 dark:hover:bg-navy-800',
+    error: 'bg-error-600 text-white hover:bg-error-700',
   };
 
   return (
     <button
       type={type}
       title={title}
-      className={`inline-flex items-center justify-center font-medium gap-2 rounded-lg transition ${className} ${
-        sizeClasses[size]
-      } ${variantClasses[variant]} ${disabled || isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+      className={cn(
+        'admin-action inline-flex items-center justify-center gap-2 rounded-lg font-semibold leading-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-colors motion-safe:duration-200 dark:focus-visible:ring-offset-navy-900',
+        sizeClasses[size],
+        variantClasses[variant],
+        className,
+      )}
       onClick={onClick}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      {...props}
     >
       {isLoading && (
-        <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+        <svg
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0 animate-spin motion-reduce:animate-none"
+          viewBox="0 0 24 24"
+        >
           <circle
             className="opacity-25"
             cx="12"

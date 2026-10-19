@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Modal } from '@/components/ui/modal';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Switch from '@/components/form/switch/Switch';
@@ -54,8 +54,7 @@ type PageFormData = z.input<typeof pageSchema>;
 
 import { useWebsites } from '../hooks/useWebsites';
 
-interface PageFormModalProps {
-  isOpen: boolean;
+interface PageFormWorkspaceProps {
   onClose: () => void;
   siteId?: string;
   pageData?: WebsitePage | null;
@@ -88,8 +87,7 @@ const mapBlockTypeToSectionType = (editorType: string): string => {
   return mapping[editorType] || editorType.toUpperCase();
 };
 
-export const PageFormModal: React.FC<PageFormModalProps> = ({
-  isOpen,
+export const PageFormWorkspace: React.FC<PageFormWorkspaceProps> = ({
   onClose,
   siteId,
   pageData,
@@ -238,7 +236,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
       setEditorContent(null);
     }
     setActiveTab('info');
-  }, [pageData, setValue, isOpen, siteId, rawPageSiteId, websites]);
+  }, [pageData, setValue, siteId, rawPageSiteId, websites]);
 
   // Generate slug dynamically from title
   useEffect(() => {
@@ -361,7 +359,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
 
   // Debounced auto-save on field changes
   useEffect(() => {
-    if (!isOpen || activeTab !== 'info') return;
+    if (activeTab !== 'info') return;
 
     // Clear any existing timer
     if (debounceTimerRef.current) {
@@ -387,7 +385,6 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     statusVal,
     isHomepageVal,
     shortDescriptionVal,
-    isOpen,
     effectiveSiteId,
   ]);
 
@@ -454,16 +451,15 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
+    <FormWorkspace
       onClose={onClose}
       title={isEdit ? 'Edit Page Details' : 'Create Website Page'}
-      size="5xl"
+      description="Manage page details, build content sections, and configure search visibility."
     >
-      <div className="flex flex-col h-[80vh] overflow-hidden">
+      <div className="min-w-0 space-y-6">
         {/* Tab Headers */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-navy-800">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-100 dark:border-navy-800">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => handleTabChange('info')}
@@ -534,12 +530,12 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
         )}
 
         {/* Modal Form Content */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 space-y-6">
+          <div className="min-w-0 space-y-6">
             {activeTab === 'info' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {!siteId && (
-                  <div className="col-span-2 flex flex-col space-y-2">
+                  <div className="md:col-span-2 flex flex-col space-y-2">
                     <div className="flex items-center">
                       <Label htmlFor="targetWebsite">
                         Target Website <span className="text-error-500">*</span>
@@ -563,7 +559,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                   </div>
                 )}
 
-                <div className="col-span-2 flex flex-col space-y-2">
+                <div className="md:col-span-2 flex flex-col space-y-2">
                   <div className="flex items-center">
                     <Label htmlFor="pageTitle">
                       Page Title <span className="text-error-500">*</span>
@@ -626,7 +622,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                   </select>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl dark:border-navy-700 col-span-2">
+                <div className="flex items-center justify-between gap-4 p-4 border border-gray-100 rounded-2xl dark:border-navy-700 md:col-span-2">
                   <div>
                     <div className="flex items-center">
                       <Label className="mb-0 font-bold">Set as Homepage</Label>
@@ -645,7 +641,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                   />
                 </div>
 
-                <div className="col-span-2 space-y-2">
+                <div className="md:col-span-2 space-y-2">
                   <div className="flex items-center">
                     <Label htmlFor="shortDescription">Short Description</Label>
                     <Tooltip content="A brief summary overview used for internal indexers, card previews, or general metadata." />
@@ -684,7 +680,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
             {activeTab === 'seo' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="col-span-2 flex flex-col space-y-2">
+                  <div className="md:col-span-2 flex flex-col space-y-2">
                     <div className="flex items-center">
                       <Label htmlFor="seoMetaTitle">SEO Meta Title</Label>
                       <Tooltip content="The primary page title displayed in search engine results and browser tabs (Recommended length: 50-60 characters)." />
@@ -696,7 +692,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2 space-y-2">
+                  <div className="md:col-span-2 space-y-2">
                     <div className="flex items-center">
                       <Label htmlFor="seoMetaDescription">SEO Meta Description</Label>
                       <Tooltip content="A concise overview summary shown under your title in search results (Recommended length: 150-160 characters)." />
@@ -709,7 +705,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2 space-y-2">
+                  <div className="md:col-span-2 space-y-2">
                     <div className="flex items-center">
                       <Label>Keywords / Tags</Label>
                       <Tooltip content="Relevant content tags and focus keyphrases to help search engine crawlers understand topic taxonomy." />
@@ -799,7 +795,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2 space-y-2">
+                  <div className="md:col-span-2 space-y-2">
                     <div className="flex items-center">
                       <Label htmlFor="schemaMarkup">JSON-LD Structured Schema Markup</Label>
                       <Tooltip content="Structured JSON schema script markup (e.g. FAQ, Article, local business schema) to produce rich snippets." />
@@ -855,7 +851,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 dark:border-navy-800 bg-gray-50 dark:bg-navy-950/40 rounded-b-3xl">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end pt-6 border-t border-gray-100 dark:border-navy-800">
             <Button variant="outline" onClick={onClose} type="button">
               Cancel
             </Button>
@@ -873,6 +869,6 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
           </div>
         </form>
       </div>
-    </Modal>
+    </FormWorkspace>
   );
 };

@@ -1,6 +1,7 @@
 import SignInForm from '@/components/auth/SignInForm';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
+import { AuthLoading } from '@/components/auth/AuthWorkspace';
 
 export const metadata: Metadata = {
   title: 'Sign In | Core Media Admin',
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<AuthLoading />}>
       <SignInForm />
     </Suspense>
   );

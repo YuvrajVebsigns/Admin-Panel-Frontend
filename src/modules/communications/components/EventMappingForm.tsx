@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button/Button';
 import {
@@ -521,585 +522,606 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Action Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-2xl transition-all text-gray-500 dark:text-gray-400"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEdit ? `Edit Event Mapping` : 'Create Event Mapping'}
-            </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              Configure website-scoped and global notification templates triggered on a parent
-              system event.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" type="button" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            className="shadow-lg shadow-brand-500/20 px-6 font-bold"
-            isLoading={isCreating || isUpdating}
-          >
-            {isEdit ? 'Save Changes' : 'Create Mapping'}
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-500/10 text-red-650 dark:text-red-400 rounded-2xl flex items-center gap-2 text-sm font-bold border border-red-100 dark:border-red-500/20">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Event Config & Triggers */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Parent Event Selection */}
-          <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
-            <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
-              1. Event Trigger
-            </h3>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                Parent System Event Name
-              </label>
-              <SystemEventCombobox
-                value={event}
-                onChange={(val) => {
-                  setEvent(val);
-                  setError('');
-                }}
-                categories={categories}
-                isLoading={isLoadingEvents}
-              />
-              <p className="text-[10px] text-gray-450 mt-1.5">
-                The event emitted by backend systems (e.g., <code>nomination.submitted</code>) that
-                triggers the mappings.
-              </p>
-            </div>
-          </div>
-
-          {/* Dynamic Triggers List */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wide">
-                  2. Actions & Website Triggers ({triggers.length})
-                </h3>
-                <p className="text-xs text-gray-450 dark:text-navy-400 mt-0.5">
-                  Route notifications based on website domain source or fall back to global
-                  channels.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                onClick={handleAddTrigger}
-                startIcon={<Plus size={14} />}
-                className="font-bold border-brand-500 text-brand-650 hover:bg-brand-50 dark:hover:bg-brand-500/10"
-              >
-                Add Action / Trigger
-              </Button>
-            </div>
-
-            {triggers.length === 0 ? (
-              <div className="p-12 text-center border border-dashed border-gray-200 dark:border-navy-800 rounded-3xl bg-gray-55 dark:bg-navy-950/20">
-                <Info className="mx-auto text-gray-300 dark:text-navy-600 mb-2" size={32} />
-                <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                  No active notification triggers mapped
-                </p>
-                <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                  Click &ldquo;Add Action / Trigger&rdquo; to automate sending emails, SMS, or Push
-                  notifications when this event occurs.
-                </p>
-              </div>
-            ) : (
-              triggers.map((trigger, idx) => {
-                const trgPaths = getPathsForTemplate(trigger.templateId);
-                const filteredTemplates = templates.filter(
-                  (t) => t.channel === trigger.channel && t.isActive,
-                );
-                const targetWebsite = websites.find((w) => w.id === trigger.websiteId);
-
-                return (
-                  <div
-                    key={trigger.id}
-                    className={`rounded-3xl border p-6 shadow-sm space-y-4 relative border-l-4 animate-fade-in transition-all ${
-                      trigger.websiteId
-                        ? 'bg-blue-50/20 dark:bg-navy-900 border-blue-150 dark:border-navy-800 border-l-blue-600'
-                        : 'bg-white dark:bg-navy-900 border-gray-100 dark:border-navy-800 border-l-brand-500'
-                    }`}
-                  >
-                    {/* Trigger Card Header */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-navy-850 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-bold text-gray-900 dark:text-white">
-                          Action #{idx + 1}
-                        </span>
-                        {targetWebsite ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
-                            <Globe size={12} className="text-blue-600 dark:text-blue-400" />
-                            <span>{targetWebsite.name}</span>
-                            <span className="text-[10px] font-mono text-blue-600/75 dark:text-blue-400/75">
-                              ({targetWebsite.domain})
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-gray-100 text-gray-700 dark:bg-navy-800 dark:text-gray-300 border border-gray-200 dark:border-navy-700">
-                            <Globe size={12} className="text-gray-500" />
-                            <span>🌐 All Websites (Global Default)</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-gray-500">Active</span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleTriggerChange(trigger.id, { isActive: !trigger.isActive })
-                            }
-                            className={`relative w-9 h-5 rounded-full transition-colors duration-250 ${
-                              trigger.isActive ? 'bg-brand-500' : 'bg-gray-250 dark:bg-navy-750'
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-250 ${
-                                trigger.isActive ? 'translate-x-4' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTrigger(trigger.id)}
-                          className="p-1.5 hover:bg-red-50 hover:text-red-500 text-gray-400 dark:hover:bg-red-500/10 rounded-xl transition-all"
-                          title="Remove Action"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Website Scope, Channel & Template Rows */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Website Scope */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                          Target Website Scope
-                        </label>
-                        <select
-                          value={trigger.websiteId || ''}
-                          onChange={(e) =>
-                            handleTriggerChange(trigger.id, {
-                              websiteId: e.target.value || undefined,
-                            })
-                          }
-                          className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                        >
-                          <option value="">🌐 All Websites (Global Default)</option>
-                          {websites.map((w) => (
-                            <option key={w.id} value={w.id}>
-                              🏷️ {w.name} ({w.domain})
-                            </option>
-                          ))}
-                        </select>
-                        {targetWebsite ? (
-                          <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
-                            Dispatches when event originates from{' '}
-                            <span className="font-mono font-bold">{targetWebsite.domain}</span>.
-                          </p>
-                        ) : (
-                          <p className="mt-1.5 text-[10px] text-gray-450 dark:text-navy-400">
-                            Dispatches as fallback or global rule.
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Channel */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                          Channel
-                        </label>
-                        <select
-                          value={trigger.channel}
-                          onChange={(e) =>
-                            handleTriggerChange(trigger.id, {
-                              channel: e.target.value as CommunicationChannel,
-                            })
-                          }
-                          className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                        >
-                          <option value={CommunicationChannel.EMAIL}>📧 Email</option>
-                          <option value={CommunicationChannel.SMS}>💬 SMS</option>
-                          <option value={CommunicationChannel.PUSH}>Bell Push</option>
-                        </select>
-                      </div>
-
-                      {/* Template Selector */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5 flex items-center justify-between">
-                          <span>Message Template</span>
-                          {trigger.templateId && (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenPreview(trigger.templateId)}
-                              className="text-[10px] text-brand-500 hover:text-brand-600 font-bold flex items-center gap-0.5 cursor-pointer"
-                            >
-                              <Eye size={11} /> Preview
-                            </button>
-                          )}
-                        </label>
-                        <select
-                          value={trigger.templateId}
-                          onChange={(e) =>
-                            handleTriggerChange(trigger.id, { templateId: e.target.value })
-                          }
-                          className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                        >
-                          <option value="">— Select Active Template —</option>
-                          {filteredTemplates.map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.name} (slug: {t.slug})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Dynamic Recipient Fields */}
-                    {trigger.templateId && (
-                      <div className="space-y-3 pt-2 bg-gray-50/50 dark:bg-navy-950/20 p-4 rounded-2xl border border-gray-100 dark:border-navy-850">
-                        {/* Primary Recipient (To) */}
-                        <div>
-                          {(() => {
-                            const isStatic =
-                              trigger.to &&
-                              trigger.to !== 'admin' &&
-                              !trgPaths.includes(trigger.to);
-
-                            return (
-                              <>
-                                <div className="flex items-center justify-between mb-1.5">
-                                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                    Primary Recipient (To)
-                                  </label>
-                                  <div className="flex bg-gray-100 dark:bg-navy-950 p-0.5 rounded-lg border border-gray-200/50 dark:border-navy-800">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        handleTriggerChange(trigger.id, { to: '' });
-                                      }}
-                                      className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
-                                        !isStatic
-                                          ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm'
-                                          : 'text-gray-500 hover:text-gray-700'
-                                      }`}
-                                    >
-                                      Dynamic Field
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const defaultVal =
-                                          trigger.channel === CommunicationChannel.EMAIL
-                                            ? 'custom@example.com'
-                                            : 'static-recipient';
-                                        handleTriggerChange(trigger.id, { to: defaultVal });
-                                      }}
-                                      className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
-                                        isStatic
-                                          ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm'
-                                          : 'text-gray-500 hover:text-gray-700'
-                                      }`}
-                                    >
-                                      Custom Static
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {isStatic ? (
-                                  <input
-                                    type="text"
-                                    value={trigger.to}
-                                    onChange={(e) =>
-                                      handleTriggerChange(trigger.id, { to: e.target.value })
-                                    }
-                                    placeholder={
-                                      trigger.channel === CommunicationChannel.EMAIL
-                                        ? 'e.g. info@vebsigns.com'
-                                        : 'e.g. static-value'
-                                    }
-                                    className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
-                                  />
-                                ) : (
-                                  <select
-                                    value={trigger.to}
-                                    onChange={(e) =>
-                                      handleTriggerChange(trigger.id, { to: e.target.value })
-                                    }
-                                    className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                                  >
-                                    <option value="">— Select Recipient —</option>
-                                    <option value="admin">
-                                      System Administrator ({adminEmail || 'Not Configured'})
-                                    </option>
-                                    {(() => {
-                                      const options: { value: string; label: string }[] = [];
-                                      if (trigger.channel === CommunicationChannel.EMAIL) {
-                                        trgPaths
-                                          .filter((p) => p.toLowerCase().includes('email'))
-                                          .forEach((p) => {
-                                            options.push({
-                                              value: p,
-                                              label: `${p} (Dynamic Email)`,
-                                            });
-                                          });
-                                      } else if (trigger.channel === CommunicationChannel.SMS) {
-                                        trgPaths
-                                          .filter(
-                                            (p) =>
-                                              p.toLowerCase().includes('phone') ||
-                                              p.toLowerCase().includes('mobile'),
-                                          )
-                                          .forEach((p) => {
-                                            options.push({
-                                              value: p,
-                                              label: `${p} (Dynamic Phone)`,
-                                            });
-                                          });
-                                      } else {
-                                        trgPaths.forEach((p) => {
-                                          options.push({ value: p, label: `${p} (Dynamic Field)` });
-                                        });
-                                      }
-                                      return options
-                                        .filter((opt) => opt.value !== 'admin')
-                                        .map((opt) => (
-                                          <option key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                          </option>
-                                        ));
-                                    })()}
-                                  </select>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-
-                        {/* CC & BCC (Email only) */}
-                        {trigger.channel === CommunicationChannel.EMAIL && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 flex items-center justify-between">
-                                <span>CC Recipients</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={trigger.cc}
-                                onChange={(e) =>
-                                  handleTriggerChange(trigger.id, { cc: e.target.value })
-                                }
-                                placeholder="Backup email address or field path"
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
-                              />
-                              {true && (
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const current = trigger.cc ? `${trigger.cc}, admin` : 'admin';
-                                      handleTriggerChange(trigger.id, { cc: current });
-                                    }}
-                                    className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
-                                  >
-                                    + admin ({adminEmail || 'Not Configured'})
-                                  </button>
-                                  {trgPaths
-                                    .filter((p) => p.toLowerCase().includes('email'))
-                                    .map((p) => (
-                                      <button
-                                        key={p}
-                                        type="button"
-                                        onClick={() => {
-                                          const current = trigger.cc ? `${trigger.cc}, ${p}` : p;
-                                          handleTriggerChange(trigger.id, { cc: current });
-                                        }}
-                                        className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-navy-800 dark:text-navy-300 font-mono text-[8px] transition-all"
-                                      >
-                                        + {p}
-                                      </button>
-                                    ))}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 flex items-center justify-between">
-                                <span>BCC Recipients</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={trigger.bcc}
-                                onChange={(e) =>
-                                  handleTriggerChange(trigger.id, { bcc: e.target.value })
-                                }
-                                placeholder="Static archive or backup address"
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
-                              />
-                              {true && (
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const current = trigger.bcc
-                                        ? `${trigger.bcc}, admin`
-                                        : 'admin';
-                                      handleTriggerChange(trigger.id, { bcc: current });
-                                    }}
-                                    className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
-                                  >
-                                    + admin ({adminEmail || 'Not Configured'})
-                                  </button>
-                                  {trgPaths
-                                    .filter((p) => p.toLowerCase().includes('email'))
-                                    .map((p) => (
-                                      <button
-                                        key={p}
-                                        type="button"
-                                        onClick={() => {
-                                          const current = trigger.bcc ? `${trigger.bcc}, ${p}` : p;
-                                          handleTriggerChange(trigger.id, { bcc: current });
-                                        }}
-                                        className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-navy-800 dark:text-navy-300 font-mono text-[8px] transition-all"
-                                      >
-                                        + {p}
-                                      </button>
-                                    ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Provider sender configuration (Email only) */}
-                        {trigger.channel === CommunicationChannel.EMAIL && (
-                          <div className="pt-1 space-y-2">
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                                Sender Email
-                              </label>
-                              <select
-                                value={trigger.senderEmail}
-                                onChange={(e) =>
-                                  handleTriggerChange(trigger.id, { senderEmail: e.target.value })
-                                }
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                              >
-                                <option value="">Default Provider Email</option>
-                                {verifiedSenders.map((s) => (
-                                  <option key={s.id} value={s.email}>
-                                    {s.name} ({s.email})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                                Brand Sender Name
-                              </label>
-                              <input
-                                type="text"
-                                value="Provider default"
-                                readOnly
-                                disabled
-                                className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                              />
-                              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                                The From name stays fixed to the brand identity and not the contact
-                                name.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar Info & Controls */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
-            <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
-              Trigger Mappings Settings
-            </h3>
-
-            {/* Parent Active Status toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-55 dark:bg-navy-950 rounded-2xl border border-gray-100 dark:border-navy-800">
-              <div>
-                <p className="text-xs font-bold text-gray-800 dark:text-white">Mapping Status</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">
-                  Activate or deactivate this event mapping rules.
-                </p>
-              </div>
+    <>
+      {!previewTemplate && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Action Header */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setIsActive(!isActive)}
-                className={`relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 ${
-                  isActive ? 'bg-brand-500' : 'bg-gray-300 dark:bg-navy-700'
-                }`}
+                onClick={handleCancel}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-2xl transition-all text-gray-500 dark:text-gray-400"
               >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                    isActive ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <ArrowLeft size={20} />
               </button>
-            </div>
-
-            {/* Instructions info */}
-            <div className="p-4 bg-blue-50/50 dark:bg-brand-500/5 border border-blue-100 dark:border-brand-500/10 rounded-2xl space-y-2 text-xs text-gray-600 dark:text-gray-300">
-              <div className="flex items-center gap-1.5 font-bold text-blue-800 dark:text-brand-400">
-                <HelpCircle size={14} />
-                <span>Multi-Trigger Resolution</span>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {isEdit ? `Edit Event Mapping` : 'Create Event Mapping'}
+                </h1>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure website-scoped and global notification templates triggered on a parent
+                  system event.
+                </p>
               </div>
-              <p>When a system event occurs:</p>
-              <ul className="list-disc pl-4 space-y-1 text-[11px] text-gray-500 dark:text-gray-400">
-                <li>The system will evaluate all actions listed on the left.</li>
-                <li>
-                  Each active action channel resolves its recipient dynamically against the event
-                  data context.
-                </li>
-                <li>Separate templates will be prepared and delivered concurrently.</li>
-              </ul>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" type="button" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                className="shadow-lg shadow-brand-500/20 px-6 font-bold"
+                isLoading={isCreating || isUpdating}
+              >
+                {isEdit ? 'Save Changes' : 'Create Mapping'}
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Live Preview Modal Overlay */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-500/10 text-red-650 dark:text-red-400 rounded-2xl flex items-center gap-2 text-sm font-bold border border-red-100 dark:border-red-500/20">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="min-w-0 space-y-6">
+            {/* Main Event Config & Triggers */}
+            <div className="min-w-0 space-y-6">
+              {/* Parent Event Selection */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
+                  1. Event Trigger
+                </h3>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Parent System Event Name
+                  </label>
+                  <SystemEventCombobox
+                    value={event}
+                    onChange={(val) => {
+                      setEvent(val);
+                      setError('');
+                    }}
+                    categories={categories}
+                    isLoading={isLoadingEvents}
+                  />
+                  <p className="text-[10px] text-gray-450 mt-1.5">
+                    The event emitted by backend systems (e.g., <code>nomination.submitted</code>)
+                    that triggers the mappings.
+                  </p>
+                </div>
+              </div>
+
+              {/* Dynamic Triggers List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wide">
+                      2. Actions & Website Triggers ({triggers.length})
+                    </h3>
+                    <p className="text-xs text-gray-450 dark:text-navy-400 mt-0.5">
+                      Route notifications based on website domain source or fall back to global
+                      channels.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={handleAddTrigger}
+                    startIcon={<Plus size={14} />}
+                    className="font-bold border-brand-500 text-brand-650 hover:bg-brand-50 dark:hover:bg-brand-500/10"
+                  >
+                    Add Action / Trigger
+                  </Button>
+                </div>
+
+                {triggers.length === 0 ? (
+                  <div className="p-12 text-center border border-dashed border-gray-200 dark:border-navy-800 rounded-3xl bg-gray-55 dark:bg-navy-950/20">
+                    <Info className="mx-auto text-gray-300 dark:text-navy-600 mb-2" size={32} />
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      No active notification triggers mapped
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                      Click &ldquo;Add Action / Trigger&rdquo; to automate sending emails, SMS, or
+                      Push notifications when this event occurs.
+                    </p>
+                  </div>
+                ) : (
+                  triggers.map((trigger, idx) => {
+                    const trgPaths = getPathsForTemplate(trigger.templateId);
+                    const filteredTemplates = templates.filter(
+                      (t) => t.channel === trigger.channel && t.isActive,
+                    );
+                    const targetWebsite = websites.find((w) => w.id === trigger.websiteId);
+
+                    return (
+                      <div
+                        key={trigger.id}
+                        className={`rounded-3xl border p-6 shadow-sm space-y-4 relative border-l-4 animate-fade-in transition-all ${
+                          trigger.websiteId
+                            ? 'bg-blue-50/20 dark:bg-navy-900 border-blue-150 dark:border-navy-800 border-l-blue-600'
+                            : 'bg-white dark:bg-navy-900 border-gray-100 dark:border-navy-800 border-l-brand-500'
+                        }`}
+                      >
+                        {/* Trigger Card Header */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-navy-850 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xs font-bold text-gray-900 dark:text-white">
+                              Action #{idx + 1}
+                            </span>
+                            {targetWebsite ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
+                                <Globe size={12} className="text-blue-600 dark:text-blue-400" />
+                                <span>{targetWebsite.name}</span>
+                                <span className="text-[10px] font-mono text-blue-600/75 dark:text-blue-400/75">
+                                  ({targetWebsite.domain})
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-gray-100 text-gray-700 dark:bg-navy-800 dark:text-gray-300 border border-gray-200 dark:border-navy-700">
+                                <Globe size={12} className="text-gray-500" />
+                                <span>🌐 All Websites (Global Default)</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-gray-500">Active</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleTriggerChange(trigger.id, { isActive: !trigger.isActive })
+                                }
+                                className={`relative w-9 h-5 rounded-full transition-colors duration-250 ${
+                                  trigger.isActive ? 'bg-brand-500' : 'bg-gray-250 dark:bg-navy-750'
+                                }`}
+                              >
+                                <span
+                                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-250 ${
+                                    trigger.isActive ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTrigger(trigger.id)}
+                              className="p-1.5 hover:bg-red-50 hover:text-red-500 text-gray-400 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                              title="Remove Action"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Website Scope, Channel & Template Rows */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Website Scope */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                              Target Website Scope
+                            </label>
+                            <select
+                              value={trigger.websiteId || ''}
+                              onChange={(e) =>
+                                handleTriggerChange(trigger.id, {
+                                  websiteId: e.target.value || undefined,
+                                })
+                              }
+                              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                            >
+                              <option value="">🌐 All Websites (Global Default)</option>
+                              {websites.map((w) => (
+                                <option key={w.id} value={w.id}>
+                                  🏷️ {w.name} ({w.domain})
+                                </option>
+                              ))}
+                            </select>
+                            {targetWebsite ? (
+                              <p className="mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                                Dispatches when event originates from{' '}
+                                <span className="font-mono font-bold">{targetWebsite.domain}</span>.
+                              </p>
+                            ) : (
+                              <p className="mt-1.5 text-[10px] text-gray-450 dark:text-navy-400">
+                                Dispatches as fallback or global rule.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Channel */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                              Channel
+                            </label>
+                            <select
+                              value={trigger.channel}
+                              onChange={(e) =>
+                                handleTriggerChange(trigger.id, {
+                                  channel: e.target.value as CommunicationChannel,
+                                })
+                              }
+                              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                            >
+                              <option value={CommunicationChannel.EMAIL}>📧 Email</option>
+                              <option value={CommunicationChannel.SMS}>💬 SMS</option>
+                              <option value={CommunicationChannel.PUSH}>Bell Push</option>
+                            </select>
+                          </div>
+
+                          {/* Template Selector */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-450 dark:text-gray-400 uppercase tracking-wide mb-1.5 flex items-center justify-between">
+                              <span>Message Template</span>
+                              {trigger.templateId && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPreview(trigger.templateId)}
+                                  className="text-[10px] text-brand-500 hover:text-brand-600 font-bold flex items-center gap-0.5 cursor-pointer"
+                                >
+                                  <Eye size={11} /> Preview
+                                </button>
+                              )}
+                            </label>
+                            <select
+                              value={trigger.templateId}
+                              onChange={(e) =>
+                                handleTriggerChange(trigger.id, { templateId: e.target.value })
+                              }
+                              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                            >
+                              <option value="">— Select Active Template —</option>
+                              {filteredTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                  {t.name} (slug: {t.slug})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Dynamic Recipient Fields */}
+                        {trigger.templateId && (
+                          <div className="space-y-3 pt-2 bg-gray-50/50 dark:bg-navy-950/20 p-4 rounded-2xl border border-gray-100 dark:border-navy-850">
+                            {/* Primary Recipient (To) */}
+                            <div>
+                              {(() => {
+                                const isStatic =
+                                  trigger.to &&
+                                  trigger.to !== 'admin' &&
+                                  !trgPaths.includes(trigger.to);
+
+                                return (
+                                  <>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Primary Recipient (To)
+                                      </label>
+                                      <div className="flex bg-gray-100 dark:bg-navy-950 p-0.5 rounded-lg border border-gray-200/50 dark:border-navy-800">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            handleTriggerChange(trigger.id, { to: '' });
+                                          }}
+                                          className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
+                                            !isStatic
+                                              ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm'
+                                              : 'text-gray-500 hover:text-gray-700'
+                                          }`}
+                                        >
+                                          Dynamic Field
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const defaultVal =
+                                              trigger.channel === CommunicationChannel.EMAIL
+                                                ? 'custom@example.com'
+                                                : 'static-recipient';
+                                            handleTriggerChange(trigger.id, { to: defaultVal });
+                                          }}
+                                          className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
+                                            isStatic
+                                              ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm'
+                                              : 'text-gray-500 hover:text-gray-700'
+                                          }`}
+                                        >
+                                          Custom Static
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {isStatic ? (
+                                      <input
+                                        type="text"
+                                        value={trigger.to}
+                                        onChange={(e) =>
+                                          handleTriggerChange(trigger.id, { to: e.target.value })
+                                        }
+                                        placeholder={
+                                          trigger.channel === CommunicationChannel.EMAIL
+                                            ? 'e.g. info@vebsigns.com'
+                                            : 'e.g. static-value'
+                                        }
+                                        className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
+                                      />
+                                    ) : (
+                                      <select
+                                        value={trigger.to}
+                                        onChange={(e) =>
+                                          handleTriggerChange(trigger.id, { to: e.target.value })
+                                        }
+                                        className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                                      >
+                                        <option value="">— Select Recipient —</option>
+                                        <option value="admin">
+                                          System Administrator ({adminEmail || 'Not Configured'})
+                                        </option>
+                                        {(() => {
+                                          const options: { value: string; label: string }[] = [];
+                                          if (trigger.channel === CommunicationChannel.EMAIL) {
+                                            trgPaths
+                                              .filter((p) => p.toLowerCase().includes('email'))
+                                              .forEach((p) => {
+                                                options.push({
+                                                  value: p,
+                                                  label: `${p} (Dynamic Email)`,
+                                                });
+                                              });
+                                          } else if (trigger.channel === CommunicationChannel.SMS) {
+                                            trgPaths
+                                              .filter(
+                                                (p) =>
+                                                  p.toLowerCase().includes('phone') ||
+                                                  p.toLowerCase().includes('mobile'),
+                                              )
+                                              .forEach((p) => {
+                                                options.push({
+                                                  value: p,
+                                                  label: `${p} (Dynamic Phone)`,
+                                                });
+                                              });
+                                          } else {
+                                            trgPaths.forEach((p) => {
+                                              options.push({
+                                                value: p,
+                                                label: `${p} (Dynamic Field)`,
+                                              });
+                                            });
+                                          }
+                                          return options
+                                            .filter((opt) => opt.value !== 'admin')
+                                            .map((opt) => (
+                                              <option key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                              </option>
+                                            ));
+                                        })()}
+                                      </select>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            {/* CC & BCC (Email only) */}
+                            {trigger.channel === CommunicationChannel.EMAIL && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 flex items-center justify-between">
+                                    <span>CC Recipients</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={trigger.cc}
+                                    onChange={(e) =>
+                                      handleTriggerChange(trigger.id, { cc: e.target.value })
+                                    }
+                                    placeholder="Backup email address or field path"
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
+                                  />
+                                  {true && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const current = trigger.cc
+                                            ? `${trigger.cc}, admin`
+                                            : 'admin';
+                                          handleTriggerChange(trigger.id, { cc: current });
+                                        }}
+                                        className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
+                                      >
+                                        + admin ({adminEmail || 'Not Configured'})
+                                      </button>
+                                      {trgPaths
+                                        .filter((p) => p.toLowerCase().includes('email'))
+                                        .map((p) => (
+                                          <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => {
+                                              const current = trigger.cc
+                                                ? `${trigger.cc}, ${p}`
+                                                : p;
+                                              handleTriggerChange(trigger.id, { cc: current });
+                                            }}
+                                            className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-navy-800 dark:text-navy-300 font-mono text-[8px] transition-all"
+                                          >
+                                            + {p}
+                                          </button>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 flex items-center justify-between">
+                                    <span>BCC Recipients</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={trigger.bcc}
+                                    onChange={(e) =>
+                                      handleTriggerChange(trigger.id, { bcc: e.target.value })
+                                    }
+                                    placeholder="Static archive or backup address"
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 font-mono"
+                                  />
+                                  {true && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const current = trigger.bcc
+                                            ? `${trigger.bcc}, admin`
+                                            : 'admin';
+                                          handleTriggerChange(trigger.id, { bcc: current });
+                                        }}
+                                        className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-mono text-[8px] transition-all border border-brand-200 dark:border-brand-800"
+                                      >
+                                        + admin ({adminEmail || 'Not Configured'})
+                                      </button>
+                                      {trgPaths
+                                        .filter((p) => p.toLowerCase().includes('email'))
+                                        .map((p) => (
+                                          <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => {
+                                              const current = trigger.bcc
+                                                ? `${trigger.bcc}, ${p}`
+                                                : p;
+                                              handleTriggerChange(trigger.id, { bcc: current });
+                                            }}
+                                            className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-navy-800 dark:text-navy-300 font-mono text-[8px] transition-all"
+                                          >
+                                            + {p}
+                                          </button>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Provider sender configuration (Email only) */}
+                            {trigger.channel === CommunicationChannel.EMAIL && (
+                              <div className="pt-1 space-y-2">
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                    Sender Email
+                                  </label>
+                                  <select
+                                    value={trigger.senderEmail}
+                                    onChange={(e) =>
+                                      handleTriggerChange(trigger.id, {
+                                        senderEmail: e.target.value,
+                                      })
+                                    }
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+                                  >
+                                    <option value="">Default Provider Email</option>
+                                    {verifiedSenders.map((s) => (
+                                      <option key={s.id} value={s.email}>
+                                        {s.name} ({s.email})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                    Brand Sender Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value="Provider default"
+                                    readOnly
+                                    disabled
+                                    className="w-full px-4 py-2 rounded-2xl border border-gray-200 dark:border-navy-800 text-xs bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                                  />
+                                  <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
+                                    The From name stays fixed to the brand identity and not the
+                                    contact name.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar Info & Controls */}
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
+                  Trigger Mappings Settings
+                </h3>
+
+                {/* Parent Active Status toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-55 dark:bg-navy-950 rounded-2xl border border-gray-100 dark:border-navy-800">
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 dark:text-white">
+                      Mapping Status
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Activate or deactivate this event mapping rules.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(!isActive)}
+                    className={`relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 ${
+                      isActive ? 'bg-brand-500' : 'bg-gray-300 dark:bg-navy-700'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
+                        isActive ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Instructions info */}
+                <div className="p-4 bg-blue-50/50 dark:bg-brand-500/5 border border-blue-100 dark:border-brand-500/10 rounded-2xl space-y-2 text-xs text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-1.5 font-bold text-blue-800 dark:text-brand-400">
+                    <HelpCircle size={14} />
+                    <span>Multi-Trigger Resolution</span>
+                  </div>
+                  <p>When a system event occurs:</p>
+                  <ul className="list-disc pl-4 space-y-1 text-[11px] text-gray-500 dark:text-gray-400">
+                    <li>The system will evaluate all actions listed on the left.</li>
+                    <li>
+                      Each active action channel resolves its recipient dynamically against the
+                      event data context.
+                    </li>
+                    <li>Separate templates will be prepared and delivered concurrently.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Editable preview data uses a dedicated normal-flow workspace. */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-5xl h-[80vh] rounded-3xl overflow-hidden shadow-2xl border border-gray-150 dark:border-navy-800 flex flex-col">
+        <FormWorkspace
+          title={`Test Mapping Variables: ${previewTemplate.name}`}
+          description="Use sample values to review the message layout before returning to your mapping draft."
+          onClose={handleClosePreview}
+        >
+          <div className="min-w-0 space-y-5">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-150 dark:border-navy-800 flex items-center justify-between bg-gray-50 dark:bg-navy-950">
               <div>
@@ -1118,14 +1140,14 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="min-w-0 space-y-5">
               {/* Mock variables sidepanel */}
               {previewTemplate.variables.length > 0 && (
-                <div className="w-72 border-r border-gray-150 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/20 p-5 overflow-y-auto space-y-4">
+                <div className="rounded-xl border border-gray-150 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/20 p-4 sm:p-5 space-y-4">
                   <h4 className="text-[10px] font-bold text-gray-450 uppercase tracking-wider">
                     Enter Mock Variables Data
                   </h4>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {previewTemplate.variables.map((v) => (
                       <div key={v}>
                         <label className="block text-[10px] font-semibold text-gray-650 dark:text-gray-300 mb-1 font-mono">
@@ -1151,7 +1173,7 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
                   <iframe
                     ref={iframeRef}
                     title="Live Render Output"
-                    className="w-full h-full border border-gray-150 rounded-2xl shadow-inner bg-white"
+                    className="w-full min-h-[60vh] border border-gray-150 rounded-2xl shadow-inner bg-white"
                   />
                 ) : (
                   <div className="max-w-md mx-auto h-full border border-gray-200 rounded-3xl shadow-lg bg-gray-55 p-4 relative overflow-y-auto">
@@ -1166,8 +1188,8 @@ export const EventMappingForm: React.FC<EventMappingFormProps> = ({ mappingId })
               </div>
             </div>
           </div>
-        </div>
+        </FormWorkspace>
       )}
-    </form>
+    </>
   );
 };

@@ -223,10 +223,11 @@ export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) 
   return (
     <div className="space-y-6">
       {/* Search & Custom Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
-        <div className="flex-1">
+      <div className="flex flex-col xl:flex-row gap-3 p-4 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800">
+        <div className="min-w-0 flex-1">
           <input
             type="text"
+            aria-label="Search sponsors"
             placeholder="Search sponsors by name, company, domain, email..."
             value={params.search}
             onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
@@ -234,8 +235,9 @@ export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) 
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <select
+            aria-label="Sponsor type"
             value={params.type || ''}
             onChange={(e) =>
               setParams((p) => ({
@@ -254,6 +256,7 @@ export const SponsorTable: React.FC<SponsorTableProps> = ({ onEdit, onDelete }) 
           </select>
 
           <select
+            aria-label="Sponsor tier"
             value={params.tier || ''}
             onChange={(e) =>
               setParams((p) => ({

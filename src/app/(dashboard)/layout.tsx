@@ -6,23 +6,37 @@ import AppHeader from '@/layout/AppHeader';
 import Backdrop from '@/layout/Backdrop';
 import { useSidebar } from '@/context/SidebarContext';
 import SecurityProvider from '@/providers/SecurityProvider';
+import { usePathname } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isExpanded, isHovered } = useSidebar();
+  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const pathname = usePathname();
 
   return (
     <SecurityProvider>
-      <div className="flex min-h-screen overflow-hidden bg-gray-50 dark:bg-navy-950">
+      <div className="admin-workspace flex min-h-dvh bg-navy-25 dark:bg-navy-950">
         <AppSidebar />
         <Backdrop />
         <div
-          className={`relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto transition-all duration-300 ease-in-out ${
+          inert={isMobileOpen}
+          className={`relative flex min-w-0 flex-1 flex-col motion-safe:transition-[margin] motion-safe:duration-200 ${
             isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
           }`}
         >
+          <a
+            href="#main-content"
+            className="sr-only z-40 rounded-lg bg-brand-500 px-4 py-3 text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+          >
+            Skip to content
+          </a>
           <AppHeader />
-          <main>
-            <div className="p-6 mx-auto max-w-screen-2xl lg:p-8 2xl:p-10">{children}</div>
+          <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
+            <div
+              key={pathname}
+              className={`${pathname === '/' ? '' : 'admin-page-enter'} mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8 2xl:px-10`}
+            >
+              {children}
+            </div>
           </main>
         </div>
       </div>

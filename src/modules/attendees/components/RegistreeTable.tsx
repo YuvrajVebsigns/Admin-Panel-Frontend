@@ -567,237 +567,239 @@ export const RegistreeTable: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Overview Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
-            <Users size={20} />
+    <>
+      <div className="space-y-6">
+        {/* Overview Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Total Contacts
+              </p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {isLoading ? '...' : stats.total}
+              </h3>
+            </div>
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Total Contacts
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              {isLoading ? '...' : stats.total}
-            </h3>
+
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-500 flex items-center justify-center shrink-0">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Delegates
+              </p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {isLoading ? '...' : stats.delegates}
+              </h3>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-500 flex items-center justify-center shrink-0">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Sponsors
+              </p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {isLoading ? '...' : stats.sponsors}
+              </h3>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+              <Mic size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Speakers
+              </p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {isLoading ? '...' : stats.speakers}
+              </h3>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-500 flex items-center justify-center shrink-0">
+              <Clock size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Pending
+              </p>
+              <h3 className="text-lg font-bold text-yellow-600 dark:text-yellow-400 mt-0.5">
+                {isLoading ? '...' : stats.pending}
+              </h3>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+              <CheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Attended
+              </p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+                {isLoading ? '...' : `${stats.attended} (${stats.attendedRate}%)`}
+              </h3>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-500 flex items-center justify-center shrink-0">
-            <UserCheck size={20} />
+        {/* Filter & Export Bar */}
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-4 flex flex-col 2xl:flex-row gap-4 justify-between items-start">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Event Filter dropdown */}
+            <div className="flex flex-col min-w-[190px] w-full sm:w-auto">
+              <select
+                value={params.eventId || ''}
+                onChange={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                    eventId: e.target.value || undefined,
+                  }))
+                }
+                className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
+              >
+                <option value="">All Registered Events</option>
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Opportunity / Registration Type dropdown */}
+            <div className="flex flex-col min-w-[180px] w-full sm:w-auto">
+              <select
+                value={params.tag || ''}
+                onChange={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                    tag: e.target.value || undefined,
+                  }))
+                }
+                className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
+              >
+                <option value="">All Opportunity Types</option>
+                <option value="delegate">CIO Delegates</option>
+                <option value="sponsor">Sponsors & Partners</option>
+                <option value="speaker">Speaker Opportunities</option>
+              </select>
+            </div>
+
+            {/* Status Filter dropdown */}
+            <div className="flex flex-col min-w-[150px] w-full sm:w-auto">
+              <select
+                value={params.status || ''}
+                onChange={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                    status: e.target.value || undefined,
+                  }))
+                }
+                className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
+              >
+                <option value="">All Statuses</option>
+                <option value="APPROVED">Approved</option>
+                <option value="PENDING">Pending Approval</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="BLOCKED">Blocked</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Delegates
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              {isLoading ? '...' : stats.delegates}
-            </h3>
+
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+            <button
+              type="button"
+              onClick={() => setIsBulkUploadModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-theme-xs hover:shadow-theme-md transition-all cursor-pointer shrink-0"
+            >
+              <UploadCloud size={15} />
+              <span>Bulk Upload</span>
+            </button>
+
+            <ExportButton
+              permission={PERMISSIONS.REGISTRATIONS_EXPORT}
+              exportTitle="Export Registrees Directory"
+              exportDescription="Generate an analytical spreadsheet of event registrations, approval statuses, corporate affiliations, and registration types."
+              showStatusFilter={true}
+              statusOptions={[
+                { value: 'approved', label: 'Approved' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'rejected', label: 'Rejected' },
+                { value: 'blocked', label: 'Blocked' },
+              ]}
+              customFilters={[
+                {
+                  key: 'eventId',
+                  label: 'Assigned Event',
+                  placeholder: 'All Events',
+                  options: events.map((ev) => ({
+                    value: ev.id,
+                    label: ev.title,
+                  })),
+                },
+              ]}
+              sheetsInfo={[
+                {
+                  sheet: 'Sheet 1: Analytics',
+                  desc: 'KPI cards with total registrations, approvals, and breakdown.',
+                },
+                {
+                  sheet: 'Sheet 2: Registrees Directory',
+                  desc: 'Detailed table with name, designation, organization, email, registration type, and approval status.',
+                },
+              ]}
+              initialFilters={{
+                search: params.search,
+                eventId: params.eventId,
+                status: params.status,
+              }}
+              onExport={(filters) =>
+                dataExportService.exportRegistrees({ ...filters, eventOnly: true })
+              }
+            />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-500 flex items-center justify-center shrink-0">
-            <Sparkles size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Sponsors
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              {isLoading ? '...' : stats.sponsors}
-            </h3>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-            <Mic size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Speakers
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              {isLoading ? '...' : stats.speakers}
-            </h3>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-500 flex items-center justify-center shrink-0">
-            <Clock size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Pending
-            </p>
-            <h3 className="text-lg font-bold text-yellow-600 dark:text-yellow-400 mt-0.5">
-              {isLoading ? '...' : stats.pending}
-            </h3>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-4 rounded-2xl shadow-theme-xs flex items-center gap-3.5 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-          <div className="h-11 w-11 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-            <CheckCircle size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Attended
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              {isLoading ? '...' : `${stats.attended} (${stats.attendedRate}%)`}
-            </h3>
-          </div>
-        </div>
+        {/* Main DataTable */}
+        <DataTable<Registree>
+          data={data?.data || []}
+          columns={columns}
+          isLoading={isLoading}
+          serverSide={true}
+          totalItems={totalItems}
+          page={params.page}
+          limit={params.limit}
+          search={params.search}
+          onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
+          onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
+          onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
+          searchPlaceholder="Search by name, email, phone, passcode, organization, designation..."
+        />
       </div>
-
-      {/* Filter & Export Bar */}
-      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-4 shadow-theme-xs flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Event Filter dropdown */}
-          <div className="flex flex-col min-w-[190px] w-full sm:w-auto">
-            <select
-              value={params.eventId || ''}
-              onChange={(e) =>
-                setParams((prev) => ({
-                  ...prev,
-                  page: 1,
-                  eventId: e.target.value || undefined,
-                }))
-              }
-              className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
-            >
-              <option value="">All Registered Events</option>
-              {events.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Opportunity / Registration Type dropdown */}
-          <div className="flex flex-col min-w-[180px] w-full sm:w-auto">
-            <select
-              value={params.tag || ''}
-              onChange={(e) =>
-                setParams((prev) => ({
-                  ...prev,
-                  page: 1,
-                  tag: e.target.value || undefined,
-                }))
-              }
-              className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
-            >
-              <option value="">All Opportunity Types</option>
-              <option value="delegate">CIO Delegates</option>
-              <option value="sponsor">Sponsors & Partners</option>
-              <option value="speaker">Speaker Opportunities</option>
-            </select>
-          </div>
-
-          {/* Status Filter dropdown */}
-          <div className="flex flex-col min-w-[150px] w-full sm:w-auto">
-            <select
-              value={params.status || ''}
-              onChange={(e) =>
-                setParams((prev) => ({
-                  ...prev,
-                  page: 1,
-                  status: e.target.value || undefined,
-                }))
-              }
-              className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
-            >
-              <option value="">All Statuses</option>
-              <option value="APPROVED">Approved</option>
-              <option value="PENDING">Pending Approval</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="BLOCKED">Blocked</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-          <button
-            type="button"
-            onClick={() => setIsBulkUploadModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-theme-xs hover:shadow-theme-md transition-all cursor-pointer shrink-0"
-          >
-            <UploadCloud size={15} />
-            <span>Bulk Upload</span>
-          </button>
-
-          <ExportButton
-            permission={PERMISSIONS.REGISTRATIONS_EXPORT}
-            exportTitle="Export Registrees Directory"
-            exportDescription="Generate an analytical spreadsheet of event registrations, approval statuses, corporate affiliations, and registration types."
-            showStatusFilter={true}
-            statusOptions={[
-              { value: 'approved', label: 'Approved' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'rejected', label: 'Rejected' },
-              { value: 'blocked', label: 'Blocked' },
-            ]}
-            customFilters={[
-              {
-                key: 'eventId',
-                label: 'Assigned Event',
-                placeholder: 'All Events',
-                options: events.map((ev) => ({
-                  value: ev.id,
-                  label: ev.title,
-                })),
-              },
-            ]}
-            sheetsInfo={[
-              {
-                sheet: 'Sheet 1: Analytics',
-                desc: 'KPI cards with total registrations, approvals, and breakdown.',
-              },
-              {
-                sheet: 'Sheet 2: Registrees Directory',
-                desc: 'Detailed table with name, designation, organization, email, registration type, and approval status.',
-              },
-            ]}
-            initialFilters={{
-              search: params.search,
-              eventId: params.eventId,
-              status: params.status,
-            }}
-            onExport={(filters) =>
-              dataExportService.exportRegistrees({ ...filters, eventOnly: true })
-            }
-          />
-        </div>
-      </div>
-
-      {/* Main DataTable */}
-      <DataTable<Registree>
-        data={data?.data || []}
-        columns={columns}
-        isLoading={isLoading}
-        serverSide={true}
-        totalItems={totalItems}
-        page={params.page}
-        limit={params.limit}
-        search={params.search}
-        onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
-        onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
-        onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
-        searchPlaceholder="Search by name, email, phone, passcode, organization, designation..."
-      />
-
-      {/* Bulk Upload Modal */}
       <RegistrationBulkUploadModal
         isOpen={isBulkUploadModalOpen}
         onClose={() => setIsBulkUploadModalOpen(false)}
-        onSuccess={() => refetch()}
+        onSuccess={() => {
+          refetch();
+        }}
       />
-    </div>
+    </>
   );
 };

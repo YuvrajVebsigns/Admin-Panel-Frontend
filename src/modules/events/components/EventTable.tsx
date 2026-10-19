@@ -173,11 +173,21 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
 
   const showHeader = !hideHeader && !websiteId;
 
+  if (selectedPosterEvent) {
+    return (
+      <EventQrPosterModal
+        isOpen
+        onClose={() => setSelectedPosterEvent(null)}
+        event={selectedPosterEvent}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8">
       {showHeader && (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Event Management</h2>
               <p className="text-sm text-gray-500">
@@ -194,7 +204,7 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
               return (
                 <div
                   key={i}
-                  className="group bg-white dark:bg-navy-800 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 shadow-theme-sm hover:shadow-theme-lg transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white dark:bg-navy-800 p-5 rounded-2xl border border-gray-200 dark:border-navy-700"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div
@@ -224,6 +234,7 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
                     <div
                       className={cn(
                         'h-full rounded-full transition-all duration-1000',
+                        stat.value > 0 ? 'w-[70%]' : 'w-0',
                         stat.color === 'blue'
                           ? 'bg-blue-500'
                           : stat.color === 'success'
@@ -232,7 +243,6 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
                               ? 'bg-warning-500'
                               : 'bg-brand-500',
                       )}
-                      style={{ width: stat.value > 0 ? '70%' : '0%' }}
                     />
                   </div>
                 </div>
@@ -301,14 +311,6 @@ export const EventTable: React.FC<EventTableProps> = ({ websiteId, hideHeader })
           </div>
         </div>
       </Modal>
-
-      {selectedPosterEvent && (
-        <EventQrPosterModal
-          isOpen={!!selectedPosterEvent}
-          onClose={() => setSelectedPosterEvent(null)}
-          event={selectedPosterEvent}
-        />
-      )}
     </div>
   );
 };

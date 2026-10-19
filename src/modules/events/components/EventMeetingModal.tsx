@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/modal';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import Button from '@/components/ui/button/Button';
 import { EventManagement, EventMeeting } from '../types/event.types';
 import { useEventAttendees } from '@/modules/attendees/hooks/useAttendees';
@@ -173,12 +173,13 @@ export const EventMeetingModal: React.FC<EventMeetingModalProps> = ({
 
   const isSubmitting = createMeetingMutation.isPending || updateMeetingMutation.isPending;
 
+  if (!isOpen) return null;
+
   return (
-    <Modal
-      isOpen={isOpen}
+    <FormWorkspace
       onClose={onClose}
       title={isEdit ? 'Edit Meeting Reservation' : 'Book Guest-Sponsor Meeting'}
-      size="lg"
+      description={`Arrange a meeting for ${event.title}.`}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Agenda Slot */}
@@ -462,6 +463,6 @@ export const EventMeetingModal: React.FC<EventMeetingModalProps> = ({
           </Button>
         </div>
       </form>
-    </Modal>
+    </FormWorkspace>
   );
 };

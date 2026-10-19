@@ -1,47 +1,40 @@
 import Link from 'next/link';
-import React from 'react';
+import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbProps {
   pageTitle: string;
 }
 
-const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle }) => {
+export default function PageBreadcrumb({ pageTitle }: BreadcrumbProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90" x-text="pageName">
-        {pageTitle}
-      </h2>
-      <nav>
-        <ol className="flex items-center gap-1.5">
+    <div className="mb-7 flex min-w-0 flex-col gap-3 border-b border-navy-100 pb-6 dark:border-navy-800 sm:flex-row sm:items-end sm:justify-between">
+      <div className="admin-section-heading min-w-0">
+        <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+          Workspace
+        </p>
+        <h1 className="text-2xl font-semibold leading-tight text-navy-900 dark:text-white sm:text-3xl">
+          {pageTitle}
+        </h1>
+      </div>
+      <nav aria-label="Breadcrumb">
+        <ol className="flex flex-wrap items-center gap-1 text-xs text-navy-500 dark:text-navy-300">
           <li>
             <Link
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+              className="admin-action inline-flex min-h-11 items-center rounded-lg px-1 hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 motion-safe:transition-colors dark:hover:text-brand-300"
               href="/"
             >
               Home
-              <svg
-                className="stroke-current"
-                width="17"
-                height="16"
-                viewBox="0 0 17 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                  stroke=""
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
             </Link>
           </li>
-          <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+          <li aria-hidden="true">
+            <ChevronRight size={14} />
+          </li>
+          <li aria-current="page" className="text-navy-700 dark:text-navy-100">
+            {pageTitle}
+          </li>
         </ol>
       </nav>
     </div>
   );
-};
-
-export default PageBreadcrumb;
+}

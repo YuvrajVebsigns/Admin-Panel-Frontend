@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { VerifyOTPForm } from '@/modules/auth/components/VerifyOTPForm';
+import VerifyOTPForm from '@/components/auth/VerifyOTPForm';
+import { AuthLoading } from '@/components/auth/AuthWorkspace';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function VerifyOTPPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<AuthLoading />}>
       <VerifyOTPForm />
     </Suspense>
   );

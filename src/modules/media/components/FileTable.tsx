@@ -10,6 +10,7 @@ import {
   Copy,
   Check,
   Eye,
+  Edit2,
 } from 'lucide-react';
 import { DataTable, Column } from '@/components/ui/table/DataTable';
 import Badge from '@/components/ui/badge/Badge';
@@ -25,9 +26,10 @@ import { dataExportService } from '@/services/dataExport.service';
 interface FileTableProps {
   params: Record<string, unknown>;
   onParamsChange: (params: unknown) => void;
+  onEdit?: (file: FileData) => void;
 }
 
-export const FileTable: React.FC<FileTableProps> = ({ params, onParamsChange }) => {
+export const FileTable: React.FC<FileTableProps> = ({ params, onParamsChange, onEdit }) => {
   const { files, meta, isLoading, deleteFile } = useFiles(params);
   const { confirm } = useGlobalModal();
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
@@ -140,6 +142,16 @@ export const FileTable: React.FC<FileTableProps> = ({ params, onParamsChange }) 
         header: 'ACTIONS',
         accessor: (file) => (
           <div className="flex items-center gap-1.5">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(file)}
+                title="Edit metadata"
+                className="p-2 text-gray-500 hover:text-brand-500 rounded-lg focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                <Edit2 size={16} />
+              </button>
+            )}
             <button
               onClick={() => handleCopyUrl(file)}
               className="p-2 text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-lg transition-all"
@@ -173,7 +185,7 @@ export const FileTable: React.FC<FileTableProps> = ({ params, onParamsChange }) 
         ),
       },
     ],
-    [copiedId, deleteFile, confirm],
+    [copiedId, deleteFile, confirm, onEdit],
   );
 
   return (

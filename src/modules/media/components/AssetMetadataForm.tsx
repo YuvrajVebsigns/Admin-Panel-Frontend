@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Button from '@/components/ui/button/Button';
@@ -58,17 +58,24 @@ export const AssetMetadataForm: React.FC<AssetMetadataFormProps> = ({
   isProcessing,
   submitLabel = 'Start Upload',
 }) => {
+  const [previewUrl, setPreviewUrl] = useState('');
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl('');
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
   return (
     <div className="space-y-6">
       {/* File Preview Card */}
       <div className="bg-gray-50 dark:bg-navy-900/50 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl bg-white dark:bg-navy-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-navy-700">
           {step === 'upload' && file?.type.startsWith('image/') ? (
-            <img
-              src={URL.createObjectURL(file)}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
+            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
           ) : step === 'url' &&
             url &&
             (url.startsWith('data:image') || /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(url)) ? (
@@ -130,7 +137,7 @@ export const AssetMetadataForm: React.FC<AssetMetadataFormProps> = ({
             autoFocus
           />
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select
             label="Module"
             options={MODULE_OPTIONS}
@@ -172,6 +179,7 @@ export const AssetMetadataForm: React.FC<AssetMetadataFormProps> = ({
         <Button
           variant="primary"
           className="flex-1 rounded-xl shadow-lg shadow-brand-500/20"
+          type="button"
           onClick={onSubmit}
           disabled={isProcessing || (step === 'url' && !url)}
         >

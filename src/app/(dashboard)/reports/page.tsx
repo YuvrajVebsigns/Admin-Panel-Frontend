@@ -4,7 +4,7 @@ import React, { Suspense } from 'react';
 import { ReportsDashboard } from '@/modules/websites/components/ReportsDashboard';
 import { Loader2 } from 'lucide-react';
 
-export default function ReportsPage() {
+function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -31,3 +31,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+export default ReportsPage;

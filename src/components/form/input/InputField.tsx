@@ -1,4 +1,5 @@
-import React, { forwardRef, InputHTMLAttributes } from 'react';
+import React, { forwardRef, InputHTMLAttributes, useId } from 'react';
+import { cn } from '@/lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   success?: boolean;
@@ -26,18 +27,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
-    // Determine input styles based on state (disabled, success, error)
-    let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 transition-all dark:bg-[#0b1a32] dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
+    const messageId = `${inputId}-message`;
+    let inputClasses =
+      'h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm placeholder:text-navy-400 focus:ring-3 transition-colors dark:bg-navy-900 dark:text-navy-100 dark:placeholder:text-navy-400';
 
     // Add styles for the different states
-    if (disabled || props.readOnly) {
-      inputClasses += ` text-gray-500 border-gray-300 cursor-not-allowed dark:bg-navy-950 dark:text-gray-500 dark:border-navy-800`;
+    if (disabled) {
+      inputClasses +=
+        ' border-navy-200 bg-navy-50 text-navy-400 cursor-not-allowed dark:bg-navy-950 dark:text-navy-400 dark:border-navy-800';
     } else if (error) {
-      inputClasses += ` text-error-800 border-error-500 focus:ring-3 focus:ring-error-500/10  dark:text-error-400 dark:border-error-500`;
+      inputClasses +=
+        ' text-navy-800 border-error-500 focus:ring-error-500/10 dark:border-error-400';
     } else if (success) {
-      inputClasses += ` text-success-500 border-success-400 focus:ring-success-500/10 focus:border-success-300  dark:text-success-400 dark:border-success-500`;
+      inputClasses +=
+        ' text-navy-800 border-success-500 focus:ring-success-500/10 dark:border-success-400';
     } else {
-      inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/10 dark:border-navy-600 dark:bg-[#0b1a32] dark:text-white/90 dark:focus:border-brand-500`;
+      inputClasses +=
+        ' text-navy-800 border-navy-200 focus:border-brand-500 focus:ring-brand-500/10 dark:border-navy-700 dark:focus:border-brand-400';
     }
 
     if (endIcon) {
@@ -52,34 +60,48 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative w-full space-y-2">
         {label && (
-          <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor={inputId}
+            className="block text-sm font-semibold text-navy-700 dark:text-navy-200"
+          >
             {label}
           </label>
         )}
         <div className="relative w-full">
           {startIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-navy-400">
               {startIcon}
             </div>
           )}
           <input
-            id={id}
+            id={inputId}
             ref={ref}
             type={type}
             disabled={disabled}
-            className={inputClasses}
+            className={cn(inputClasses, className)}
+            aria-invalid={!!error || undefined}
             {...props}
+            aria-describedby={
+              [props['aria-describedby'], errorMessage ? messageId : undefined]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
           />
           {endIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{endIcon}</div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400">{endIcon}</div>
           )}
         </div>
 
         {/* Optional Hint/Error Text */}
         {errorMessage && (
           <p
+            id={messageId}
             className={`mt-1.5 text-xs font-medium ${
-              error ? 'text-error-500' : success ? 'text-success-500' : 'text-gray-500'
+              error
+                ? 'text-error-600 dark:text-error-300'
+                : success
+                  ? 'text-success-700 dark:text-success-300'
+                  : 'text-navy-500 dark:text-navy-300'
             }`}
           >
             {errorMessage}

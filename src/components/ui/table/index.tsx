@@ -35,7 +35,7 @@ interface TableCellProps {
 
 // Table Component
 const Table: React.FC<TableProps> = ({ children, className }) => {
-  return <table className={`min-w-full  ${className}`}>{children}</table>;
+  return <table className={`w-full text-sm tabular-nums ${className ?? ''}`}>{children}</table>;
 };
 
 // TableHeader Component
@@ -63,7 +63,12 @@ const TableCell: React.FC<TableCellProps> = ({
 }) => {
   const CellTag = isHeader ? 'th' : 'td';
   return (
-    <CellTag colSpan={colSpan} rowSpan={rowSpan} className={` ${className}`}>
+    <CellTag
+      scope={isHeader ? 'col' : undefined}
+      colSpan={colSpan}
+      rowSpan={rowSpan}
+      className={className}
+    >
       {children}
     </CellTag>
   );

@@ -68,6 +68,7 @@ export default function WebsiteDashboardPage() {
     limit: 1,
   });
   const [activeTab, setActiveTab] = useState('blogs');
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [nominationActive, setNominationActive] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
@@ -167,189 +168,203 @@ export default function WebsiteDashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <button
-            onClick={() => router.back()}
-            className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm hover:border-brand-500 hover:text-brand-500 transition-all dark:bg-navy-800 dark:border-navy-700 dark:hover:border-brand-500"
-          >
-            <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-0.5" />
-          </button>
+      {!isWorkspaceOpen && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+            <button
+              onClick={() => router.back()}
+              className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm hover:border-brand-500 hover:text-brand-500 transition-all dark:bg-navy-800 dark:border-navy-700 dark:hover:border-brand-500"
+            >
+              <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-0.5" />
+            </button>
 
-          <div className="flex items-center gap-4">
-            <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm dark:bg-navy-800 dark:border-navy-700 flex items-center justify-center">
-              {getImageUrl(website.logo) ? (
-                <Image
-                  src={getImageUrl(website.logo)}
-                  alt={website.name}
-                  fill
-                  sizes="56px"
-                  className="object-contain p-2"
-                />
-              ) : (
-                <span className="text-xl font-bold text-brand-600 uppercase">
-                  {website.name.charAt(0)}
-                </span>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {website.name}
-                </h1>
-                <Badge color={website.isActive ? 'success' : 'light'}>
-                  {website.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm dark:bg-navy-800 dark:border-navy-700 flex items-center justify-center">
+                {getImageUrl(website.logo) ? (
+                  <Image
+                    src={getImageUrl(website.logo)}
+                    alt={website.name}
+                    fill
+                    sizes="56px"
+                    className="object-contain p-2"
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-brand-600 uppercase">
+                    {website.name.charAt(0)}
+                  </span>
+                )}
               </div>
-              <p className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
-                Dashboard <ChevronRight size={14} className="text-gray-300" /> Website insights
-              </p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                    {website.name}
+                  </h1>
+                  <Badge color={website.isActive ? 'success' : 'light'}>
+                    {website.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <p className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Dashboard <ChevronRight size={14} className="text-gray-300" /> Website insights
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => window.open(website.domain, '_blank')}
-            className="bg-white dark:bg-navy-800 border-gray-100 dark:border-navy-700 hover:border-brand-500"
-          >
-            <ExternalLink size={18} className="mr-2" />
-            Visit Website
-          </Button>
-          <Button variant="primary" onClick={() => router.push(`/websites/update/${website.id}`)}>
-            Settings
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              variant="ghost"
+              onClick={() => window.open(website.domain, '_blank')}
+              className="bg-white dark:bg-navy-800 border-gray-100 dark:border-navy-700 hover:border-brand-500"
+            >
+              <ExternalLink size={18} className="mr-2" />
+              Visit Website
+            </Button>
+            <Button variant="primary" onClick={() => router.push(`/websites/update/${website.id}`)}>
+              Settings
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <SummaryCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            bgIllustration={stat.bgIllustration}
-            iconBgColor={stat.iconBgColor}
-            iconTextColor={stat.iconTextColor}
-          />
-        ))}
-      </div>
+      {!isWorkspaceOpen && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {stats.map((stat, index) => (
+            <SummaryCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              bgIllustration={stat.bgIllustration}
+              iconBgColor={stat.iconBgColor}
+              iconTextColor={stat.iconTextColor}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Content Area */}
-      <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-theme-sm dark:bg-navy-800 dark:border-navy-700">
+      <div
+        className={
+          isWorkspaceOpen
+            ? 'min-w-0'
+            : 'min-w-0 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-theme-sm dark:bg-navy-800 dark:border-navy-700'
+        }
+      >
         {/* Tabs Header */}
-        <div className="border-b border-gray-50 dark:border-navy-700 p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center p-1 bg-gray-50 dark:bg-navy-900 rounded-xl w-fit overflow-x-auto">
-                {TABS.map((tab) => {
-                  const isAnalyticsTab = tab.id === 'analytics';
-                  const isNominationTab = tab.id === 'nomination_status';
+        {!isWorkspaceOpen && (
+          <div className="border-b border-gray-50 dark:border-navy-700 p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex min-w-0 max-w-full items-center p-1 bg-gray-50 dark:bg-navy-900 rounded-xl overflow-x-auto">
+                  {TABS.map((tab) => {
+                    const isAnalyticsTab = tab.id === 'analytics';
+                    const isNominationTab = tab.id === 'nomination_status';
 
-                  return (
-                    <React.Fragment key={tab.id}>
-                      <button
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                          activeTab === tab.id
-                            ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-800 dark:text-white'
-                            : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                        }`}
-                      >
-                        {tab.icon}
-                        {tab.label}
-                      </button>
-
-                      {isAnalyticsTab && isCxoCapitalDashboard && (
+                    return (
+                      <React.Fragment key={tab.id}>
                         <button
-                          type="button"
-                          onClick={() =>
-                            router.push(`/websites/dashboard/${websiteId}/cxo-network`)
-                          }
-                          className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ml-1"
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex shrink-0 min-h-11 items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                            activeTab === tab.id
+                              ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-800 dark:text-white'
+                              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                          }`}
                         >
-                          <UserCheck size={16} />
-                          CXO Network Members
+                          {tab.icon}
+                          {tab.label}
                         </button>
-                      )}
 
-                      {isNominationTab && <div className="ml-1" />}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
+                        {isAnalyticsTab && isCxoCapitalDashboard && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              router.push(`/websites/dashboard/${websiteId}/cxo-network`)
+                            }
+                            className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ml-1"
+                          >
+                            <UserCheck size={16} />
+                            CXO Network Members
+                          </button>
+                        )}
 
-              {(activeTab === 'blogs' || activeTab === 'events') && (
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      if (activeTab === 'blogs') {
-                        router.push(
-                          `/blogs/create?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
-                        );
-                      } else if (activeTab === 'events') {
-                        router.push(
-                          `/events/new?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
-                        );
-                      }
-                    }}
-                  >
-                    <Plus size={18} className="mr-2" />
-                    New {activeTab === 'blogs' ? 'Blog' : 'Event'}
-                  </Button>
+                        {isNominationTab && <div className="ml-1" />}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-              )}
+
+                {(activeTab === 'blogs' || activeTab === 'events') && (
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (activeTab === 'blogs') {
+                          router.push(
+                            `/blogs/create?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                          );
+                        } else if (activeTab === 'events') {
+                          router.push(
+                            `/events/new?websiteId=${websiteId}&from=/websites/dashboard/${websiteId}`,
+                          );
+                        }
+                      }}
+                    >
+                      <Plus size={18} className="mr-2" />
+                      New {activeTab === 'blogs' ? 'Blog' : 'Event'}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content Table */}
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
-                {activeTab === 'navbar'
-                  ? 'Navigation Menu links'
-                  : activeTab === 'seo'
-                    ? 'Global Website SEO'
-                    : activeTab === 'analytics'
-                      ? 'Visitor Analytics & Cookie Tracker'
-                      : activeTab === 'nomination_status'
-                        ? ''
-                        : activeTab}{' '}
-                <span className="ml-2 text-sm font-medium text-gray-400">
-                  {activeTab === 'pages'
-                    ? websitePages?.length || 0
-                    : activeTab === 'blogs'
-                      ? blogsMeta?.total || 0
-                      : activeTab === 'events'
-                        ? websiteEvents?.length || 0
-                        : activeTab === 'reports'
-                          ? reportsMeta?.total || 0
-                          : ''}{' '}
-                  {activeTab !== 'seo' &&
-                    activeTab !== 'navbar' &&
-                    activeTab !== 'analytics' &&
-                    activeTab !== 'nomination_status' &&
-                    'Total'}
-                </span>
-              </h2>
-              {/* <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className={isWorkspaceOpen ? 'min-w-0' : 'min-w-0 p-4 sm:p-6'}>
+          {!isWorkspaceOpen && (
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
+                  {activeTab === 'navbar'
+                    ? 'Navigation Menu links'
+                    : activeTab === 'seo'
+                      ? 'Global Website SEO'
+                      : activeTab === 'analytics'
+                        ? 'Visitor Analytics & Cookie Tracker'
+                        : activeTab === 'nomination_status'
+                          ? ''
+                          : activeTab}{' '}
+                  <span className="ml-2 text-sm font-medium text-gray-400">
+                    {activeTab === 'pages'
+                      ? websitePages?.length || 0
+                      : activeTab === 'blogs'
+                        ? blogsMeta?.total || 0
+                        : activeTab === 'events'
+                          ? websiteEvents?.length || 0
+                          : activeTab === 'reports'
+                            ? reportsMeta?.total || 0
+                            : ''}{' '}
+                    {activeTab !== 'seo' &&
+                      activeTab !== 'navbar' &&
+                      activeTab !== 'analytics' &&
+                      activeTab !== 'nomination_status' &&
+                      'Total'}
+                  </span>
+                </h2>
+                {/* <p className="text-sm text-gray-500 dark:text-gray-400">
                 {activeTab === 'analytics'
                   ? 'Monitor visitor traffic, unique pageviews, sessions, and cookie consent conversions'
                   : `Manage and monitor your website's ${activeTab} content`}
               </p> */}
+              </div>
             </div>
-          </div>
+          )}
 
           {activeTab === 'pages' ? (
-            <PageManager siteId={websiteId} />
+            <PageManager siteId={websiteId} onWorkspaceChange={setIsWorkspaceOpen} />
           ) : activeTab === 'navbar' ? (
-            <NavbarManager siteId={websiteId} />
+            <NavbarManager siteId={websiteId} onWorkspaceChange={setIsWorkspaceOpen} />
           ) : activeTab === 'seo' ? (
             <WebsiteSeoManager siteId={websiteId} />
           ) : activeTab === 'blogs' ? (
@@ -361,64 +376,70 @@ export default function WebsiteDashboardPage() {
           ) : activeTab === 'nomination_status' ? (
             <div className="space-y-8">
               {/* Nomination Form Global Status Switch */}
-              <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8 text-left dark:border-navy-700 dark:bg-navy-900 shadow-sm">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Nomination & Voting Portal Status
-                    </h3>
+              {!isWorkspaceOpen && (
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 sm:p-8 text-left dark:border-navy-700 dark:bg-navy-900 shadow-sm">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Nomination & Voting Portal Status
+                      </h3>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-3 md:min-w-[220px]">
+                      <div className="text-right">
+                        <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                          Current state
+                        </p>
+                        <p
+                          className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                        >
+                          {nominationActive ? 'Active' : 'Inactive'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-3 md:min-w-[220px]">
-                    <div className="text-right">
-                      <p className="text-sm uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-                        Current state
+                  <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
                       </p>
-                      <p
-                        className={`mt-2 font-semibold ${nominationActive ? 'text-emerald-600' : 'text-red-600'}`}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Toggle the switch to {nominationActive ? 'disable' : 'enable'} nomination
+                        submissions for this website.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        disabled={nominationMutation.status === 'pending'}
+                        onClick={() => nominationMutation.mutate(!nominationActive)}
+                        className={`relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                          nominationActive ? 'bg-emerald-500' : 'bg-rose-500'
+                        } ${nominationMutation.status === 'pending' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                        aria-label={
+                          nominationActive ? 'Disable nomination form' : 'Enable nomination form'
+                        }
+                        aria-pressed={nominationActive}
                       >
-                        {nominationActive ? 'Active' : 'Inactive'}
-                      </p>
+                        <span
+                          className={`inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                            nominationActive ? 'translate-x-6' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {nominationActive ? 'Nomination form enabled' : 'Nomination form disabled'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Toggle the switch to {nominationActive ? 'disable' : 'enable'} nomination
-                      submissions for this website.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 flex-wrap">
-                    <button
-                      type="button"
-                      disabled={nominationMutation.status === 'pending'}
-                      onClick={() => nominationMutation.mutate(!nominationActive)}
-                      className={`relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-                        nominationActive ? 'bg-emerald-500' : 'bg-rose-500'
-                      } ${nominationMutation.status === 'pending' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-                      aria-label={
-                        nominationActive ? 'Disable nomination form' : 'Enable nomination form'
-                      }
-                      aria-pressed={nominationActive}
-                    >
-                      <span
-                        className={`inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                          nominationActive ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Nomination & Voting Submissions Table */}
-              <WebsiteNominationSubmissionsTable websiteId={websiteId} website={website} />
+              <WebsiteNominationSubmissionsTable
+                websiteId={websiteId}
+                website={website}
+                onWorkspaceChange={setIsWorkspaceOpen}
+              />
             </div>
           ) : (
             <EventTable websiteId={websiteId} />

@@ -13,6 +13,7 @@ export default function PagesPage() {
   const { meta: draftPages } = useWebsitePages({ limit: 1, status: PageStatus.DRAFT });
 
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
 
   const stats = [
     {
@@ -46,26 +47,34 @@ export default function PagesPage() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <PageBreadcrumb pageTitle="Website Pages" />
+      {!isWorkspaceOpen && <PageBreadcrumb pageTitle="Website Pages" />}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat) => (
-          <SummaryCard
-            key={stat.id}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            bgIllustration={stat.bgIllustration}
-            iconBgColor={stat.iconBgColor}
-            iconTextColor={stat.iconTextColor}
-            onClick={() => setActiveFilter(stat.id as 'ALL' | 'PUBLISHED' | 'DRAFT')}
-            isActive={activeFilter === stat.id}
-          />
-        ))}
-      </div>
+      {!isWorkspaceOpen && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {stats.map((stat) => (
+            <SummaryCard
+              key={stat.id}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              bgIllustration={stat.bgIllustration}
+              iconBgColor={stat.iconBgColor}
+              iconTextColor={stat.iconTextColor}
+              onClick={() => setActiveFilter(stat.id as 'ALL' | 'PUBLISHED' | 'DRAFT')}
+              isActive={activeFilter === stat.id}
+            />
+          ))}
+        </div>
+      )}
 
-      <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm">
-        <PageManager />
+      <div
+        className={
+          isWorkspaceOpen
+            ? 'min-w-0'
+            : 'bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 p-4 sm:p-6 shadow-sm'
+        }
+      >
+        <PageManager onWorkspaceChange={setIsWorkspaceOpen} />
       </div>
     </div>
   );

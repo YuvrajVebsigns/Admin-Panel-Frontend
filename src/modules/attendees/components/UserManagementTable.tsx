@@ -306,7 +306,7 @@ export const UserManagementTable: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Aggregate KPI Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
           <div className="h-12 w-12 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
             <Users size={22} />
@@ -377,7 +377,7 @@ export const UserManagementTable: React.FC = () => {
       </div>
 
       {/* Search & Custom Filter Bar */}
-      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-5 shadow-theme-xs flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-4 flex flex-col xl:flex-row gap-4 justify-between items-start">
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           {/* Tag / Source Filter dropdown */}
           <div className="flex flex-col min-w-[200px] w-full sm:w-auto">
