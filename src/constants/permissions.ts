@@ -133,6 +133,19 @@ export const PERMISSIONS = {
   // Communications
   COMMUNICATIONS_VIEW: 'communications.view',
   COMMUNICATIONS_EXPORT: 'communications.export',
+
+  // Custom Forms
+  FORMS_VIEW: 'forms.view',
+  FORMS_CREATE: 'forms.create',
+  FORMS_UPDATE: 'forms.update',
+  FORMS_DELETE: 'forms.delete',
+  FORMS_EXPORT: 'forms.export',
+
+  // Form Submissions
+  FORM_SUBMISSIONS_VIEW: 'form-submissions.view',
+  FORM_SUBMISSIONS_UPDATE: 'form-submissions.update',
+  FORM_SUBMISSIONS_DELETE: 'form-submissions.delete',
+  FORM_SUBMISSIONS_EXPORT: 'form-submissions.export',
 };
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
