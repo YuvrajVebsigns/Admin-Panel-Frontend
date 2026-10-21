@@ -24,6 +24,8 @@ export enum SubmissionStatus {
 }
 
 export interface FormFieldOption {
+  id?: string;
+  _id?: string;
   label: string;
   value: string;
 }
@@ -39,10 +41,13 @@ export interface FormValidationRules {
 }
 
 export interface FormQuestion {
+  id?: string;
+  _id?: string;
   key: string;
   label: string;
   description?: string;
   placeholder?: string;
+  url?: string;
   type: FormFieldType;
   options?: FormFieldOption[];
   validation?: FormValidationRules;

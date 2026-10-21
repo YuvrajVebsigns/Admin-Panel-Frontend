@@ -153,8 +153,25 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
         settings: sanitizedSettings,
       });
 
-      // 2. Save Questions Array
-      await updateQuestions(questions);
+      // 2. Save Questions Array with sanitization
+      const sanitizedQuestions: FormQuestion[] = questions.map((q, i) => ({
+        id: q.id || q._id,
+        key: q.key,
+        label: q.label,
+        type: q.type,
+        description: q.description?.trim() || undefined,
+        placeholder: q.placeholder?.trim() || undefined,
+        url: q.url?.trim() || undefined,
+        order: q.order !== undefined ? q.order : i + 1,
+        width: q.width || 'full',
+        options: (q.options || []).map((opt) => ({
+          label: opt.label,
+          value: opt.value,
+        })),
+        validation: q.validation || {},
+      }));
+
+      await updateQuestions(sanitizedQuestions);
 
       setHasChanges(false);
       toast.success('All changes saved successfully');
