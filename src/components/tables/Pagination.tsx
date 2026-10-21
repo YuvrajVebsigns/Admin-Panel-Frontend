@@ -1,72 +1,48 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  disabled?: boolean;
 };
 
-export default function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-  disabled = false,
-}: PaginationProps) {
-  const count = Math.max(0, Math.floor(totalPages));
-  const activePage = Math.min(Math.max(1, currentPage), Math.max(1, count));
-  const start = Math.max(1, Math.min(activePage - 1, count - 2));
-  const pages = Array.from({ length: Math.min(3, count) }, (_, index) => start + index);
-  const buttonClass =
-    'admin-action flex size-11 shrink-0 items-center justify-center rounded-lg border border-navy-100 text-sm font-semibold text-navy-600 hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:transition-colors dark:border-navy-700 dark:text-navy-200 dark:hover:bg-navy-800 dark:focus-visible:ring-offset-navy-900';
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  const pagesAroundCurrent = Array.from(
+    { length: Math.min(3, totalPages) },
+    (_, i) => i + Math.max(currentPage - 1, 1),
+  );
 
   return (
-    <nav aria-label="Pagination" className="flex max-w-full flex-wrap items-center gap-1.5">
+    <div className="flex items-center ">
       <button
-        type="button"
-        aria-label="Previous page"
-        onClick={() => onPageChange(activePage - 1)}
-        disabled={disabled || activePage <= 1 || count === 0}
-        className={buttonClass}
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="mr-2.5 flex items-center h-10 justify-center rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-gray-700 shadow-theme-xs hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] text-sm"
       >
-        <ChevronLeft size={18} aria-hidden="true" />
+        Previous
       </button>
-      {start > 1 && (
-        <span className="hidden px-1 text-navy-400 sm:inline" aria-hidden="true">
-          …
-        </span>
-      )}
-      {pages.map((page) => (
-        <button
-          key={page}
-          type="button"
-          aria-label={`Page ${page}`}
-          aria-current={page === activePage ? 'page' : undefined}
-          disabled={disabled}
-          onClick={() => onPageChange(page)}
-          className={
-            page === activePage
-              ? 'admin-action flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:transition-colors dark:focus-visible:ring-offset-navy-900'
-              : buttonClass
-          }
-        >
-          {page}
-        </button>
-      ))}
-      {start + pages.length <= count && (
-        <span className="hidden px-1 text-navy-400 sm:inline" aria-hidden="true">
-          …
-        </span>
-      )}
+      <div className="flex items-center gap-2">
+        {currentPage > 3 && <span className="px-2">...</span>}
+        {pagesAroundCurrent.map((page) => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`px-4 py-2 rounded ${
+              currentPage === page ? 'bg-brand-500 text-white' : 'text-gray-700 dark:text-gray-400'
+            } flex w-10 items-center justify-center h-10 rounded-lg text-sm font-medium hover:bg-blue-500/[0.08] hover:text-brand-500 dark:hover:text-brand-500`}
+          >
+            {page}
+          </button>
+        ))}
+        {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+      </div>
       <button
-        type="button"
-        aria-label="Next page"
-        onClick={() => onPageChange(activePage + 1)}
-        disabled={disabled || activePage >= count || count === 0}
-        className={buttonClass}
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="ml-2.5 flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-gray-700 shadow-theme-xs text-sm hover:bg-gray-50 h-10 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]"
       >
-        <ChevronRight size={18} aria-hidden="true" />
+        Next
       </button>
-    </nav>
+    </div>
   );
-}
+};
+
+export default Pagination;

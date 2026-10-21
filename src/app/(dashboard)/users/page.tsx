@@ -4,7 +4,7 @@ import React from 'react';
 import { UserManagementTable } from '@/modules/attendees/components/UserManagementTable';
 import PageBreadcrumb from '@/components/common/PageBreadCrumb';
 
-function UserManagementPage() {
+export default function UserManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header breadcrumb element */}
@@ -15,4 +15,3 @@ function UserManagementPage() {
     </div>
   );
 }
-export default UserManagementPage;

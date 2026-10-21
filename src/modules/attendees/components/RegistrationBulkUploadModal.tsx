@@ -5,6 +5,7 @@ import { useWebsites } from '@/modules/websites/hooks/useWebsites';
 import { useEvents } from '@/modules/events/hooks/useEvents';
 import { registreeService } from '@/services/registree.service';
 import {
+  X,
   FileSpreadsheet,
   Download,
   Upload,
@@ -23,7 +24,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { Modal } from '@/components/ui/modal';
 
 interface RegistrationBulkUploadModalProps {
   isOpen: boolean;
@@ -490,17 +490,41 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
     Boolean(selectedWebsiteId) && Boolean(selectedEventId) && activeRows >= 1 && activeRows <= 1000;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => !isSubmitting && onClose()}
-      title="Bulk registration manager"
-      description="Download a template, validate your spreadsheet, and import registrations."
-      size="4xl"
-      className="max-h-[calc(100dvh-1.5rem)]"
-    >
-      <div className="max-h-[calc(100dvh-9rem)] min-w-0 space-y-6 overflow-y-auto pr-1">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal Card */}
+      <div className="relative w-full max-w-3xl transform overflow-hidden rounded-3xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 p-6 sm:p-8 shadow-2xl transition-all max-h-[90vh] flex flex-col">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 dark:bg-navy-800 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer z-10"
+        >
+          <X size={18} />
+        </button>
+
+        {/* Modal Header */}
+        <div className="flex items-start gap-4 mb-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 shrink-0">
+            <FileSpreadsheet size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Bulk Registration Manager
+            </h2>
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              Download pre-configured Excel templates with interactive dropdowns or upload filled
+              sheets with client-side error verification.
+            </p>
+          </div>
+        </div>
+
         {/* Tab Navigation */}
-        <div className="flex flex-col sm:flex-row items-stretch gap-2 p-1 rounded-xl bg-gray-100 dark:bg-navy-800 mb-6">
+        <div className="flex items-center gap-2 p-1 rounded-2xl bg-gray-100 dark:bg-navy-800 mb-6 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('download')}
@@ -553,7 +577,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                   value={selectedWebsiteId}
                   onChange={(e) => handleWebsiteChange(e.target.value)}
                   disabled={isLoadingWebsites || isDownloading}
-                  className="w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm font-medium text-gray-900 focus-visible:outline-none focus:border-brand-500 focus:bg-white motion-safe:transition-[border-color,background-color] disabled:opacity-60 dark:border-navy-700 dark:bg-navy-950/70 dark:text-white dark:focus:bg-navy-900"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50/70 dark:bg-navy-950/70 px-4 py-3 text-sm font-medium text-gray-900 dark:text-white outline-none transition-all focus:border-brand-500 focus:bg-white dark:focus:bg-navy-900 disabled:opacity-60 cursor-pointer"
                 >
                   <option value="">
                     {isLoadingWebsites ? 'Loading websites...' : '-- Select Website --'}
@@ -582,7 +606,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
                   disabled={!selectedWebsiteId || isLoadingEvents || isDownloading}
-                  className="w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm font-medium text-gray-900 focus-visible:outline-none focus:border-brand-500 focus:bg-white motion-safe:transition-[border-color,background-color] disabled:cursor-not-allowed disabled:opacity-50 dark:border-navy-700 dark:bg-navy-950/70 dark:text-white dark:focus:bg-navy-900"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50/70 dark:bg-navy-950/70 px-4 py-3 text-sm font-medium text-gray-900 dark:text-white outline-none transition-all focus:border-brand-500 focus:bg-white dark:focus:bg-navy-900 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   <option value="">
                     {!selectedWebsiteId
@@ -636,7 +660,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                   }}
                   disabled={isDownloading}
                   placeholder="e.g. 10"
-                  className="w-28 rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-2.5 text-sm font-bold text-gray-900 focus-visible:outline-none focus:border-brand-500 focus:bg-white motion-safe:transition-[border-color,background-color] dark:border-navy-700 dark:bg-navy-950/70 dark:text-white dark:focus:bg-navy-900"
+                  className="w-28 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50/70 dark:bg-navy-950/70 px-4 py-2.5 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:border-brand-500 focus:bg-white dark:focus:bg-navy-900"
                 />
 
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -681,7 +705,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
             </div>
 
             {/* Step 1 Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-navy-800">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-navy-800">
               <button
                 type="button"
                 onClick={() => setActiveTab('upload')}
@@ -787,15 +811,6 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                   <div
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        document.getElementById('bulk-excel-input')?.click();
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Choose a registration spreadsheet to upload"
                     className="border-2 border-dashed border-gray-300 dark:border-navy-700 hover:border-brand-500 rounded-3xl p-8 text-center transition-all bg-gray-50/50 dark:bg-navy-950/50 hover:bg-brand-500/5 cursor-pointer flex flex-col items-center justify-center space-y-3"
                     onClick={() => document.getElementById('bulk-excel-input')?.click()}
                   >
@@ -1002,7 +1017,7 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
                 )}
 
                 {/* Submit Action Bar */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-navy-800 mt-auto">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-navy-800 mt-auto">
                   <button
                     type="button"
                     onClick={() => setActiveTab('download')}
@@ -1052,6 +1067,6 @@ export const RegistrationBulkUploadModal: React.FC<RegistrationBulkUploadModalPr
           </div>
         )}
       </div>
-    </Modal>
+    </div>
   );
 };

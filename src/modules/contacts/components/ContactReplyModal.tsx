@@ -17,7 +17,6 @@ import {
   ShieldQuestion,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 
 interface ContactReplyModalProps {
   isOpen: boolean;
@@ -72,17 +71,13 @@ export const ContactReplyModal: React.FC<ContactReplyModalProps> = ({
   const repliedBy = typeof contactData.repliedBy === 'object' ? contactData.repliedBy : null;
 
   return (
-    <FormWorkspace
-      title="Contact conversation"
-      description="Review the inquiry and send a response."
-      onClose={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
       <div
-        className="grid w-full grid-cols-1 gap-6 lg:grid-cols-12"
+        className="relative w-full max-w-4xl bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left Side: Submission Details */}
-        <div className="lg:col-span-4 rounded-2xl bg-gray-50 dark:bg-navy-950 p-5 space-y-6 border border-gray-200 dark:border-navy-800">
+        <div className="w-full md:w-5/12 bg-gray-50 dark:bg-navy-950 p-6 flex flex-col justify-between border-r border-gray-100 dark:border-navy-800 overflow-y-auto">
           <div className="space-y-6">
             <div>
               <div className="flex items-center justify-between gap-2">
@@ -184,7 +179,7 @@ export const ContactReplyModal: React.FC<ContactReplyModalProps> = ({
         </div>
 
         {/* Right Side: Conversation Flow (Message and Reply box) */}
-        <div className="lg:col-span-8 min-w-0 flex flex-col justify-between">
+        <div className="w-full md:w-7/12 p-6 flex flex-col justify-between overflow-y-auto max-h-[50vh] md:max-h-none">
           {/* Header Controls */}
           <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-navy-800 shrink-0">
             <div className="flex items-center gap-2">
@@ -298,6 +293,6 @@ export const ContactReplyModal: React.FC<ContactReplyModalProps> = ({
           </div>
         </div>
       </div>
-    </FormWorkspace>
+    </div>
   );
 };

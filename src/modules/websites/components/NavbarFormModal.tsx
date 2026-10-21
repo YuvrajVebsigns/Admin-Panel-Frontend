@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { Modal } from '@/components/ui/modal';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Button from '@/components/ui/button/Button';
@@ -25,7 +25,8 @@ const navbarItemSchema = z.object({
 
 type NavbarItemFormData = z.infer<typeof navbarItemSchema>;
 
-interface NavbarFormWorkspaceProps {
+interface NavbarFormModalProps {
+  isOpen: boolean;
   onClose: () => void;
   siteId: string;
   position: NavbarPosition;
@@ -33,7 +34,8 @@ interface NavbarFormWorkspaceProps {
   siblingItems?: NavbarItem[];
 }
 
-export const NavbarFormWorkspace: React.FC<NavbarFormWorkspaceProps> = ({
+export const NavbarFormModal: React.FC<NavbarFormModalProps> = ({
+  isOpen,
   onClose,
   siteId,
   position,
@@ -92,7 +94,7 @@ export const NavbarFormWorkspace: React.FC<NavbarFormWorkspaceProps> = ({
       setValue('order', siblingItems.length);
       setValue('isVisible', true);
     }
-  }, [itemData, position, setValue, siblingItems.length]);
+  }, [itemData, position, setValue, siblingItems.length, isOpen]);
 
   // When menu position changes, assign active default position
   useEffect(() => {
@@ -153,12 +155,13 @@ export const NavbarFormWorkspace: React.FC<NavbarFormWorkspaceProps> = ({
   );
 
   return (
-    <FormWorkspace
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Edit Menu Item' : 'Add Navigation Menu Item'}
-      description="Choose a destination and organize links within your website navigation."
+      size="md"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
         <div className="flex flex-col space-y-2">
           <Label>Link Action Type</Label>
           <select
@@ -275,6 +278,6 @@ export const NavbarFormWorkspace: React.FC<NavbarFormWorkspaceProps> = ({
           </Button>
         </div>
       </form>
-    </FormWorkspace>
+    </Modal>
   );
 };

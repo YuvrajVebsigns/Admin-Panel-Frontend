@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { CommunicationProvidersTab } from '@/modules/communications/components/CommunicationProvidersTab';
 import { AlertTriangle } from 'lucide-react';
 
 export default function ProvidersPluginsPage() {
   const { user } = useAuthStore();
-  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
 
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
 
@@ -28,23 +27,15 @@ export default function ProvidersPluginsPage() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {!isWorkspaceOpen && (
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Providers / Plugins</h1>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
-            Configure third-party API integration keys, fallback hierarchies, and webhook trackers.
-          </p>
-        </div>
-      )}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Providers / Plugins</h1>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
+          Configure third-party API integration keys, fallback hierarchies, and webhook trackers.
+        </p>
+      </div>
 
-      <div
-        className={
-          isWorkspaceOpen
-            ? 'min-w-0'
-            : 'bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 shadow-sm p-4 sm:p-6'
-        }
-      >
-        <CommunicationProvidersTab onWorkspaceChange={setIsWorkspaceOpen} />
+      <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm p-6">
+        <CommunicationProvidersTab />
       </div>
     </div>
   );

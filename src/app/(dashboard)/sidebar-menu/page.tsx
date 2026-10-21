@@ -6,7 +6,7 @@ import { MenuTreeBuilder } from '@/modules/sidebar-menu/components/MenuTreeBuild
 import Button from '@/components/ui/button/Button';
 import { Plus, List, ListTree } from 'lucide-react';
 
-function MenuManagementPage() {
+export default function MenuManagementPage() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
 
@@ -15,19 +15,19 @@ function MenuManagementPage() {
   };
 
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="space-y-8 max-w-(--breakpoint-2xl) mx-auto py-8 px-4">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900 dark:text-white">
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
             Sidebar Menu Management
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
-            Manage navigation hierarchy and permissions.
+            Architect your system's navigation hierarchy and permissions.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="flex bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
             <button
               onClick={() => setViewMode('table')}
@@ -51,7 +51,11 @@ function MenuManagementPage() {
             </button>
           </div>
 
-          <Button onClick={handleCreate} startIcon={<Plus size={22} />} className="rounded-xl">
+          <Button
+            onClick={handleCreate}
+            startIcon={<Plus size={22} />}
+            className="shadow-2xl shadow-brand-500/30 active:scale-95 py-4 px-8 text-base font-black rounded-2xl"
+          >
             Create Menu
           </Button>
         </div>
@@ -62,7 +66,7 @@ function MenuManagementPage() {
         {viewMode === 'table' ? (
           <SidebarMenuTable />
         ) : (
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-6 rounded-2xl border border-gray-200 dark:border-navy-800">
+          <div className="bg-white dark:bg-gray-900 p-10 rounded-[2.5rem] border border-gray-200 dark:border-gray-800 shadow-2xl">
             <MenuTreeBuilder />
           </div>
         )}
@@ -70,4 +74,3 @@ function MenuManagementPage() {
     </div>
   );
 }
-export default MenuManagementPage;

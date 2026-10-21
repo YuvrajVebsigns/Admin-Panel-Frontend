@@ -7,7 +7,7 @@ import { Plus, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button/Button';
 
-function RolesPage() {
+export default function RolesPage() {
   const router = useRouter();
   const { roles, isLoading, updateRole, deleteRole } = useRoles();
 
@@ -52,4 +52,3 @@ function RolesPage() {
     </div>
   );
 }
-export default RolesPage;

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, AlertTriangle } from 'lucide-react';
+import { X, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/button/Button';
 import { EventScheduledEmail, ScheduleType, EventManagement } from '../types/event.types';
 import { useMessageTemplates } from '@/modules/communications/hooks/useMessageTemplates';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 
 interface EventScheduledEmailModalProps {
   isOpen: boolean;
@@ -67,14 +66,29 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
   };
 
   return (
-    <FormWorkspace
-      title="Scheduled event reminders"
-      description="Configure automated messages before or after this event."
-      onClose={onClose}
-    >
-      <div className="space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/50 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-navy-900 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-navy-700 flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-navy-800">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Calendar className="text-brand-500" size={24} />
+              Scheduled Event Reminders
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Configure automated emails sent to approved registrations before or after the event.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors text-gray-500"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
         {/* Content */}
-        <div className="space-y-6">
+        <div className="p-6 overflow-y-auto flex-1 space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-bold text-gray-800 dark:text-white">Active Schedules</h3>
             <Button variant="outline" size="sm" onClick={handleAddEmail}>
@@ -95,7 +109,7 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
                   className="p-4 rounded-2xl border border-gray-100 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-900/30"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                    <div className="sm:col-span-4">
+                    <div className="col-span-4">
                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                         Template
                       </label>
@@ -117,7 +131,7 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
                       </select>
                     </div>
 
-                    <div className="sm:col-span-3">
+                    <div className="col-span-3">
                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                         Timing
                       </label>
@@ -132,7 +146,7 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
                       </select>
                     </div>
 
-                    <div className="sm:col-span-4">
+                    <div className="col-span-4">
                       {email.scheduleType === ScheduleType.EXACT_DATE ? (
                         <>
                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
@@ -220,10 +234,8 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
                       )}
                     </div>
 
-                    <div className="sm:col-span-1 flex items-end justify-end">
+                    <div className="col-span-1 flex items-end justify-end">
                       <button
-                        type="button"
-                        aria-label={`Remove schedule ${idx + 1}`}
                         onClick={() => handleRemoveEmail(idx)}
                         className="p-2 text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 rounded-xl transition-colors"
                       >
@@ -247,7 +259,7 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-gray-100 dark:border-navy-800 flex flex-wrap justify-end gap-3">
+        <div className="p-6 border-t border-gray-100 dark:border-navy-800 flex justify-end gap-3 bg-gray-50 dark:bg-navy-900/50">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -256,6 +268,6 @@ export const EventScheduledEmailModal: React.FC<EventScheduledEmailModalProps> =
           </Button>
         </div>
       </div>
-    </FormWorkspace>
+    </div>
   );
 };

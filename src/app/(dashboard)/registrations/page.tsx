@@ -4,7 +4,7 @@ import React from 'react';
 import { RegistreeTable } from '@/modules/attendees/components/RegistreeTable';
 import PageBreadcrumb from '@/components/common/PageBreadCrumb';
 
-function RegistrationsPage() {
+export default function RegistrationsPage() {
   return (
     <div className="space-y-6">
       {/* Header breadcrumb element */}
@@ -15,4 +15,3 @@ function RegistrationsPage() {
     </div>
   );
 }
-export default RegistrationsPage;

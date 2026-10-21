@@ -1,107 +1,145 @@
 'use client';
-
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronUp, LogOut } from 'lucide-react';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 
 export default function SidebarUserProfile() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const { user, logout } = useAuth();
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+
   const showText = isExpanded || isHovered || isMobileOpen;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e.stopPropagation();
+    setIsOpen((prev) => !prev);
+  }
 
-  const handleLogout = async () => {
-    setIsSigningOut(true);
-    try {
-      await logout();
-      setIsOpen(false);
-      router.push('/login');
-    } finally {
-      setIsSigningOut(false);
-    }
+  function closeDropdown() {
+    setIsOpen(false);
+  }
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await logout();
+    closeDropdown();
+    router.push('/login');
   };
 
   return (
-    <div className="relative border-t border-navy-100 p-4 dark:border-navy-800">
+    <div className="relative border-t border-gray-200 dark:border-navy-700 p-4">
       <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen((previous) => !previous)}
-        aria-label="Account options"
-        aria-expanded={isOpen}
-        aria-controls="sidebar-account-options"
-        className="admin-action dropdown-toggle flex min-h-11 w-full items-center gap-3 rounded-lg text-left text-navy-700 transition-colors hover:bg-navy-25 dark:text-navy-200 dark:hover:bg-navy-800"
+        onClick={toggleDropdown}
+        className="flex items-center w-full text-left text-gray-700 dark:text-gray-300 focus:outline-none"
       >
-        <span className="size-10 shrink-0 overflow-hidden rounded-full bg-navy-50 dark:bg-navy-800">
-          <Image
-            width={40}
-            height={40}
-            src={user?.profileImage || '/images/user/owner.jpg'}
-            alt=""
-            className="size-full object-cover"
-          />
-        </span>
-        {showText && (
-          <>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-navy-800 dark:text-white">
-                {user?.fullName || 'Your account'}
+        <div className="flex items-center gap-3 w-full">
+          <span className="overflow-hidden rounded-full h-10 w-10 shrink-0">
+            <Image
+              width={40}
+              height={40}
+              src={user?.profileImage || '/images/user/owner.jpg'}
+              alt={user?.fullName || 'User'}
+              className="object-cover w-full h-full"
+            />
+          </span>
+
+          {showText && (
+            <div className="flex-1 min-w-0">
+              <span className="block font-medium text-sm text-gray-900 dark:text-white truncate">
+                {user?.fullName || 'Guest User'}
               </span>
-              <span className="block truncate text-xs text-navy-500 dark:text-navy-300">
+              <span className="block text-xs text-gray-500 dark:text-navy-300 truncate">
                 {user?.role?.name || 'Administrator'}
               </span>
-            </span>
-            <ChevronUp
-              size={16}
-              aria-hidden="true"
-              className={`shrink-0 motion-safe:transition-transform motion-safe:duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            />
-          </>
-        )}
+            </div>
+          )}
+
+          {showText && (
+            <svg
+              className={`shrink-0 stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+                isOpen ? 'rotate-180' : ''
+              }`}
+              width="18"
+              height="20"
+              viewBox="0 0 18 20"
+              fill="none"
+            >
+              <path
+                d="M4.3125 13.3438L9 8.65625L13.6875 13.3438"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </div>
       </button>
+
       <Dropdown
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        className={`${showText ? 'left-4 right-4' : 'left-full right-auto ml-2 w-60'} bottom-full mb-2 flex flex-col rounded-xl p-3`}
+        onClose={closeDropdown}
+        className={`absolute ${showText ? 'left-4 w-[240px]' : 'left-full ml-2 w-[240px]'} bottom-full mb-2 flex flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-navy-700 dark:bg-navy-800 z-50`}
       >
-        <div id="sidebar-account-options">
-          <div className="border-b border-navy-100 px-2 pb-3 dark:border-navy-700">
-            <p className="truncate text-sm font-semibold text-navy-800 dark:text-white">
-              {user?.fullName || 'Your account'}
-            </p>
-            {user?.email && (
-              <p className="mt-1 truncate text-xs text-navy-500 dark:text-navy-300">{user.email}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isSigningOut}
-            className="admin-action mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-navy-700 transition-colors hover:bg-brand-25 hover:text-brand-700 disabled:opacity-50 dark:text-navy-200 dark:hover:bg-brand-500/10 dark:hover:text-brand-300"
-          >
-            <LogOut size={18} aria-hidden="true" />
-            {isSigningOut ? 'Signing out…' : 'Sign out'}
-          </button>
+        <div>
+          <span className="block font-medium text-gray-700 text-sm dark:text-gray-400 truncate">
+            {user?.fullName || 'Guest User'}
+          </span>
+          <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400 truncate">
+            {user?.email || 'admin@example.com'}
+          </span>
         </div>
+
+        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-navy-700">
+          {/* <li>
+            <DropdownItem
+              onItemClick={closeDropdown}
+              tag="a"
+              href="/profile"
+              className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-sm hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+            >
+              <svg
+                className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z"
+                  fill="currentColor"
+                />
+              </svg>
+              Account settings
+            </DropdownItem>
+          </li> */}
+        </ul>
+        <button
+          onClick={handleLogout}
+          className="flex items-center w-full gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-sm hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+        >
+          <svg
+            className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M15.1007 19.247C14.6865 19.247 14.3507 18.9112 14.3507 18.497L14.3507 14.245H12.8507V18.497C12.8507 19.7396 13.8581 20.747 15.1007 20.747H18.5007C19.7434 20.747 20.7507 19.7396 20.7507 18.497L20.7507 5.49609C20.7507 4.25345 19.7433 3.24609 18.5007 3.24609H15.1007C13.8581 3.24609 12.8507 4.25345 12.8507 5.49609V9.74501L14.3507 9.74501V5.49609C14.3507 5.08188 14.6865 4.74609 15.1007 4.74609L18.5007 4.74609C18.9149 4.74609 19.2507 5.08188 19.2507 5.49609L19.2507 18.497C19.2507 18.9112 18.9149 19.247 18.5007 19.247H15.1007ZM3.25073 11.9984C3.25073 12.2144 3.34204 12.4091 3.48817 12.546L8.09483 17.1556C8.38763 17.4485 8.86251 17.4487 9.15549 17.1559C9.44848 16.8631 9.44863 16.3882 9.15583 16.0952L5.81116 12.7484L16.0007 12.7484C16.4149 12.7484 16.7507 12.4127 16.7507 11.9984C16.7507 11.5842 16.4149 11.2484 16.0007 11.2484L5.81528 11.2484L9.15585 7.90554C9.44864 7.61255 9.44847 7.13767 9.15547 6.84488C8.86248 6.55209 8.3876 6.55226 8.09481 6.84525L3.52309 11.4202C3.35673 11.5577 3.25073 11.7657 3.25073 11.9984Z"
+              fill="currentColor"
+            />
+          </svg>
+          Sign out
+        </button>
       </Dropdown>
     </div>
   );

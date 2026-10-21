@@ -3,16 +3,12 @@ import { useSidebar } from '@/context/SidebarContext';
 import React from 'react';
 
 const Backdrop: React.FC = () => {
-  const { isMobileOpen, closeMobileSidebar } = useSidebar();
+  const { isMobileOpen, toggleMobileSidebar } = useSidebar();
 
   if (!isMobileOpen) return null;
 
   return (
-    <div
-      aria-hidden="true"
-      className="fixed inset-0 z-50 bg-navy-950/60 lg:hidden"
-      onClick={closeMobileSidebar}
-    />
+    <div className="fixed inset-0 z-40 bg-gray-900/50 lg:hidden" onClick={toggleMobileSidebar} />
   );
 };
 

@@ -1,5 +1,4 @@
-import React, { forwardRef, useId } from 'react';
-import { cn } from '@/lib/utils';
+import React, { forwardRef } from 'react';
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   error?: boolean | string; // Error state
@@ -8,43 +7,24 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 const TextArea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className = '', disabled = false, error = false, hint = '', ...props }, ref) => {
-    const generatedId = useId();
-    const inputId = props.id ?? generatedId;
     const errorMessage = typeof error === 'string' ? error : hint;
-    let textareaClasses =
-      'min-h-28 w-full rounded-lg border bg-white px-3.5 py-3 text-sm leading-6 text-navy-800 placeholder:text-navy-400 transition-colors dark:bg-navy-900 dark:text-navy-100';
+    let textareaClasses = `w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden ${className}`;
 
     if (disabled) {
-      textareaClasses +=
-        ' bg-navy-50 opacity-60 border-navy-200 cursor-not-allowed dark:bg-navy-950 dark:border-navy-800';
+      textareaClasses += ` bg-gray-100 opacity-50 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-navy-950 dark:text-gray-500 dark:border-navy-800`;
     } else if (error) {
-      textareaClasses +=
-        ' border-error-500 focus:border-error-500 focus:ring-3 focus:ring-error-500/10 dark:border-error-400';
+      textareaClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-error-500 focus:ring-3 focus:ring-error-500/10 dark:border-error-500 dark:bg-[#0b1a32] dark:text-white/90 dark:focus:border-error-500`;
     } else {
-      textareaClasses +=
-        ' border-navy-200 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/10 dark:border-navy-700 dark:focus:border-brand-400';
+      textareaClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/10 dark:border-navy-400 dark:bg-[#0b1a32] dark:text-white/90 dark:focus:border-brand-500`;
     }
 
     return (
       <div className="relative">
-        <textarea
-          ref={ref}
-          disabled={disabled}
-          className={cn(textareaClasses, className)}
-          {...props}
-          id={inputId}
-          aria-invalid={!!error || props['aria-invalid'] || undefined}
-          aria-describedby={
-            [props['aria-describedby'], errorMessage ? `${inputId}-message` : undefined]
-              .filter(Boolean)
-              .join(' ') || undefined
-          }
-        />
+        <textarea ref={ref} disabled={disabled} className={textareaClasses} {...props} />
         {errorMessage && (
           <p
-            id={`${inputId}-message`}
             className={`mt-2 text-sm ${
-              error ? 'text-error-600 dark:text-error-300' : 'text-navy-500 dark:text-navy-300'
+              error ? 'text-error-500' : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             {errorMessage}

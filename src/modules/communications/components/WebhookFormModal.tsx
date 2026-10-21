@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import {
   WebhookSubscription,
@@ -99,13 +99,12 @@ export const WebhookFormModal: React.FC<WebhookFormModalProps> = ({
 
   const isBusy = isCreating || isUpdating;
 
-  if (!isOpen) return null;
-
   return (
-    <FormWorkspace
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Edit Webhook Subscription' : 'Create Webhook Subscription'}
-      description="Configure the endpoint, subscribed events, and signing secret."
+      size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* URL */}
@@ -211,6 +210,6 @@ export const WebhookFormModal: React.FC<WebhookFormModalProps> = ({
           </Button>
         </div>
       </form>
-    </FormWorkspace>
+    </Modal>
   );
 };

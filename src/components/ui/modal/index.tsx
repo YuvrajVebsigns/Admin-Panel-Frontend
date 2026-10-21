@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useEffect, useState, useId } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,7 +9,6 @@ interface ModalProps {
   showCloseButton?: boolean;
   isFullscreen?: boolean;
   title?: string;
-  description?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full' | 'auto';
 }
 
@@ -21,67 +20,33 @@ export const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
   isFullscreen = false,
   title,
-  description,
   size = 'md',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const previousActiveElementRef = useRef<HTMLElement | null>(null);
-  const titleId = useId();
-  const descriptionId = useId();
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      previousActiveElementRef.current = document.activeElement as HTMLElement | null;
       // Trigger animation on next frame for enter transition
-      const frame = requestAnimationFrame(() => {
-        setIsAnimating(true);
-        modalRef.current?.focus();
-      });
-
-      return () => {
-        cancelAnimationFrame(frame);
-        previousActiveElementRef.current?.focus();
-        previousActiveElementRef.current = null;
-      };
+      requestAnimationFrame(() => setIsAnimating(true));
     } else {
       setIsAnimating(false);
-      previousActiveElementRef.current?.focus();
-      previousActiveElementRef.current = null;
     }
   }, [isOpen]);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
-        return;
-      }
-
-      if (event.key !== 'Tab' || !modalRef.current) return;
-
-      const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusableElements.length) return;
-
-      const firstElement = focusableElements[0]!;
-      const lastElement = focusableElements[focusableElements.length - 1]!;
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
 
@@ -118,7 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
     : `relative w-full ${sizeClasses[size]} rounded-2xl bg-white dark:bg-navy-800 shadow-2xl border border-gray-100 dark:border-navy-700 overflow-hidden`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto p-3 modal z-999999 sm:p-4">
+    <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto modal z-999999">
       {/* Backdrop */}
       {!isFullscreen && (
         <div
@@ -132,12 +97,6 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        aria-label={!title ? 'Dialog' : undefined}
-        tabIndex={-1}
         className={`${contentClasses} transition-all duration-300 ease-out ${
           isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
         } ${className}`}
@@ -146,9 +105,7 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Close Button */}
         {showCloseButton && (
           <button
-            type="button"
             onClick={onClose}
-            aria-label="Close dialog"
             className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100/80 text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 hover:ring-2 hover:ring-gray-200 dark:bg-navy-700/80 dark:text-gray-400 dark:hover:bg-navy-600 dark:hover:text-white dark:hover:ring-navy-600 sm:right-4 sm:top-4 sm:h-9 sm:w-9"
           >
             <svg
@@ -170,22 +127,15 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Title Bar with accent */}
         {title && (
-          <div className="relative border-b border-gray-100 px-4 py-4 dark:border-navy-700 sm:px-6 sm:py-5">
+          <div className="relative px-6 py-5 border-b border-gray-100 dark:border-navy-700">
             {/* Brand accent line */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-500 via-brand-400 to-brand-600" />
-            <h3 id={titleId} className="pr-10 text-lg font-bold text-gray-900 dark:text-white">
-              {title}
-            </h3>
-            {description && (
-              <p id={descriptionId} className="mt-1 pr-10 text-sm text-gray-500 dark:text-gray-400">
-                {description}
-              </p>
-            )}
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-10">{title}</h3>
           </div>
         )}
 
         {/* Content Area */}
-        <div className={title ? 'px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-5' : 'p-0'}>{children}</div>
+        <div className={title ? 'px-6 pb-6 pt-5' : 'p-0'}>{children}</div>
       </div>
     </div>
   );

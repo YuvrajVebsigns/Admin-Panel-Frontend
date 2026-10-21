@@ -23,13 +23,9 @@ import toast from 'react-hot-toast';
 
 interface MessageTemplatesTabProps {
   channel?: CommunicationChannel;
-  onWorkspaceChange?: (isOpen: boolean) => void;
 }
 
-export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({
-  channel,
-  onWorkspaceChange,
-}) => {
+export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({ channel }) => {
   const router = useRouter();
   const [params, setParams] = useState<{
     page: number;
@@ -77,7 +73,6 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({
   const handleTestSend = (template: MessageTemplate) => {
     setSelectedTemplate(template);
     setIsSendOpen(true);
-    onWorkspaceChange?.(true);
   };
 
   const handleSyncToProvider = async (template: MessageTemplate) => {
@@ -304,19 +299,6 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({
     },
   ];
 
-  if (isSendOpen) {
-    return (
-      <TemplateSendModal
-        isOpen
-        template={selectedTemplate}
-        onClose={() => {
-          setIsSendOpen(false);
-          onWorkspaceChange?.(false);
-        }}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Search filters & sync pulls */}
@@ -352,10 +334,7 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({
         </div>
 
         {/* Right: Pull Sync form */}
-        <form
-          onSubmit={handlePullSync}
-          className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
-        >
+        <form onSubmit={handlePullSync} className="flex items-center gap-2">
           {!channel || channel === CommunicationChannel.EMAIL ? (
             <>
               <Button
@@ -409,6 +388,13 @@ export const MessageTemplatesTab: React.FC<MessageTemplatesTabProps> = ({
         limit={params.limit}
         onPageChange={(page) => setParams((p) => ({ ...p, page }))}
         onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
+      />
+
+      {/* Tester Modal */}
+      <TemplateSendModal
+        isOpen={isSendOpen}
+        onClose={() => setIsSendOpen(false)}
+        template={selectedTemplate}
       />
     </div>
   );

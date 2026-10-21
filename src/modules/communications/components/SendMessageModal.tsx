@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import { CommunicationChannel, SendMessageDto } from '../types/communication.types';
 import { useCommunicationLogs } from '../hooks/useCommunicationLogs';
@@ -121,14 +121,8 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({ isOpen, onCl
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <FormWorkspace
-      onClose={onClose}
-      title="Send Manual Message"
-      description="Choose a delivery channel and compose a message for your recipient."
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Send Manual Message" size="lg">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Channel Selector */}
         <div>
@@ -276,6 +270,6 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({ isOpen, onCl
           </Button>
         </div>
       </form>
-    </FormWorkspace>
+    </Modal>
   );
 };

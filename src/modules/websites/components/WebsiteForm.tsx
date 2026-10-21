@@ -4,9 +4,7 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { Globe, Search } from 'lucide-react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
-import { FormActions, FormFeedback, FormSectionLinks } from '@/components/common/FormPresentation';
+import { ArrowLeft, Globe, Search } from 'lucide-react';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import TextArea from '@/components/form/input/TextArea';
@@ -112,28 +110,29 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
   };
 
   return (
-    <FormWorkspace
-      title={isEdit ? 'Edit website' : 'Add website'}
-      eyebrow="Network / Websites"
-      description="Configure website identity, domain, and search presentation."
-      onClose={() => router.push('/websites')}
-    >
-      <FormSectionLinks
-        sections={[
-          { id: 'website-basics', label: 'Website details' },
-          { id: 'website-seo', label: 'Search & social' },
-        ]}
-      />
-      <FormFeedback errorCount={Object.keys(errors).length} isSaving={isCreating || isUpdating} />
-      <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-9 w-9 p-0">
+          <ArrowLeft size={20} />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEdit ? 'Edit Website' : 'Add New Website'}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            {isEdit
+              ? 'Update website configuration and SEO settings'
+              : 'Configure a new website for your network'}
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information Section */}
-        <div
-          id="website-basics"
-          className="scroll-mt-24 bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 overflow-hidden shadow-sm"
-        >
-          <div className="px-4 sm:px-8 py-5 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50">
+        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 overflow-hidden shadow-sm">
+          <div className="px-8 py-5 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400">
+              <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
                 <Globe size={18} />
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -142,7 +141,7 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
             </div>
           </div>
 
-          <div className="p-4 sm:p-8 space-y-6">
+          <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">
@@ -220,11 +219,8 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
         </div>
 
         {/* SEO & Social Meta Section */}
-        <div
-          id="website-seo"
-          className="scroll-mt-24 bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 overflow-hidden shadow-sm"
-        >
-          <div className="px-4 sm:px-8 py-5 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50">
+        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 overflow-hidden shadow-sm">
+          <div className="px-8 py-5 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400">
                 <Search size={18} />
@@ -235,7 +231,7 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
             </div>
           </div>
 
-          <div className="p-4 sm:p-8 space-y-6">
+          <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="metaTitle">Meta Title</Label>
@@ -286,15 +282,19 @@ export const WebsiteForm: React.FC<WebsiteFormProps> = ({ initialData }) => {
         </div>
 
         {/* Action Buttons */}
-        <FormActions>
+        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm flex justify-end gap-3 sticky bottom-6 z-10">
           <Button type="button" variant="outline" onClick={() => router.push('/websites')}>
             Cancel
           </Button>
-          <Button type="submit" isLoading={isCreating || isUpdating} className="min-w-[120px]">
+          <Button
+            type="submit"
+            isLoading={isCreating || isUpdating}
+            className="bg-primary-600 hover:bg-primary-700 text-white min-w-[120px]"
+          >
             {isEdit ? 'Update Website' : 'Create Website'}
           </Button>
-        </FormActions>
+        </div>
       </form>
-    </FormWorkspace>
+    </div>
   );
 };

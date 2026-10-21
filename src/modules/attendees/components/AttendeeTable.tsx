@@ -1,5 +1,4 @@
 'use client';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -526,213 +525,204 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
 
   return (
     <div className="space-y-7.5">
-      {!isBulkPassModalOpen && (
-        <>
-          {/* Overview Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-              <div className="h-12 w-12 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
-                <Users size={22} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                  Total Registered
-                </p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isLoading ? '...' : stats.total}
-                </h3>
-              </div>
-            </div>
+      {/* Overview Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+          <div className="h-12 w-12 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0">
+            <Users size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              Total Registered
+            </p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {isLoading ? '...' : stats.total}
+            </h3>
+          </div>
+        </div>
 
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-                <UserCheck size={22} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Checked-In</p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isLoading ? '...' : stats.checkedIn}
-                </h3>
-              </div>
-            </div>
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+          <div className="h-12 w-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+            <UserCheck size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Checked-In</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {isLoading ? '...' : stats.checkedIn}
+            </h3>
+          </div>
+        </div>
 
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-              <div className="h-12 w-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
-                <Percent size={22} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                  Check-In Rate
-                </p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isLoading ? '...' : `${stats.checkInRate}%`}
-                </h3>
-              </div>
-            </div>
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+          <div className="h-12 w-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
+            <Percent size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Check-In Rate</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {isLoading ? '...' : `${stats.checkInRate}%`}
+            </h3>
+          </div>
+        </div>
 
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-              <div className="h-12 w-12 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-                <UserMinus size={22} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Invited</p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isLoading ? '...' : stats.invited}
-                </h3>
-              </div>
-            </div>
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+          <div className="h-12 w-12 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+            <UserMinus size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Invited</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {isLoading ? '...' : stats.invited}
+            </h3>
+          </div>
+        </div>
 
-            <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
-              <div className="h-12 w-12 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
-                <Ban size={22} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Blocked</p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-                  {isLoading ? '...' : stats.blocked}
-                </h3>
-              </div>
-            </div>
+        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 p-5 rounded-2xl shadow-theme-xs flex items-center gap-4 transition-all hover:shadow-theme-md hover:-translate-y-0.5">
+          <div className="h-12 w-12 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+            <Ban size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Blocked</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {isLoading ? '...' : stats.blocked}
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Search & Custom Filter Bar */}
+      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-5 shadow-theme-xs flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          {/* Event Filter dropdown */}
+          <div className="flex flex-col min-w-[200px] w-full sm:w-auto">
+            <select
+              value={params.eventId || ''}
+              onChange={(e) =>
+                setParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  eventId: e.target.value || undefined,
+                }))
+              }
+              className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
+            >
+              <option value="">All Assigned Events</option>
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Search & Custom Filter Bar */}
-          <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-2xl p-5 shadow-theme-xs flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-              {/* Event Filter dropdown */}
-              <div className="flex flex-col min-w-[200px] w-full sm:w-auto">
-                <select
-                  value={params.eventId || ''}
-                  onChange={(e) =>
-                    setParams((prev) => ({
-                      ...prev,
-                      page: 1,
-                      eventId: e.target.value || undefined,
-                    }))
-                  }
-                  className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
-                >
-                  <option value="">All Assigned Events</option>
-                  {events.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Status Filter dropdown */}
-              <div className="flex flex-col min-w-[160px] w-full sm:w-auto">
-                <select
-                  value={params.status || ''}
-                  onChange={(e) =>
-                    setParams((prev) => ({
-                      ...prev,
-                      page: 1,
-                      status: (e.target.value as AttendeeStatus) || undefined,
-                    }))
-                  }
-                  className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
-                >
-                  <option value="">All Statuses</option>
-                  {Object.values(AttendeeStatus).map((status) => (
-                    <option key={status} value={status}>
-                      {status.replace('_', ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <ExportButton
-                permission={PERMISSIONS.ATTENDANCE_EXPORT}
-                exportTitle="Export Event Attendees"
-                exportDescription="Generate a detailed attendee spreadsheet with check-in timestamps, VIP statuses, passcode tracking, and event tags."
-                showStatusFilter={true}
-                statusOptions={Object.values(AttendeeStatus).map((status) => ({
-                  value: status,
-                  label: status.replace('_', ' '),
-                }))}
-                customFilters={[
-                  {
-                    key: 'eventId',
-                    label: 'Assigned Event',
-                    placeholder: 'All Events',
-                    options: events.map((ev) => ({
-                      value: ev.id,
-                      label: ev.title,
-                    })),
-                  },
-                ]}
-                sheetsInfo={[
-                  {
-                    sheet: 'Sheet 1: Analytics',
-                    desc: 'KPI cards with total registrations, confirmed guests, check-in rate.',
-                  },
-                  {
-                    sheet: 'Sheet 2: Attendees Directory',
-                    desc: 'Detailed list of names, emails, phones, ticket types, and badges.',
-                  },
-                ]}
-                initialFilters={{
-                  search: params.search,
-                  eventId: params.eventId,
-                  status: params.status,
-                }}
-                onExport={(filters) => dataExportService.exportAttendees(filters)}
-              />
-              {!isEventStaff && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleDownloadBulkPasses()}
-                    disabled={isGeneratingBulkPdf}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
-                  >
-                    {isGeneratingBulkPdf ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Printer size={16} />
-                    )}
-                    <span>12x18 Bulk Passes</span>
-                  </Button>
-                  <Button
-                    onClick={onCreateNew}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
-                  >
-                    <Users size={16} />
-                    Register Attendee
-                  </Button>
-                </>
-              )}
-            </div>
+          {/* Status Filter dropdown */}
+          <div className="flex flex-col min-w-[160px] w-full sm:w-auto">
+            <select
+              value={params.status || ''}
+              onChange={(e) =>
+                setParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  status: (e.target.value as AttendeeStatus) || undefined,
+                }))
+              }
+              className="w-full appearance-none bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:border-brand-500 transition-all dark:text-white cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              {Object.values(AttendeeStatus).map((status) => (
+                <option key={status} value={status}>
+                  {status.replace('_', ' ')}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
 
-          {/* Main DataTable */}
-          <DataTable<Attendee>
-            data={data?.data || []}
-            columns={columns}
-            isLoading={isLoading}
-            serverSide={true}
-            totalItems={totalItems}
-            page={params.page}
-            limit={params.limit}
-            search={params.search}
-            onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
-            onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
-            onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
-            searchPlaceholder="Search attendee by name, email, passcode..."
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <ExportButton
+            permission={PERMISSIONS.ATTENDANCE_EXPORT}
+            exportTitle="Export Event Attendees"
+            exportDescription="Generate a detailed attendee spreadsheet with check-in timestamps, VIP statuses, passcode tracking, and event tags."
+            showStatusFilter={true}
+            statusOptions={Object.values(AttendeeStatus).map((status) => ({
+              value: status,
+              label: status.replace('_', ' '),
+            }))}
+            customFilters={[
+              {
+                key: 'eventId',
+                label: 'Assigned Event',
+                placeholder: 'All Events',
+                options: events.map((ev) => ({
+                  value: ev.id,
+                  label: ev.title,
+                })),
+              },
+            ]}
+            sheetsInfo={[
+              {
+                sheet: 'Sheet 1: Analytics',
+                desc: 'KPI cards with total registrations, confirmed guests, check-in rate.',
+              },
+              {
+                sheet: 'Sheet 2: Attendees Directory',
+                desc: 'Detailed list of names, emails, phones, ticket types, and badges.',
+              },
+            ]}
+            initialFilters={{
+              search: params.search,
+              eventId: params.eventId,
+              status: params.status,
+            }}
+            onExport={(filters) => dataExportService.exportAttendees(filters)}
           />
-        </>
-      )}
-      {/* Replace the attendee listing with the bulk print workflow. */}
+          {!isEventStaff && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => handleDownloadBulkPasses()}
+                disabled={isGeneratingBulkPdf}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-navy-800 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold"
+              >
+                {isGeneratingBulkPdf ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Printer size={16} />
+                )}
+                <span>12x18 Bulk Passes</span>
+              </Button>
+              <Button
+                onClick={onCreateNew}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl"
+              >
+                <Users size={16} />
+                Register Attendee
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Main DataTable */}
+      <DataTable<Attendee>
+        data={data?.data || []}
+        columns={columns}
+        isLoading={isLoading}
+        serverSide={true}
+        totalItems={totalItems}
+        page={params.page}
+        limit={params.limit}
+        search={params.search}
+        onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
+        onPageSizeChange={(limit) => setParams((prev) => ({ ...prev, limit, page: 1 }))}
+        onSearchChange={(search) => setParams((prev) => ({ ...prev, search, page: 1 }))}
+        searchPlaceholder="Search attendee by name, email, passcode..."
+      />
+
+      {/* Event Selection Modal for Bulk 12x18 Pass Sheets */}
       {isBulkPassModalOpen && (
-        <FormWorkspace
-          title="Bulk event passes"
-          description="Choose a sheet layout and event to generate printable passes."
-          onClose={() => setIsBulkPassModalOpen(false)}
-        >
-          <div className="space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
@@ -763,9 +753,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                 Sheet Layout & Card Format
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  aria-pressed={bulkCardsPerRow === 3}
+                <div
                   onClick={() => setBulkCardsPerRow(3)}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                     bulkCardsPerRow === 3
@@ -782,11 +770,9 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-snug">
                     Standard Neck-Hanging Badge / Lanyard Card (3.68&quot; × 5.59&quot;)
                   </p>
-                </button>
+                </div>
 
-                <button
-                  type="button"
-                  aria-pressed={bulkCardsPerRow === 2}
+                <div
                   onClick={() => setBulkCardsPerRow(2)}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                     bulkCardsPerRow === 2
@@ -803,7 +789,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-snug">
                     Wide Invitation Pass Format (5.44&quot; × 5.47&quot;)
                   </p>
-                </button>
+                </div>
               </div>
             </div>
 
@@ -812,14 +798,12 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                 Select Event for Bulk Pass Printing
               </label>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {events.map((ev) => (
-                  <button
-                    type="button"
-                    aria-pressed={selectedBulkEventId === ev.id}
+                  <div
                     key={ev.id}
                     onClick={() => setSelectedBulkEventId(ev.id)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                       selectedBulkEventId === ev.id
                         ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200 shadow-sm'
                         : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-800 text-gray-800 dark:text-gray-200'
@@ -850,7 +834,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
                     >
                       {selectedBulkEventId === ev.id && <CheckCircle size={12} />}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -875,7 +859,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
               <Button
                 onClick={() => handleDownloadBulkPasses(selectedBulkEventId)}
                 disabled={!selectedBulkEventId || isGeneratingBulkPdf}
-                className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white flex items-center gap-2"
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
               >
                 {isGeneratingBulkPdf ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -886,7 +870,7 @@ export const AttendeeTable: React.FC<AttendeeTableProps> = ({
               </Button>
             </div>
           </div>
-        </FormWorkspace>
+        </div>
       )}
     </div>
   );

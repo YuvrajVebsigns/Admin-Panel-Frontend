@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
-import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
-import { AuthLoading } from '@/components/auth/AuthWorkspace';
+import { ResetPasswordForm } from '@/modules/auth/components/ResetPasswordForm';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -10,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<AuthLoading />}>
+    <Suspense fallback={<div>Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
   );

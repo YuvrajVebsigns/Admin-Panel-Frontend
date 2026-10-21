@@ -15,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { useGlobalModal } from '@/hooks/useGlobalModal';
 import Button from '@/components/ui/button/Button';
 import InputField from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
@@ -60,14 +60,6 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
   const [updatingComment, setUpdatingComment] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
-  const [isCommentWorkspaceOpen, setIsCommentWorkspaceOpen] = useState(false);
-  const [commentDraft, setCommentDraft] = useState({
-    authorName: '',
-    authorEmail: '',
-    content: '',
-  });
-  const [isPostingComment, setIsPostingComment] = useState(false);
-  const [commentError, setCommentError] = useState('');
 
   const toggleCommentExpand = (commentId: string) => {
     setExpandedComments((prev) => ({
@@ -99,10 +91,65 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
       : date.toLocaleDateString('en-US', options);
   };
 
+  const { openModal, closeModal } = useGlobalModal();
+
   const handleAddCommentClick = () => {
-    setCommentDraft({ authorName: '', authorEmail: '', content: '' });
-    setCommentError('');
-    setIsCommentWorkspaceOpen(true);
+    let formData = { authorName: '', authorEmail: '', content: '' };
+
+    openModal({
+      title: 'Add New Comment',
+      description: 'Fill in the details below to post a comment on this blog.',
+      content: (
+        <div className="space-y-4">
+          <InputField
+            label="Name"
+            placeholder="Enter author name"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              (formData.authorName = e.target.value)
+            }
+          />
+          <InputField
+            label="Email"
+            placeholder="Enter author email"
+            type="email"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              (formData.authorEmail = e.target.value)
+            }
+          />
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Comment
+            </label>
+            <TextArea
+              placeholder="Write your comment here..."
+              rows={4}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                (formData.content = e.target.value)
+              }
+            />
+          </div>
+        </div>
+      ),
+      actions: (
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!formData.authorName || !formData.authorEmail || !formData.content) {
+                return;
+              }
+              await onCreateComment(formData);
+              closeModal();
+            }}
+          >
+            Post Comment
+          </Button>
+        </div>
+      ),
+    });
   };
 
   const handleStatusUpdate = async (
@@ -116,92 +163,6 @@ export const BlogDetailsView: React.FC<BlogDetailsViewProps> = ({
       setUpdatingComment(null);
     }
   };
-
-  if (isCommentWorkspaceOpen) {
-    return (
-      <FormWorkspace
-        title="Add comment"
-        description="Post a comment on this blog."
-        onClose={() => setIsCommentWorkspaceOpen(false)}
-      >
-        <form
-          className="max-w-3xl space-y-5"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            if (
-              !commentDraft.authorName.trim() ||
-              !commentDraft.authorEmail.trim() ||
-              !commentDraft.content.trim()
-            ) {
-              setCommentError('Name, email, and comment are required.');
-              return;
-            }
-            setIsPostingComment(true);
-            setCommentError('');
-            try {
-              await onCreateComment(commentDraft);
-              setIsCommentWorkspaceOpen(false);
-            } catch {
-              setCommentError('The comment could not be posted. Please try again.');
-            } finally {
-              setIsPostingComment(false);
-            }
-          }}
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <InputField
-              label="Name"
-              id="comment-author-name"
-              required
-              value={commentDraft.authorName}
-              onChange={(event) =>
-                setCommentDraft((draft) => ({ ...draft, authorName: event.target.value }))
-              }
-            />
-            <InputField
-              label="Email"
-              id="comment-author-email"
-              type="email"
-              required
-              value={commentDraft.authorEmail}
-              onChange={(event) =>
-                setCommentDraft((draft) => ({ ...draft, authorEmail: event.target.value }))
-              }
-            />
-          </div>
-          <label className="block space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            <span>Comment</span>
-            <TextArea
-              value={commentDraft.content}
-              placeholder="Write your comment here…"
-              rows={5}
-              onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setCommentDraft((draft) => ({ ...draft, content: event.target.value }))
-              }
-            />
-          </label>
-          {commentError && (
-            <p role="alert" className="text-sm text-error-600 dark:text-error-400">
-              {commentError}
-            </p>
-          )}
-          <div className="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-5 dark:border-navy-800">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isPostingComment}
-              onClick={() => setIsCommentWorkspaceOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isPostingComment}>
-              Post comment
-            </Button>
-          </div>
-        </form>
-      </FormWorkspace>
-    );
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

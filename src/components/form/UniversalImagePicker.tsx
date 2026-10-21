@@ -1,16 +1,8 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import {
-  Image as ImageIcon,
-  Upload,
-  Globe,
-  Search,
-  X,
-  Loader2,
-  Video,
-  ArrowLeft,
-} from 'lucide-react';
+import React from 'react';
+import { Image as ImageIcon, Upload, Globe, Search, X, Loader2, Video } from 'lucide-react';
+import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { useFiles } from '@/modules/media/hooks/useFiles';
 import { FileBrowser } from '@/modules/media/components/FileBrowser';
 import { FileData } from '@/modules/media/types/file.types';
@@ -30,15 +22,6 @@ interface UniversalImagePickerProps {
   module?: string;
 }
 
-type PickerStep =
-  | 'closed'
-  | 'selector'
-  | 'library'
-  | 'upload_details'
-  | 'url_details'
-  | 'youtube_details';
-
-/** Inline image and video picker. Forms never open a modal to add media. */
 export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
   value,
   onChange,
@@ -49,60 +32,249 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
   aspectRatio = 'video',
   module = 'media',
 }) => {
+  const { openModal, closeModal } = useGlobalModal();
   const { uploadFile, isUploading } = useFiles();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<PickerStep>('closed');
-  const [file, setFile] = useState<File | null>(null);
-  const [url, setUrl] = useState('');
-  const [alt, setAlt] = useState('');
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [selectedModule, setSelectedModule] = useState(module);
-  const [visibility, setVisibility] = useState('public');
 
-  const resetPicker = () => {
-    setStep('closed');
-    setFile(null);
-    setUrl('');
-    setAlt('');
-    setKeywords([]);
-    setSelectedModule(module);
-    setVisibility('public');
-  };
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setStep('upload_details');
-    }
-  };
-  const handleSubmit = async (event?: React.FormEvent) => {
-    event?.preventDefault();
-    if (!url && !file) return;
-    const formData = new FormData();
-    if (file && step === 'upload_details') formData.append('file', file);
-    else if (url) formData.append('url', url);
-    else return;
-    formData.append('module', selectedModule);
-    formData.append('visibility', visibility);
-    formData.append('alt', alt || 'Media asset');
-    keywords.forEach((keyword) => formData.append('keywords[]', keyword));
-    formData.append('entityType', 'manual_upload');
-    formData.append('entityId', 'none');
-    try {
-      const response = await uploadFile(formData);
-      onChange(response.url || '');
-      onSelect?.(response);
-      resetPicker();
-      toast.success('Asset added successfully');
-    } catch {
-      toast.error('Failed to process asset');
-    }
-  };
   const aspectClasses = {
     square: 'aspect-square',
     video: 'aspect-video',
     portrait: 'aspect-[3/4]',
     auto: 'aspect-auto min-h-[200px]',
+  };
+  const openSourceSelector = () => {
+    const openExistingBrowser = () => {
+      openModal({
+        title: 'Browse Image Library',
+        size: '3xl',
+        content: (
+          <div className="max-h-[75vh] overflow-y-auto px-1">
+            <FileBrowser
+              initialFileType="image"
+              onSelect={(file: FileData) => {
+                onChange(file.url || '');
+                onSelect?.(file);
+                closeModal();
+              }}
+            />
+          </div>
+        ),
+      });
+    };
+
+    const PickerModalContent = () => {
+      const [step, setStep] = React.useState<
+        'selector' | 'upload_details' | 'url_details' | 'youtube_details'
+      >('selector');
+      const [file, setFile] = React.useState<File | null>(null);
+      const [url, setUrl] = React.useState('');
+      const [alt, setAlt] = React.useState('');
+      const [keywords, setKeywords] = React.useState<string[]>([]);
+      const [modalModule, setModalModule] = React.useState(module);
+      const [visibility, setVisibility] = React.useState('public');
+
+      const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+          setFile(selectedFile);
+          setStep('upload_details');
+        }
+      };
+
+      const handleFinalSubmit = async () => {
+        const formData = new FormData();
+        if (step === 'upload_details' && file) {
+          formData.append('file', file);
+        } else if ((step === 'url_details' || step === 'youtube_details') && url) {
+          formData.append('url', url);
+        } else {
+          return;
+        }
+
+        formData.append('module', modalModule);
+        formData.append('visibility', visibility);
+        formData.append('alt', alt || 'YouTube Video');
+
+        keywords.forEach((k) => formData.append('keywords[]', k));
+
+        formData.append('entityType', 'manual_upload');
+        formData.append('entityId', 'none');
+
+        try {
+          const response = await uploadFile(formData);
+          onChange(response.url || '');
+          onSelect?.(response);
+          closeModal();
+          toast.success('Asset added successfully');
+        } catch (error) {
+          toast.error('Failed to process asset');
+        }
+      };
+
+      if (step === 'selector') {
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 py-6">
+            <button
+              onClick={() => document.getElementById('picker-file-input')?.click()}
+              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-200 transition-all group text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
+                <Upload size={32} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">Upload</p>
+                <p className="text-xs text-gray-500 mt-1">From computer</p>
+              </div>
+              <input
+                id="picker-file-input"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+            </button>
+
+            <button
+              onClick={openExistingBrowser}
+              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-200 transition-all group text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
+                <Search size={32} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">Library</p>
+                <p className="text-xs text-gray-500 mt-1">Existing assets</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setStep('url_details')}
+              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-200 transition-all group text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
+                <Globe size={32} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">URL</p>
+                <p className="text-xs text-gray-500 mt-1">External link</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setStep('youtube_details')}
+              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-200 transition-all group text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
+                <Video size={32} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">YouTube</p>
+                <p className="text-xs text-gray-500 mt-1">Add YT Video</p>
+              </div>
+            </button>
+          </div>
+        );
+      }
+
+      if (step === 'youtube_details') {
+        return (
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">
+                YouTube Video URL
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. https://www.youtube.com/watch?v=..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+              />
+              <p className="text-xs text-gray-500">
+                Paste any standard watch link, share link, or embedded YouTube link. We will extract
+                the video details automatically.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">Video Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Tutorial Video (Optional)"
+                value={alt}
+                onChange={(e) => setAlt(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">
+                Tags / Keywords
+              </label>
+              <TagInput
+                defaultValue={keywords}
+                onChange={setKeywords}
+                placeholder="Add tags (press Enter or comma)..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-navy-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setUrl('');
+                  setAlt('');
+                  setKeywords([]);
+                  setStep('selector');
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-navy-300 dark:hover:bg-navy-800 transition-all"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                disabled={!url || isUploading}
+                onClick={handleFinalSubmit}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              >
+                {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Add YouTube Video
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="py-6">
+          <AssetMetadataForm
+            step={step === 'upload_details' ? 'upload' : 'url'}
+            file={file}
+            url={url}
+            setUrl={setUrl}
+            alt={alt}
+            setAlt={setAlt}
+            keywords={keywords}
+            setKeywords={setKeywords}
+            module={modalModule}
+            setModule={setModalModule}
+            visibility={visibility}
+            setVisibility={setVisibility}
+            onBack={() => setStep('selector')}
+            onSubmit={handleFinalSubmit}
+            isProcessing={isUploading}
+            submitLabel="Confirm & Add"
+          />
+        </div>
+      );
+    };
+
+    openModal({
+      title: 'Select Image Source',
+      description: 'Choose how you want to add an image',
+      size: 'lg',
+      hideFooter: true,
+      content: <PickerModalContent />,
+    });
   };
 
   return (
@@ -110,210 +282,54 @@ export const UniversalImagePicker: React.FC<UniversalImagePickerProps> = ({
       {label && (
         <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</label>
       )}
+
       <div
+        onClick={openSourceSelector}
         className={cn(
-          'group relative flex items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed bg-gray-50 dark:bg-navy-900/50',
+          'relative rounded-3xl border-2 border-dashed transition-all cursor-pointer group overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-navy-900/50',
           aspectClasses[aspectRatio],
           value
             ? 'border-transparent'
-            : 'border-gray-200 hover:border-brand-400 dark:border-navy-700',
+            : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 hover:bg-brand-50/30 dark:hover:bg-brand-500/5',
         )}
       >
         {value ? (
           <>
-            <img src={value} alt="Selected asset" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+            <img
+              src={value}
+              alt="Selected"
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="bg-white/90 dark:bg-navy-800/90 p-3 rounded-2xl text-brand-600 font-bold flex items-center gap-2 shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
+                <ImageIcon size={20} />
+                Change Image
+              </div>
               <button
-                type="button"
-                onClick={() => setStep('selector')}
-                className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-brand-600"
-              >
-                Change image
-              </button>
-              <button
-                type="button"
-                aria-label="Remove selected asset"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onChange('');
                   onSelect?.(null);
                 }}
-                className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white text-error-600"
+                className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-navy-800/90 text-error-600 rounded-xl shadow-lg hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
           </>
         ) : (
-          <button
-            type="button"
-            onClick={() => setStep('selector')}
-            className="flex h-full w-full flex-col items-center justify-center gap-3 text-gray-400 hover:text-brand-500"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-navy-800">
+          <div className="flex flex-col items-center gap-3 text-gray-400 group-hover:text-brand-500 transition-colors">
+            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-navy-800 shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:shadow-brand-500/20 transition-all">
               {isUploading ? (
-                <Loader2 size={28} className="animate-spin" />
+                <Loader2 size={32} className="animate-spin text-brand-500" />
               ) : (
-                <ImageIcon size={28} />
+                <ImageIcon size={32} />
               )}
             </div>
-            <span className="text-sm font-bold">{placeholder}</span>
-          </button>
+            <p className="font-bold text-sm">{placeholder}</p>
+          </div>
         )}
       </div>
-      {step !== 'closed' && (
-        <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-navy-700 dark:bg-navy-950/40">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">Add media</p>
-              <p className="text-xs text-gray-500">This workspace stays in the current form.</p>
-            </div>
-            <button
-              type="button"
-              onClick={resetPicker}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-white dark:hover:bg-navy-800"
-              aria-label="Close media picker"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          {step === 'selector' && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
-              >
-                <Upload className="text-brand-500" size={22} />
-                <span>
-                  <strong className="block text-sm text-gray-900 dark:text-white">Upload</strong>
-                  <small className="text-xs text-gray-500">From device</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep('library')}
-                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
-              >
-                <Search className="text-brand-500" size={22} />
-                <span>
-                  <strong className="block text-sm text-gray-900 dark:text-white">Library</strong>
-                  <small className="text-xs text-gray-500">Existing asset</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep('url_details')}
-                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
-              >
-                <Globe className="text-brand-500" size={22} />
-                <span>
-                  <strong className="block text-sm text-gray-900 dark:text-white">URL</strong>
-                  <small className="text-xs text-gray-500">External image</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep('youtube_details')}
-                className="flex min-h-24 items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900"
-              >
-                <Video className="text-brand-500" size={22} />
-                <span>
-                  <strong className="block text-sm text-gray-900 dark:text-white">YouTube</strong>
-                  <small className="text-xs text-gray-500">Add a video</small>
-                </span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileSelect}
-              />
-            </div>
-          )}
-          {step === 'library' && (
-            <>
-              <button
-                type="button"
-                onClick={() => setStep('selector')}
-                className="inline-flex min-h-9 items-center gap-2 text-xs font-bold text-brand-600"
-              >
-                <ArrowLeft size={15} /> Back to sources
-              </button>
-              <FileBrowser
-                initialFileType="image"
-                onSelect={(selected) => {
-                  onChange(selected.url || '');
-                  onSelect?.(selected);
-                  resetPicker();
-                }}
-              />
-            </>
-          )}
-          {step === 'youtube_details' && (
-            <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-900 dark:text-white">
-                YouTube video URL
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(event) => setUrl(event.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm dark:border-navy-700 dark:bg-navy-900"
-                />
-              </label>
-              <label className="block text-sm font-bold text-gray-900 dark:text-white">
-                Video title
-                <input
-                  type="text"
-                  value={alt}
-                  onChange={(event) => setAlt(event.target.value)}
-                  placeholder="Optional title"
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm dark:border-navy-700 dark:bg-navy-900"
-                />
-              </label>
-              <TagInput defaultValue={keywords} onChange={setKeywords} placeholder="Add tags" />
-              <div className="flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-navy-700">
-                <button
-                  type="button"
-                  onClick={() => setStep('selector')}
-                  className="min-h-10 rounded-lg px-4 text-sm font-bold text-gray-600"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  disabled={!url || isUploading}
-                  onClick={() => handleSubmit()}
-                  className="min-h-10 rounded-lg bg-brand-500 px-4 text-sm font-bold text-white disabled:opacity-50"
-                >
-                  {isUploading ? 'Adding…' : 'Add YouTube video'}
-                </button>
-              </div>
-            </div>
-          )}
-          {(step === 'upload_details' || step === 'url_details') && (
-            <AssetMetadataForm
-              step={step === 'upload_details' ? 'upload' : 'url'}
-              file={file}
-              url={url}
-              setUrl={setUrl}
-              alt={alt}
-              setAlt={setAlt}
-              keywords={keywords}
-              setKeywords={setKeywords}
-              module={selectedModule}
-              setModule={setSelectedModule}
-              visibility={visibility}
-              setVisibility={setVisibility}
-              onBack={() => setStep('selector')}
-              onSubmit={handleSubmit}
-              isProcessing={isUploading}
-              submitLabel="Add asset"
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 };

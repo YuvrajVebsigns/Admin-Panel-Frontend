@@ -15,8 +15,6 @@ import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import { ArrowLeft, Save, Lock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
-import { FormFeedback, FormSectionLinks } from '@/components/common/FormPresentation';
 
 const schema = z.object({
   eventId: z.string().min(1, 'Event is required'),
@@ -127,215 +125,198 @@ export default function EditAttendeePage() {
   }
 
   return (
-    <FormWorkspace
-      title="Edit attendee registration"
-      description="Update event assignment, organization, and status while preserving verified identity fields."
-      eyebrow="Attendance / Registration"
-      context="Editing existing registration"
-      onClose={() => router.push('/attendance')}
-    >
-      <div className="container mx-auto px-0 py-2 max-w-3xl">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.push('/attendance')}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all shadow-theme-xs"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Modify Registration</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Modify registration assignments and status controls.
-            </p>
-          </div>
-        </div>
-
-        <FormSectionLinks
-          sections={[
-            { id: 'attendee-assignment', label: 'Assignment' },
-            { id: 'attendee-profile', label: 'Verified profile' },
-            { id: 'attendee-status', label: 'Status' },
-          ]}
-        />
-        <FormFeedback errorCount={Object.keys(errors).length} isSaving={isSubmitting} />
-
-        <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs space-y-6">
-          <div className="p-3 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs flex items-start gap-2.5 font-medium leading-relaxed">
-            <Lock size={15} className="shrink-0 mt-0.5" />
-            <span>
-              To ensure ticket authenticity, profile information (Name, Email, and Phone) are
-              read-only. Only event assignment, organization, and status can be modified.
-            </span>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Event Selection */}
-            <div id="attendee-assignment" className="scroll-mt-24">
-              <Label htmlFor="eventId">
-                Event Assignment <span className="text-red-500">*</span>
-              </Label>
-              <Controller
-                name="eventId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={eventOptions}
-                    placeholder="Select Event"
-                    value={field.value}
-                    onChange={field.onChange}
-                    className="mt-1"
-                  />
-                )}
-              />
-              {errors.eventId?.message && (
-                <p className="mt-1.5 text-xs text-red-500">{errors.eventId.message}</p>
-              )}
-            </div>
-
-            {/* Full Name */}
-            <div id="attendee-profile" className="scroll-mt-24">
-              <Label htmlFor="name">Full Name</Label>
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => (
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      id="name"
-                      disabled={true}
-                      error={errors.name?.message}
-                      className="mt-1"
-                    />
-                    <Lock
-                      size={14}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                  </div>
-                )}
-              />
-            </div>
-
-            {/* Email */}
-            <div id="attendee-status" className="scroll-mt-24">
-              <Label htmlFor="email">Email Address</Label>
-              <Controller
-                name="email"
-                control={control}
-                render={({ field }) => (
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      id="email"
-                      type="email"
-                      disabled={true}
-                      error={errors.email?.message}
-                      className="mt-1"
-                    />
-                    <Lock
-                      size={14}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                  </div>
-                )}
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Controller
-                name="phoneNumber"
-                control={control}
-                render={({ field }) => (
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      id="phoneNumber"
-                      disabled={true}
-                      error={errors.phoneNumber?.message}
-                      className="mt-1"
-                    />
-                    <Lock
-                      size={14}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                  </div>
-                )}
-              />
-            </div>
-
-            {/* Organization */}
-            <div>
-              <Label htmlFor="organization">Organization / Company</Label>
-              <Controller
-                name="organization"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id="organization"
-                    placeholder="e.g. Acme Corporation"
-                    error={errors.organization?.message}
-                    className="mt-1"
-                  />
-                )}
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <Label htmlFor="status">Registration Status</Label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={statusOptions}
-                    placeholder="Select Status"
-                    value={field.value}
-                    onChange={field.onChange}
-                    className="mt-1"
-                  />
-                )}
-              />
-            </div>
-
-            {/* Website Selection (Optional) */}
-            <div>
-              <Label htmlFor="websiteId">Origin Website</Label>
-              <Controller
-                name="websiteId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={websiteOptions}
-                    placeholder="None (Backend Manual)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    className="mt-1"
-                  />
-                )}
-              />
-            </div>
-
-            <div className="pt-4 border-t border-gray-150 dark:border-navy-700 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/attendance')}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                <Save size={16} />
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </form>
+    <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => router.push('/attendance')}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all shadow-theme-xs"
+        >
+          <ArrowLeft size={16} />
+        </button>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Modify Registration</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Modify registration assignments and status controls.
+          </p>
         </div>
       </div>
-    </FormWorkspace>
+
+      <div className="bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 shadow-theme-xs space-y-6">
+        <div className="p-3 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs flex items-start gap-2.5 font-medium leading-relaxed">
+          <Lock size={15} className="shrink-0 mt-0.5" />
+          <span>
+            To ensure ticket authenticity, profile information (Name, Email, and Phone) are
+            read-only. Only event assignment, organization, and status can be modified.
+          </span>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {/* Event Selection */}
+          <div>
+            <Label htmlFor="eventId">
+              Event Assignment <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="eventId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={eventOptions}
+                  placeholder="Select Event"
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="mt-1"
+                />
+              )}
+            />
+            {errors.eventId?.message && (
+              <p className="mt-1.5 text-xs text-red-500">{errors.eventId.message}</p>
+            )}
+          </div>
+
+          {/* Full Name */}
+          <div>
+            <Label htmlFor="name">Full Name</Label>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Input
+                    {...field}
+                    id="name"
+                    disabled={true}
+                    error={errors.name?.message}
+                    className="mt-1"
+                  />
+                  <Lock
+                    size={14}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <Label htmlFor="email">Email Address</Label>
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Input
+                    {...field}
+                    id="email"
+                    type="email"
+                    disabled={true}
+                    error={errors.email?.message}
+                    className="mt-1"
+                  />
+                  <Lock
+                    size={14}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <Label htmlFor="phoneNumber">Phone Number</Label>
+            <Controller
+              name="phoneNumber"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Input
+                    {...field}
+                    id="phoneNumber"
+                    disabled={true}
+                    error={errors.phoneNumber?.message}
+                    className="mt-1"
+                  />
+                  <Lock
+                    size={14}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Organization */}
+          <div>
+            <Label htmlFor="organization">Organization / Company</Label>
+            <Controller
+              name="organization"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="organization"
+                  placeholder="e.g. Acme Corporation"
+                  error={errors.organization?.message}
+                  className="mt-1"
+                />
+              )}
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <Label htmlFor="status">Registration Status</Label>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={statusOptions}
+                  placeholder="Select Status"
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="mt-1"
+                />
+              )}
+            />
+          </div>
+
+          {/* Website Selection (Optional) */}
+          <div>
+            <Label htmlFor="websiteId">Origin Website</Label>
+            <Controller
+              name="websiteId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={websiteOptions}
+                  placeholder="None (Backend Manual)"
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="mt-1"
+                />
+              )}
+            />
+          </div>
+
+          <div className="pt-4 border-t border-gray-150 dark:border-navy-700 flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/attendance')}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+              <Save size={16} />
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

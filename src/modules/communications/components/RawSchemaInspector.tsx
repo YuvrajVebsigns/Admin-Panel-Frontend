@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFetchRawMongooseSchema } from '../hooks/useVariables';
 import { Search, Database, Plus, X, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 
 interface RawSchemaInspectorProps {
   isOpen: boolean;
@@ -58,12 +57,15 @@ export const RawSchemaInspector: React.FC<RawSchemaInspectorProps> = ({
   if (!isOpen) return null;
 
   return (
-    <FormWorkspace
-      title="Database Schema Discovery"
-      description="Browse available fields and append them to your variable drafts."
-      onClose={onClose}
-    >
-      <div className="min-w-0 space-y-4">
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fade-in cursor-pointer"
+        onClick={onClose}
+      />
+
+      {/* Drawer Panel */}
+      <div className="fixed right-0 top-0 h-full w-[450px] bg-white dark:bg-navy-900 shadow-2xl border-l border-gray-150 dark:border-navy-800 z-50 flex flex-col transition-all duration-300 animate-slide-in">
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-150 dark:border-navy-800 bg-gray-50 dark:bg-navy-950 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -196,6 +198,6 @@ export const RawSchemaInspector: React.FC<RawSchemaInspectorProps> = ({
           )}
         </div>
       </div>
-    </FormWorkspace>
+    </>
   );
 };

@@ -9,7 +9,7 @@ import { Plus } from 'lucide-react';
 import PageBreadcrumb from '@/components/common/PageBreadCrumb';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 
-function SystemUsersPage() {
+export default function SystemUsersPage() {
   const router = useRouter();
   const { deleteUser } = useSystemUsers();
   const { confirm } = useGlobalModal();
@@ -35,7 +35,7 @@ function SystemUsersPage() {
   };
 
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8">
       <PageBreadcrumb pageTitle="System Users" />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -53,4 +53,3 @@ function SystemUsersPage() {
     </div>
   );
 }
-export default SystemUsersPage;

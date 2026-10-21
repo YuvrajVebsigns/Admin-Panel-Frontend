@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { SponsorTable } from '@/modules/sponsors/components/SponsorTable';
-import { SponsorFormWorkspace } from '@/modules/sponsors/components/SponsorFormModal';
+import { SponsorFormModal } from '@/modules/sponsors/components/SponsorFormModal';
 import { Sponsor } from '@/modules/sponsors/types/sponsor.types';
 import Button from '@/components/ui/button/Button';
 import { Plus, Users, Award, ShieldCheck } from 'lucide-react';
@@ -10,11 +10,11 @@ import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { useSponsors } from '@/modules/sponsors/hooks/useSponsors';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 
-function SponsorsPage() {
+export default function SponsorsPage() {
   const { deleteSponsor } = useSponsors();
   const { confirm } = useGlobalModal();
 
-  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSponsor, setSelectedSponsor] = useState<Sponsor | null>(null);
 
   // Fetch summaries for stats cards
@@ -50,12 +50,12 @@ function SponsorsPage() {
 
   const handleCreate = () => {
     setSelectedSponsor(null);
-    setIsWorkspaceOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleEdit = (sponsor: Sponsor) => {
     setSelectedSponsor(sponsor);
-    setIsWorkspaceOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleDelete = (sponsor: Sponsor) => {
@@ -69,15 +69,6 @@ function SponsorsPage() {
       },
     });
   };
-
-  if (isWorkspaceOpen) {
-    return (
-      <SponsorFormWorkspace
-        onClose={() => setIsWorkspaceOpen(false)}
-        sponsorData={selectedSponsor}
-      />
-    );
-  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -113,10 +104,15 @@ function SponsorsPage() {
         ))}
       </div>
 
-      <div className="min-w-0 bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-5 border border-gray-200 dark:border-navy-800">
+      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
         <SponsorTable onEdit={handleEdit} onDelete={handleDelete} />
       </div>
+
+      <SponsorFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        sponsorData={selectedSponsor}
+      />
     </div>
   );
 }
-export default SponsorsPage;

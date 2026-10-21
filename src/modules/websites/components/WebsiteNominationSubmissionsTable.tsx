@@ -191,14 +191,13 @@ export function resolveWebsiteTableHeadings(website?: Website): TableHeadings {
 interface WebsiteNominationSubmissionsTableProps {
   websiteId: string;
   website?: Website;
-  onWorkspaceChange?: (isOpen: boolean) => void;
 }
 
 type ViewMode = 'submissions' | 'nominees' | 'nominators';
 
 export const WebsiteNominationSubmissionsTable: React.FC<
   WebsiteNominationSubmissionsTableProps
-> = ({ websiteId, website, onWorkspaceChange }) => {
+> = ({ websiteId, website }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -857,458 +856,450 @@ export const WebsiteNominationSubmissionsTable: React.FC<
         : isNominatorsLoading;
 
   return (
-    <>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header & Preset Terminology Banner */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-gray-50 via-brand-50/20 to-gray-50 dark:from-navy-900 dark:via-navy-800/40 dark:to-navy-900 border border-gray-100 dark:border-navy-700 shadow-sm">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                {headings.entriesLabel}
-              </h3>
-              <Badge color="primary" variant="light" className="text-xs font-semibold px-2 py-0.5">
-                {headings.presetName}
-              </Badge>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Platform table headings dynamically configured for{' '}
-              <span className="font-semibold text-gray-700 dark:text-gray-300">
-                {website?.name || 'this website'}
-              </span>
-              .
-            </p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header & Preset Terminology Banner */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-gray-50 via-brand-50/20 to-gray-50 dark:from-navy-900 dark:via-navy-800/40 dark:to-navy-900 border border-gray-100 dark:border-navy-700 shadow-sm">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              {headings.entriesLabel}
+            </h3>
+            <Badge color="primary" variant="light" className="text-xs font-semibold px-2 py-0.5">
+              {headings.presetName}
+            </Badge>
           </div>
-
-          {/* View Mode Switcher */}
-          <div className="flex items-center p-1 bg-white dark:bg-navy-950 rounded-2xl border border-gray-200 dark:border-navy-800 shadow-sm w-fit">
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('submissions');
-                setPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === 'submissions'
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Layers size={14} />
-              All Submissions Log
-              {nominationsMeta?.total !== undefined && (
-                <span
-                  className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
-                    viewMode === 'submissions'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {nominationsMeta.total}
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('nominees');
-                setPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === 'nominees'
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Trophy size={14} />
-              By {headings.nomineeCompany}
-              {nomineesMeta?.total !== undefined && (
-                <span
-                  className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
-                    viewMode === 'nominees'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {nomineesMeta.total}
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('nominators');
-                setPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === 'nominators'
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Users size={14} />
-              By {headings.nominatorName.split(' ')[0]}
-              {nominatorsMeta?.total !== undefined && (
-                <span
-                  className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
-                    viewMode === 'nominators'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {nominatorsMeta.total}
-                </span>
-              )}
-            </button>
-          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Platform table headings dynamically configured for{' '}
+            <span className="font-semibold text-gray-700 dark:text-gray-300">
+              {website?.name || 'this website'}
+            </span>
+            .
+          </p>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col md:flex-row gap-3 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder={`Search by ${headings.nomineeCompany.toLowerCase()}, ${headings.nomineeContact.toLowerCase()}, or ${headings.nominatorName.toLowerCase()}...`}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
-            />
-          </div>
+        {/* View Mode Switcher */}
+        <div className="flex items-center p-1 bg-white dark:bg-navy-950 rounded-2xl border border-gray-200 dark:border-navy-800 shadow-sm w-fit">
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('submissions');
+              setPage(1);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              viewMode === 'submissions'
+                ? 'bg-brand-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            <Layers size={14} />
+            All Submissions Log
+            {nominationsMeta?.total !== undefined && (
+              <span
+                className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
+                  viewMode === 'submissions'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                {nominationsMeta.total}
+              </span>
+            )}
+          </button>
 
-          <div className="flex flex-wrap gap-2.5">
-            {/* Status Filter */}
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('nominees');
+              setPage(1);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              viewMode === 'nominees'
+                ? 'bg-brand-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            <Trophy size={14} />
+            By {headings.nomineeCompany}
+            {nomineesMeta?.total !== undefined && (
+              <span
+                className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
+                  viewMode === 'nominees'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                {nomineesMeta.total}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('nominators');
+              setPage(1);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              viewMode === 'nominators'
+                ? 'bg-brand-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            <Users size={14} />
+            By {headings.nominatorName.split(' ')[0]}
+            {nominatorsMeta?.total !== undefined && (
+              <span
+                className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${
+                  viewMode === 'nominators'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                {nominatorsMeta.total}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col md:flex-row gap-3 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder={`Search by ${headings.nomineeCompany.toLowerCase()}, ${headings.nomineeContact.toLowerCase()}, or ${headings.nominatorName.toLowerCase()}...`}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2.5">
+          {/* Status Filter */}
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus((e.target.value as NominationStatus) || '');
+              setPage(1);
+            }}
+            className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Category Filter (Only active for Submissions view) */}
+          {viewMode === 'submissions' && categories.length > 0 && (
             <select
-              value={status}
+              value={categoryId}
               onChange={(e) => {
-                setStatus((e.target.value as NominationStatus) || '');
+                setCategoryId(e.target.value);
+                setSubCategoryId('');
                 setPage(1);
               }}
-              className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer max-w-[200px]"
             >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+              <option value="">All {headings.category}</option>
+              {categories.map((c) => (
+                <option key={c.id || c._id} value={c.id || c._id}>
+                  {c.name}
                 </option>
               ))}
             </select>
+          )}
 
-            {/* Category Filter (Only active for Submissions view) */}
-            {viewMode === 'submissions' && categories.length > 0 && (
-              <select
-                value={categoryId}
-                onChange={(e) => {
-                  setCategoryId(e.target.value);
-                  setSubCategoryId('');
-                  setPage(1);
-                }}
-                className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer max-w-[200px]"
-              >
-                <option value="">All {headings.category}</option>
-                {categories.map((c) => (
-                  <option key={c.id || c._id} value={c.id || c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            )}
+          {/* Sub-Category Filter */}
+          {viewMode === 'submissions' && categoryId && subCategories.length > 0 && (
+            <select
+              value={subCategoryId}
+              onChange={(e) => {
+                setSubCategoryId(e.target.value);
+                setPage(1);
+              }}
+              className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer max-w-[200px]"
+            >
+              <option value="">All {headings.subCategory}</option>
+              {subCategories.map((s) => (
+                <option key={s.id || s._id} value={s.id || s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          )}
 
-            {/* Sub-Category Filter */}
-            {viewMode === 'submissions' && categoryId && subCategories.length > 0 && (
-              <select
-                value={subCategoryId}
-                onChange={(e) => {
-                  setSubCategoryId(e.target.value);
-                  setPage(1);
-                }}
-                className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer max-w-[200px]"
-              >
-                <option value="">All {headings.subCategory}</option>
-                {subCategories.map((s) => (
-                  <option key={s.id || s._id} value={s.id || s._id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {/* Export Data Modal Trigger */}
-            {canExport && (
-              <Button
-                type="button"
-                onClick={() => {
-                  setIsExportModalOpen(true);
-                  onWorkspaceChange?.(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
-              >
-                <FileSpreadsheet size={16} />
-                Export Excel
-              </Button>
-            )}
-          </div>
+          {/* Export Data Modal Trigger */}
+          {canExport && (
+            <Button
+              type="button"
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+            >
+              <FileSpreadsheet size={16} />
+              Export Excel
+            </Button>
+          )}
         </div>
+      </div>
 
-        {/* Main Data Table */}
-        {viewMode === 'submissions' ? (
-          <DataTable
-            data={nominations}
-            columns={submissionColumns}
-            isLoading={currentLoading}
-            serverSide
-            totalItems={totalCount}
-            page={page}
-            limit={limit}
-            onPageChange={setPage}
-            onPageSizeChange={(sz) => {
-              setLimit(sz);
-              setPage(1);
-            }}
-          />
-        ) : viewMode === 'nominees' ? (
-          <DataTable
-            data={groupedNominees}
-            columns={nomineeColumns}
-            isLoading={currentLoading}
-            serverSide
-            totalItems={totalCount}
-            page={page}
-            limit={limit}
-            onPageChange={setPage}
-            onPageSizeChange={(sz) => {
-              setLimit(sz);
-              setPage(1);
-            }}
-          />
-        ) : (
-          <DataTable
-            data={groupedNominators}
-            columns={nominatorColumns}
-            isLoading={currentLoading}
-            serverSide
-            totalItems={totalCount}
-            page={page}
-            limit={limit}
-            onPageChange={setPage}
-            onPageSizeChange={(sz) => {
-              setLimit(sz);
-              setPage(1);
-            }}
-          />
-        )}
+      {/* Main Data Table */}
+      {viewMode === 'submissions' ? (
+        <DataTable
+          data={nominations}
+          columns={submissionColumns}
+          isLoading={currentLoading}
+          serverSide
+          totalItems={totalCount}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setLimit(sz);
+            setPage(1);
+          }}
+        />
+      ) : viewMode === 'nominees' ? (
+        <DataTable
+          data={groupedNominees}
+          columns={nomineeColumns}
+          isLoading={currentLoading}
+          serverSide
+          totalItems={totalCount}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setLimit(sz);
+            setPage(1);
+          }}
+        />
+      ) : (
+        <DataTable
+          data={groupedNominators}
+          columns={nominatorColumns}
+          isLoading={currentLoading}
+          serverSide
+          totalItems={totalCount}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setLimit(sz);
+            setPage(1);
+          }}
+        />
+      )}
 
-        {/* Submission Detail Modal */}
-        {selectedSubmission && (
-          <Modal
-            isOpen={isDetailModalOpen}
-            onClose={() => {
-              setIsDetailModalOpen(false);
-              setSelectedSubmission(null);
-            }}
-            title="Nomination Submission Details"
-            size="2xl"
-          >
-            <div className="space-y-6">
-              {/* Header / Nominator Profile Box */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-gray-50 via-brand-50/10 to-gray-50 dark:from-navy-900 dark:via-navy-800/40 dark:to-navy-900 border border-gray-100 dark:border-navy-700">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-brand-500 text-white flex items-center justify-center font-bold text-lg shadow-md">
-                      {getInitials(getNominatorName(selectedSubmission))}
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold tracking-wider uppercase text-brand-600 dark:text-brand-400">
-                        {headings.nominatorName}
-                      </span>
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                        {getNominatorName(selectedSubmission)}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2">
-                        <span>{getNominatorCompany(selectedSubmission)}</span>
-                        {getNominatorCity(selectedSubmission) !== '-' && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <MapPin size={11} /> {getNominatorCity(selectedSubmission)}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    </div>
+      {/* Submission Detail Modal */}
+      {selectedSubmission && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedSubmission(null);
+          }}
+          title="Nomination Submission Details"
+          size="2xl"
+        >
+          <div className="space-y-6">
+            {/* Header / Nominator Profile Box */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-gray-50 via-brand-50/10 to-gray-50 dark:from-navy-900 dark:via-navy-800/40 dark:to-navy-900 border border-gray-100 dark:border-navy-700">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-brand-500 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                    {getInitials(getNominatorName(selectedSubmission))}
                   </div>
-
-                  <div className="flex flex-col sm:items-end gap-2">
-                    <div>{getStatusBadge(selectedSubmission.status)}</div>
-                    <span className="text-xs text-gray-400">
-                      {selectedSubmission.submittedAt
-                        ? new Date(selectedSubmission.submittedAt).toLocaleString()
-                        : '-'}
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-brand-600 dark:text-brand-400">
+                      {headings.nominatorName}
                     </span>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                      {getNominatorName(selectedSubmission)}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2">
+                      <span>{getNominatorCompany(selectedSubmission)}</span>
+                      {getNominatorCity(selectedSubmission) !== '-' && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin size={11} /> {getNominatorCity(selectedSubmission)}
+                          </span>
+                        </>
+                      )}
+                    </p>
                   </div>
                 </div>
 
-                {/* Nominator Contact details */}
-                <div className="mt-4 pt-3 border-t border-gray-200/60 dark:border-navy-700/60 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-300">
-                  {getNominatorEmail(selectedSubmission) && (
+                <div className="flex flex-col sm:items-end gap-2">
+                  <div>{getStatusBadge(selectedSubmission.status)}</div>
+                  <span className="text-xs text-gray-400">
+                    {selectedSubmission.submittedAt
+                      ? new Date(selectedSubmission.submittedAt).toLocaleString()
+                      : '-'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Nominator Contact details */}
+              <div className="mt-4 pt-3 border-t border-gray-200/60 dark:border-navy-700/60 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-300">
+                {getNominatorEmail(selectedSubmission) && (
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Mail size={13} className="text-brand-500" />
+                    {getNominatorEmail(selectedSubmission)}
+                  </span>
+                )}
+                {typeof selectedSubmission.nominatorId === 'object' &&
+                  selectedSubmission.nominatorId.phoneNumber && (
                     <span className="flex items-center gap-1.5 font-medium">
-                      <Mail size={13} className="text-brand-500" />
-                      {getNominatorEmail(selectedSubmission)}
+                      <Phone size={13} className="text-brand-500" />
+                      {selectedSubmission.nominatorId.phoneNumber}
                     </span>
                   )}
-                  {typeof selectedSubmission.nominatorId === 'object' &&
-                    selectedSubmission.nominatorId.phoneNumber && (
-                      <span className="flex items-center gap-1.5 font-medium">
-                        <Phone size={13} className="text-brand-500" />
-                        {selectedSubmission.nominatorId.phoneNumber}
-                      </span>
-                    )}
-                </div>
+              </div>
+            </div>
+
+            {/* Nominated Entries List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                  {headings.nomineeCompany} &amp; {headings.nomineeContact} Entries (
+                  {selectedSubmission.nominees?.length || 0})
+                </h4>
               </div>
 
-              {/* Nominated Entries List */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                    {headings.nomineeCompany} &amp; {headings.nomineeContact} Entries (
-                    {selectedSubmission.nominees?.length || 0})
-                  </h4>
-                </div>
-
-                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-                  {(selectedSubmission.nominees || []).map((nom, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center h-6 w-6 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 text-xs font-bold">
-                            #{idx + 1}
-                          </span>
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            {nom.companyName || nom.contactName || 'Nominee'}
-                          </p>
-                        </div>
-
-                        {nom.contactName && nom.contactName !== nom.companyName && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">
-                              {headings.nomineeContact}:
-                            </span>{' '}
-                            {nom.contactName}
-                          </p>
-                        )}
-
-                        <div className="flex flex-wrap gap-3 text-xs text-gray-500 pl-8 pt-0.5">
-                          {nom.contactEmail && (
-                            <span className="flex items-center gap-1">
-                              <Mail size={11} className="text-gray-400" /> {nom.contactEmail}
-                            </span>
-                          )}
-                          {nom.mobileNo && (
-                            <span className="flex items-center gap-1">
-                              <Phone size={11} className="text-gray-400" /> {nom.mobileNo}
-                            </span>
-                          )}
-                        </div>
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                {(selectedSubmission.nominees || []).map((nom, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center h-6 w-6 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 text-xs font-bold">
+                          #{idx + 1}
+                        </span>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">
+                          {nom.companyName || nom.contactName || 'Nominee'}
+                        </p>
                       </div>
 
-                      <div className="flex flex-col sm:items-end gap-1.5 pl-8 sm:pl-0">
-                        <Badge
-                          color="info"
-                          variant="light"
-                          startIcon={<Award size={11} />}
-                          className="text-xs font-semibold px-2 py-0.5"
-                        >
-                          {getNomineeCategoryName(nom)}
-                        </Badge>
-                        {getNomineeSubCategoryName(nom) && (
-                          <Badge
-                            color="light"
-                            className="text-[10px] font-medium px-2 py-0.5 border border-gray-200 dark:border-navy-700"
-                          >
-                            {getNomineeSubCategoryName(nom)}
-                          </Badge>
+                      {nom.contactName && nom.contactName !== nom.companyName && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            {headings.nomineeContact}:
+                          </span>{' '}
+                          {nom.contactName}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-500 pl-8 pt-0.5">
+                        {nom.contactEmail && (
+                          <span className="flex items-center gap-1">
+                            <Mail size={11} className="text-gray-400" /> {nom.contactEmail}
+                          </span>
+                        )}
+                        {nom.mobileNo && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={11} className="text-gray-400" /> {nom.mobileNo}
+                          </span>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Quick Status Action Bar */}
-              <div className="pt-4 border-t border-gray-100 dark:border-navy-700 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs text-gray-500">
-                  Update status for this entire submission:
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const id =
-                        selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
-                      updateStatusMutation.mutate({ id, newStatus: NominationStatus.APPROVED });
-                      setSelectedSubmission((p) =>
-                        p ? { ...p, status: NominationStatus.APPROVED } : null,
-                      );
-                    }}
-                    className="text-xs text-emerald-600 hover:bg-emerald-50 border-emerald-200"
-                  >
-                    <CheckCircle2 size={14} className="mr-1" /> Approve
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const id =
-                        selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
-                      updateStatusMutation.mutate({ id, newStatus: NominationStatus.REVIEWED });
-                      setSelectedSubmission((p) =>
-                        p ? { ...p, status: NominationStatus.REVIEWED } : null,
-                      );
-                    }}
-                    className="text-xs text-blue-600 hover:bg-blue-50 border-blue-200"
-                  >
-                    <Clock size={14} className="mr-1" /> Mark Reviewed
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const id =
-                        selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
-                      updateStatusMutation.mutate({ id, newStatus: NominationStatus.REJECTED });
-                      setSelectedSubmission((p) =>
-                        p ? { ...p, status: NominationStatus.REJECTED } : null,
-                      );
-                    }}
-                    className="text-xs text-rose-600 hover:bg-rose-50 border-rose-200"
-                  >
-                    <XCircle size={14} className="mr-1" /> Reject
-                  </Button>
-                </div>
+                    <div className="flex flex-col sm:items-end gap-1.5 pl-8 sm:pl-0">
+                      <Badge
+                        color="info"
+                        variant="light"
+                        startIcon={<Award size={11} />}
+                        className="text-xs font-semibold px-2 py-0.5"
+                      >
+                        {getNomineeCategoryName(nom)}
+                      </Badge>
+                      {getNomineeSubCategoryName(nom) && (
+                        <Badge
+                          color="light"
+                          className="text-[10px] font-medium px-2 py-0.5 border border-gray-200 dark:border-navy-700"
+                        >
+                          {getNomineeSubCategoryName(nom)}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </Modal>
-        )}
-      </div>
+
+            {/* Quick Status Action Bar */}
+            <div className="pt-4 border-t border-gray-100 dark:border-navy-700 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-gray-500">Update status for this entire submission:</div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const id =
+                      selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
+                    updateStatusMutation.mutate({ id, newStatus: NominationStatus.APPROVED });
+                    setSelectedSubmission((p) =>
+                      p ? { ...p, status: NominationStatus.APPROVED } : null,
+                    );
+                  }}
+                  className="text-xs text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                >
+                  <CheckCircle2 size={14} className="mr-1" /> Approve
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const id =
+                      selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
+                    updateStatusMutation.mutate({ id, newStatus: NominationStatus.REVIEWED });
+                    setSelectedSubmission((p) =>
+                      p ? { ...p, status: NominationStatus.REVIEWED } : null,
+                    );
+                  }}
+                  className="text-xs text-blue-600 hover:bg-blue-50 border-blue-200"
+                >
+                  <Clock size={14} className="mr-1" /> Mark Reviewed
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const id =
+                      selectedSubmission.id || (selectedSubmission as { _id?: string })._id || '';
+                    updateStatusMutation.mutate({ id, newStatus: NominationStatus.REJECTED });
+                    setSelectedSubmission((p) =>
+                      p ? { ...p, status: NominationStatus.REJECTED } : null,
+                    );
+                  }}
+                  className="text-xs text-rose-600 hover:bg-rose-50 border-rose-200"
+                >
+                  <XCircle size={14} className="mr-1" /> Reject
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Export Modal with Preloaded Website ID */}
       <ExportDataModal
         isOpen={isExportModalOpen}
-        onClose={() => {
-          setIsExportModalOpen(false);
-          onWorkspaceChange?.(false);
-        }}
+        onClose={() => setIsExportModalOpen(false)}
         type="nominee"
         initialWebsiteId={websiteId}
         initialSearch={search}
       />
-    </>
+    </div>
   );
 };

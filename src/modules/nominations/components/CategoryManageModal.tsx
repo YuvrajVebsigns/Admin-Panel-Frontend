@@ -6,7 +6,6 @@ import { useNominationCategories } from '../hooks/useNominationCategories';
 import Button from '@/components/ui/button/Button';
 import { X, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 
 interface CategoryManageModalProps {
   isOpen: boolean;
@@ -83,19 +82,11 @@ export const CategoryManageModal: React.FC<CategoryManageModalProps> = ({ isOpen
   };
 
   return (
-    <FormWorkspace
-      title={isAdding ? 'Create category' : editingId ? 'Edit category' : 'Manage categories'}
-      description="Manage the categories available for nominations."
-      onClose={() => {
-        if (isAdding || editingId) {
-          setIsAdding(false);
-          setEditingId(null);
-        } else {
-          onClose();
-        }
-      }}
-    >
-      <div className="space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
+      <div
+        className="relative w-full max-w-2xl bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-navy-800 bg-gray-50 dark:bg-navy-950 shrink-0">
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Manage Categories</h3>
@@ -129,10 +120,7 @@ export const CategoryManageModal: React.FC<CategoryManageModalProps> = ({ isOpen
             {isLoading ? (
               <div className="py-8 text-center text-gray-500">Loading categories...</div>
             ) : (
-              (isAdding
-                ? []
-                : categories.filter((category) => !editingId || category.id === editingId)
-              ).map((category) => (
+              categories.map((category) => (
                 <div key={category.id}>
                   {editingId === category.id ? (
                     <div className="p-4 bg-gray-50 dark:bg-navy-800/50 rounded-2xl border border-brand-100 dark:border-brand-500/20 space-y-4">
@@ -303,6 +291,6 @@ export const CategoryManageModal: React.FC<CategoryManageModalProps> = ({ isOpen
           </div>
         </div>
       </div>
-    </FormWorkspace>
+    </div>
   );
 };

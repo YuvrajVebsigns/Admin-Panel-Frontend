@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/button/Button';
 import {
@@ -757,138 +756,188 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
   }
 
   return (
-    <>
-      {!isPreviewOpen && (
-        <FormWorkspace
-          title={isEdit ? 'Edit message template' : 'Create message template'}
-          description="Define the message content, variable mapping, event linkage, and activation state."
-          eyebrow="Communications / Templates"
-          context={isEdit ? 'Editing existing template' : 'New template draft'}
-          onClose={handleCancel}
-          status={
-            <span
-              role="status"
-              className="rounded-full border border-navy-100 bg-white px-3 py-1.5 font-medium dark:border-navy-700 dark:bg-navy-800"
-            >
-              {isBusy ? 'Saving…' : isEdit ? 'Ready to update' : 'Unsaved draft'}
-            </span>
-          }
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Top action header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-2xl transition-all text-gray-500 dark:text-gray-400"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isEdit ? `Edit Template: ${name}` : 'Create Message Template'}
-                  </h1>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {isEdit
-                      ? 'Modify message layout, subject, and event linkages.'
-                      : 'Create a new email or SMS notification layout.'}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Top action header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-2xl transition-all text-gray-500 dark:text-gray-400"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {isEdit ? `Edit Template: ${name}` : 'Create Message Template'}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              {isEdit
+                ? 'Modify message layout, subject, and event linkages.'
+                : 'Create a new email or SMS notification layout.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" type="button" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            className="shadow-lg shadow-brand-500/20 px-6 font-bold"
+            isLoading={isBusy}
+          >
+            {isEdit ? 'Save Changes' : 'Create Template'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Form Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Template Title
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    handleNameChange(e.target.value);
+                    setErrors((p) => ({ ...p, name: '' }));
+                  }}
+                  placeholder="e.g. User Signup Verification"
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
+                    errors.name ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'
+                  }`}
+                />
+                {errors.name && (
+                  <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
+                    <ShieldQuestion size={12} /> {errors.name}
                   </p>
-                </div>
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <Button variant="outline" type="button" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  className="shadow-lg shadow-brand-500/20 px-6 font-bold"
-                  isLoading={isBusy}
-                >
-                  {isEdit ? 'Save Changes' : 'Create Template'}
-                </Button>
+
+              {/* Unique Slug */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Unique Slug ID
+                </label>
+                <input
+                  type="text"
+                  value={slug}
+                  disabled={isEdit}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setErrors((p) => ({ ...p, slug: '' }));
+                  }}
+                  placeholder="e.g. verify-signup"
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
+                    isEdit ? 'bg-gray-100 dark:bg-navy-950 cursor-not-allowed' : ''
+                  } ${errors.slug ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'}`}
+                />
+                {errors.slug && (
+                  <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
+                    <ShieldQuestion size={12} /> {errors.slug}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Main Form Content */}
-            <div className="min-w-0 space-y-6 animate-fade-in">
-              <div className="min-w-0 space-y-6">
-                <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Name */}
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                        Template Title
-                      </label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => {
-                          handleNameChange(e.target.value);
-                          setErrors((p) => ({ ...p, name: '' }));
-                        }}
-                        placeholder="e.g. User Signup Verification"
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
-                          errors.name ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'
-                        }`}
-                      />
-                      {errors.name && (
-                        <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
-                          <ShieldQuestion size={12} /> {errors.name}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Unique Slug */}
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                        Unique Slug ID
-                      </label>
-                      <input
-                        type="text"
-                        value={slug}
-                        disabled={isEdit}
-                        onChange={(e) => {
-                          setSlug(e.target.value);
-                          setErrors((p) => ({ ...p, slug: '' }));
-                        }}
-                        placeholder="e.g. verify-signup"
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
-                          isEdit ? 'bg-gray-100 dark:bg-navy-950 cursor-not-allowed' : ''
-                        } ${errors.slug ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'}`}
-                      />
-                      {errors.slug && (
-                        <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
-                          <ShieldQuestion size={12} /> {errors.slug}
-                        </p>
-                      )}
-                    </div>
+            {/* Event or Schema dynamic variables list inside the main card */}
+            {baseSchema ? (
+              <div className="p-5 bg-gradient-to-br from-brand-500/5 to-indigo-500/5 rounded-2xl border border-brand-100 dark:border-brand-500/25 space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-navy-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Zap size={14} className="text-brand-500 animate-pulse" />
+                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                      Base Fields:
+                      <code className="bg-brand-50 dark:bg-brand-500/10 px-1.5 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono text-xs ml-1.5">
+                        {baseSchema}
+                      </code>
+                    </span>
                   </div>
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                    Click to insert variable
+                  </span>
+                </div>
 
-                  {/* Event or Schema dynamic variables list inside the main card */}
-                  {baseSchema ? (
-                    <div className="p-5 bg-gradient-to-br from-brand-500/5 to-indigo-500/5 rounded-2xl border border-brand-100 dark:border-brand-500/25 space-y-4">
-                      <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-navy-800 pb-2">
-                        <div className="flex items-center gap-2">
-                          <Zap size={14} className="text-brand-500 animate-pulse" />
-                          <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                            Base Fields:
-                            <code className="bg-brand-50 dark:bg-brand-500/10 px-1.5 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono text-xs ml-1.5">
-                              {baseSchema}
-                            </code>
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          Click to insert variable
+                {/* Render Base Schema Fields */}
+                {schemaVariables.filter((v) => !v.isRelation).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {schemaVariables
+                      .filter((v) => !v.isRelation)
+                      .map((v) => {
+                        const isActiveChip = parsedVars.includes(v.field);
+                        return (
+                          <VariableChipWithTooltip
+                            key={v.field}
+                            name={v.field}
+                            schemaVariables={schemaVariables}
+                            isActive={isActiveChip}
+                            onClick={() => handleVariableChipClick(v.field)}
+                            onCopy={() => handleCopyVariable(v.field)}
+                            customBadgeText={isActiveChip ? 'Selected' : undefined}
+                          />
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic">No base variables found.</p>
+                )}
+
+                {/* Add-on Relation Fields (Schemas) */}
+                {relationFields.length > 0 && (
+                  <div className="pt-2 border-t border-gray-250/50 dark:border-navy-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                        Add-on Schemas (Relations):
+                      </span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                        Select relation to show its variables below
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {relationFields.map((f) => {
+                        const isAdded = selectedRelations.includes(f.path);
+                        return (
+                          <button
+                            key={f.path}
+                            type="button"
+                            onClick={() => {
+                              if (isAdded) {
+                                setSelectedRelations((prev) =>
+                                  prev.filter((r) => r !== f.path && !r.startsWith(`${f.path}.`)),
+                                );
+                              } else {
+                                setSelectedRelations((prev) => [...prev, f.path]);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-sm cursor-pointer ${
+                              isAdded
+                                ? 'bg-indigo-600 text-white border-indigo-700'
+                                : 'bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-navy-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
+                            }`}
+                          >
+                            {isAdded ? '✓ ' : '+ '} {f.path} ({f.ref})
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Relation variables if any relation is selected */}
+                    {schemaVariables.filter((v) => v.isRelation).length > 0 && (
+                      <div className="pt-3 space-y-2">
+                        <span className="text-[11px] font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-wide block">
+                          Relation Fields Variables:
                         </span>
-                      </div>
-
-                      {/* Render Base Schema Fields */}
-                      {schemaVariables.filter((v) => !v.isRelation).length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 bg-indigo-50/30 dark:bg-indigo-950/10 p-3 rounded-xl border border-indigo-100/50 dark:border-indigo-950/30">
                           {schemaVariables
-                            .filter((v) => !v.isRelation)
+                            .filter((v) => v.isRelation)
                             .map((v) => {
                               const isActiveChip = parsedVars.includes(v.field);
                               return (
@@ -904,399 +953,314 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                               );
                             })}
                         </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic">No base variables found.</p>
-                      )}
-
-                      {/* Add-on Relation Fields (Schemas) */}
-                      {relationFields.length > 0 && (
-                        <div className="pt-2 border-t border-gray-250/50 dark:border-navy-800 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                              Add-on Schemas (Relations):
-                            </span>
-                            <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                              Select relation to show its variables below
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {relationFields.map((f) => {
-                              const isAdded = selectedRelations.includes(f.path);
-                              return (
-                                <button
-                                  key={f.path}
-                                  type="button"
-                                  onClick={() => {
-                                    if (isAdded) {
-                                      setSelectedRelations((prev) =>
-                                        prev.filter(
-                                          (r) => r !== f.path && !r.startsWith(`${f.path}.`),
-                                        ),
-                                      );
-                                    } else {
-                                      setSelectedRelations((prev) => [...prev, f.path]);
-                                    }
-                                  }}
-                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-sm cursor-pointer ${
-                                    isAdded
-                                      ? 'bg-indigo-600 text-white border-indigo-700'
-                                      : 'bg-white dark:bg-navy-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-navy-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
-                                  }`}
-                                >
-                                  {isAdded ? '✓ ' : '+ '} {f.path} ({f.ref})
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Relation variables if any relation is selected */}
-                          {schemaVariables.filter((v) => v.isRelation).length > 0 && (
-                            <div className="pt-3 space-y-2">
-                              <span className="text-[11px] font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-wide block">
-                                Relation Fields Variables:
-                              </span>
-                              <div className="flex flex-wrap gap-2 bg-indigo-50/30 dark:bg-indigo-950/10 p-3 rounded-xl border border-indigo-100/50 dark:border-indigo-950/30">
-                                {schemaVariables
-                                  .filter((v) => v.isRelation)
-                                  .map((v) => {
-                                    const isActiveChip = parsedVars.includes(v.field);
-                                    return (
-                                      <VariableChipWithTooltip
-                                        key={v.field}
-                                        name={v.field}
-                                        schemaVariables={schemaVariables}
-                                        isActive={isActiveChip}
-                                        onClick={() => handleVariableChipClick(v.field)}
-                                        onCopy={() => handleCopyVariable(v.field)}
-                                        customBadgeText={isActiveChip ? 'Selected' : undefined}
-                                      />
-                                    );
-                                  })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-gray-50 dark:bg-navy-950 rounded-2xl border border-gray-150 dark:border-navy-800 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                      <Info size={14} className="text-brand-500 shrink-0" />
-                      <span>
-                        Tip: Choose a base database schema or link a system event in the sidebar
-                        configuration to discover dynamic variables.
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Interpolation variables input */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center justify-between">
-                      <span>Detected Template Variables</span>
-                      <span className="text-[10px] text-gray-400 font-normal normal-case">
-                        Comma-separated list of active variables (auto-filled on chip click)
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      value={variablesRaw}
-                      onChange={(e) => setVariablesRaw(e.target.value)}
-                      placeholder="e.g. name, otp_code, verification_url"
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900"
-                    />
-                    {parsedVars.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50/50 dark:bg-navy-950/20 rounded-2xl border border-gray-100 dark:border-navy-850">
-                        {parsedVars.map((v) => (
-                          <VariableChipWithTooltip
-                            key={v}
-                            name={v}
-                            schemaVariables={schemaVariables}
-                            isActive={true}
-                            onClick={() => handleCopyVariable(v)}
-                            onCopy={() => handleCopyVariable(v)}
-                            onRemove={() => handleRemoveVariable(v)}
-                            colorClasses={getVariableColorClasses(v)}
-                          />
-                        ))}
                       </div>
                     )}
                   </div>
-
-                  {/* Email specific subject */}
-                  {channel === CommunicationChannel.EMAIL && (
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                        Email Subject Line
-                      </label>
-                      <input
-                        type="text"
-                        value={subject}
-                        onChange={(e) => {
-                          setSubject(e.target.value);
-                          setErrors((p) => ({ ...p, subject: '' }));
-                        }}
-                        placeholder="e.g. Confirm your signup code {{params.otp_code}}"
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
-                          errors.subject
-                            ? 'border-error-500'
-                            : 'border-gray-200 dark:border-navy-800'
-                        }`}
-                      />
-                      {errors.subject && (
-                        <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
-                          <ShieldQuestion size={12} /> {errors.subject}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Simple HTML Textarea Editor with Preview button */}
-                  {channel === CommunicationChannel.EMAIL && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                          HTML Template Code
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setIsPreviewOpen(true)}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 dark:text-brand-400 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-                        >
-                          <Eye size={13} />
-                          <span>Preview HTML Output</span>
-                        </button>
-                      </div>
-
-                      {/* Variable Quick-Insert & Hover-Inspector Bar */}
-                      <div className="p-3.5 bg-gradient-to-r from-gray-50 to-brand-50/30 dark:from-navy-950 dark:to-navy-900/60 rounded-2xl border border-gray-200/90 dark:border-navy-800 space-y-2.5">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <Sparkles size={14} className="text-brand-500 shrink-0" />
-                            <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                              Variable Inspector & Quick Insert
-                            </span>
-                            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-normal normal-case hidden sm:inline">
-                              (Hover for input type & sample response &bull; Click to insert at
-                              cursor)
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleAutoDetectVariables}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 bg-white dark:bg-navy-900 border border-brand-200 dark:border-brand-500/30 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-500/15 shadow-sm transition-all cursor-pointer"
-                            title="Scan template and subject to auto-detect any pasted variables"
-                          >
-                            <RefreshCw size={11} />
-                            <span>Auto-Detect Pasted Variables</span>
-                          </button>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          {quickBarVars.map((v) => (
-                            <VariableChipWithTooltip
-                              key={v}
-                              name={v}
-                              schemaVariables={schemaVariables}
-                              isActive={parsedVars.includes(v)}
-                              onClick={() => handleInsertVariableIntoHtml(v)}
-                              onCopy={() => handleCopyVariable(v)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <textarea
-                        ref={htmlTextareaRef}
-                        rows={15}
-                        value={htmlContent}
-                        onChange={(e) => {
-                          setHtmlContent(e.target.value);
-                          setErrors((p) => ({ ...p, htmlContent: '' }));
-                        }}
-                        placeholder="<html>\n  <body>\n    <h1>Welcome {{params.name}}!</h1>\n  </body>\n</html>"
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
-                          errors.htmlContent
-                            ? 'border-error-500'
-                            : 'border-gray-200 dark:border-navy-800'
-                        }`}
-                      />
-                      {errors.htmlContent && (
-                        <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
-                          <ShieldQuestion size={12} /> {errors.htmlContent}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Fallback Text content (always shown, serves as SMS text or Email plain text body) */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                      Fallback Plain-text message body
-                    </label>
-                    <textarea
-                      rows={5}
-                      value={textContent}
-                      onChange={(e) => {
-                        setTextContent(e.target.value);
-                        setErrors((p) => ({ ...p, textContent: '' }));
-                      }}
-                      placeholder="e.g. Hi {{params.name}}, your signup verification code is {{params.otp_code}}"
-                      className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
-                        errors.textContent
-                          ? 'border-error-500'
-                          : 'border-gray-200 dark:border-navy-800'
-                      }`}
-                    />
-                    {errors.textContent && (
-                      <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
-                        <ShieldQuestion size={12} /> {errors.textContent}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
+            ) : (
+              <div className="p-4 bg-gray-50 dark:bg-navy-950 rounded-2xl border border-gray-150 dark:border-navy-800 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                <Info size={14} className="text-brand-500 shrink-0" />
+                <span>
+                  Tip: Choose a base database schema or link a system event in the sidebar
+                  configuration to discover dynamic variables.
+                </span>
+              </div>
+            )}
 
-              {/* Sidebar settings */}
-              <div className="space-y-6">
-                {/* Metadata settings */}
-                <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
-                  <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
-                    Template Configuration
-                  </h3>
-
-                  {/* Channel */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                      Channel
-                    </label>
-                    <select
-                      value={channel}
-                      disabled={isEdit}
-                      onChange={(e) => setChannel(e.target.value as CommunicationChannel)}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                    >
-                      <option value={CommunicationChannel.EMAIL}>📧 Email</option>
-                      <option value={CommunicationChannel.SMS}>💬 SMS</option>
-                      <option value={CommunicationChannel.PUSH}>Bell Push</option>
-                    </select>
-                  </div>
-
-                  {/* Linked System Event */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                      Linked System Event
-                    </label>
-                    <select
-                      value={linkedEvent}
-                      onChange={(e) => {
-                        const ev = e.target.value;
-                        setLinkedEvent(ev);
-                        const autoSchema = getAutoSchemaForEvent(ev);
-                        setBaseSchema(autoSchema);
-                        setSelectedRelations([]);
-                        setVariablesRaw(''); // Reset variables when system event changes
-                      }}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
-                    >
-                      <option value="">— No event linked —</option>
-                      {events.map((ev: string) => (
-                        <option key={ev} value={ev}>
-                          {ev}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Base Database Schema */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                      Base Database Schema
-                    </label>
-                    <SchemaCombobox
-                      value={baseSchema}
-                      disabled={!!linkedEvent}
-                      onChange={(val) => {
-                        setBaseSchema(val);
-                        setSelectedRelations([]); // reset relations on schema change
-                      }}
-                      schemas={schemaDiscovery}
+            {/* Interpolation variables input */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center justify-between">
+                <span>Detected Template Variables</span>
+                <span className="text-[10px] text-gray-400 font-normal normal-case">
+                  Comma-separated list of active variables (auto-filled on chip click)
+                </span>
+              </label>
+              <input
+                type="text"
+                value={variablesRaw}
+                onChange={(e) => setVariablesRaw(e.target.value)}
+                placeholder="e.g. name, otp_code, verification_url"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900"
+              />
+              {parsedVars.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50/50 dark:bg-navy-950/20 rounded-2xl border border-gray-100 dark:border-navy-850">
+                  {parsedVars.map((v) => (
+                    <VariableChipWithTooltip
+                      key={v}
+                      name={v}
+                      schemaVariables={schemaVariables}
+                      isActive={true}
+                      onClick={() => handleCopyVariable(v)}
+                      onCopy={() => handleCopyVariable(v)}
+                      onRemove={() => handleRemoveVariable(v)}
+                      colorClasses={getVariableColorClasses(v)}
                     />
-                  </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                  {/* Include Relation Fields */}
-                  {baseSchema && relationFields.length > 0 && (
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                        Include Relation Fields
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {relationFields.map((f) => {
-                          const isAdded = selectedRelations.includes(f.path);
-                          return (
-                            <button
-                              key={f.path}
-                              type="button"
-                              onClick={() => {
-                                if (isAdded) {
-                                  setSelectedRelations((prev) =>
-                                    prev.filter((r) => r !== f.path && !r.startsWith(`${f.path}.`)),
-                                  );
-                                } else {
-                                  setSelectedRelations((prev) => [...prev, f.path]);
-                                }
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                                isAdded
-                                  ? 'bg-brand-500 text-white border-brand-600'
-                                  : 'bg-gray-50 dark:bg-navy-950 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-navy-800 hover:border-brand-300'
-                              }`}
-                            >
-                              {isAdded ? '✓ ' : '+ '} {f.path} ({f.ref})
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+            {/* Email specific subject */}
+            {channel === CommunicationChannel.EMAIL && (
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Email Subject Line
+                </label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => {
+                    setSubject(e.target.value);
+                    setErrors((p) => ({ ...p, subject: '' }));
+                  }}
+                  placeholder="e.g. Confirm your signup code {{params.otp_code}}"
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
+                    errors.subject ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'
+                  }`}
+                />
+                {errors.subject && (
+                  <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
+                    <ShieldQuestion size={12} /> {errors.subject}
+                  </p>
+                )}
+              </div>
+            )}
 
-                  {/* Active Toggle */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-950 rounded-2xl border border-gray-100 dark:border-navy-800">
-                    <div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-white">
-                        Active Status
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">
-                        Enable using this layout in triggers.
-                      </p>
+            {/* Simple HTML Textarea Editor with Preview button */}
+            {channel === CommunicationChannel.EMAIL && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    HTML Template Code
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 dark:text-brand-400 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Eye size={13} />
+                    <span>Preview HTML Output</span>
+                  </button>
+                </div>
+
+                {/* Variable Quick-Insert & Hover-Inspector Bar */}
+                <div className="p-3.5 bg-gradient-to-r from-gray-50 to-brand-50/30 dark:from-navy-950 dark:to-navy-900/60 rounded-2xl border border-gray-200/90 dark:border-navy-800 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-brand-500 shrink-0" />
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                        Variable Inspector & Quick Insert
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 font-normal normal-case hidden sm:inline">
+                        (Hover for input type & sample response &bull; Click to insert at cursor)
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setIsActive(!isActive)}
-                      className={`relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 ${
-                        isActive ? 'bg-brand-500' : 'bg-gray-300 dark:bg-navy-700'
-                      }`}
+                      onClick={handleAutoDetectVariables}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 bg-white dark:bg-navy-900 border border-brand-200 dark:border-brand-500/30 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-500/15 shadow-sm transition-all cursor-pointer"
+                      title="Scan template and subject to auto-detect any pasted variables"
                     >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
-                          isActive ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
+                      <RefreshCw size={11} />
+                      <span>Auto-Detect Pasted Variables</span>
                     </button>
                   </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {quickBarVars.map((v) => (
+                      <VariableChipWithTooltip
+                        key={v}
+                        name={v}
+                        schemaVariables={schemaVariables}
+                        isActive={parsedVars.includes(v)}
+                        onClick={() => handleInsertVariableIntoHtml(v)}
+                        onCopy={() => handleCopyVariable(v)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <textarea
+                  ref={htmlTextareaRef}
+                  rows={15}
+                  value={htmlContent}
+                  onChange={(e) => {
+                    setHtmlContent(e.target.value);
+                    setErrors((p) => ({ ...p, htmlContent: '' }));
+                  }}
+                  placeholder="<html>\n  <body>\n    <h1>Welcome {{params.name}}!</h1>\n  </body>\n</html>"
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
+                    errors.htmlContent ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'
+                  }`}
+                />
+                {errors.htmlContent && (
+                  <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
+                    <ShieldQuestion size={12} /> {errors.htmlContent}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Fallback Text content (always shown, serves as SMS text or Email plain text body) */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Fallback Plain-text message body
+              </label>
+              <textarea
+                rows={5}
+                value={textContent}
+                onChange={(e) => {
+                  setTextContent(e.target.value);
+                  setErrors((p) => ({ ...p, textContent: '' }));
+                }}
+                placeholder="e.g. Hi {{params.name}}, your signup verification code is {{params.otp_code}}"
+                className={`w-full px-4 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 ${
+                  errors.textContent ? 'border-error-500' : 'border-gray-200 dark:border-navy-800'
+                }`}
+              />
+              {errors.textContent && (
+                <p className="text-[11px] text-error-500 mt-1 font-semibold flex items-center gap-0.5">
+                  <ShieldQuestion size={12} /> {errors.textContent}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar settings */}
+        <div className="space-y-6">
+          {/* Metadata settings */}
+          <div className="bg-white dark:bg-navy-900 rounded-3xl border border-gray-100 dark:border-navy-800 p-6 shadow-sm space-y-5">
+            <h3 className="text-sm font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-navy-800 pb-3">
+              Template Configuration
+            </h3>
+
+            {/* Channel */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Channel
+              </label>
+              <select
+                value={channel}
+                disabled={isEdit}
+                onChange={(e) => setChannel(e.target.value as CommunicationChannel)}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+              >
+                <option value={CommunicationChannel.EMAIL}>📧 Email</option>
+                <option value={CommunicationChannel.SMS}>💬 SMS</option>
+                <option value={CommunicationChannel.PUSH}>Bell Push</option>
+              </select>
+            </div>
+
+            {/* Linked System Event */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Linked System Event
+              </label>
+              <select
+                value={linkedEvent}
+                onChange={(e) => {
+                  const ev = e.target.value;
+                  setLinkedEvent(ev);
+                  const autoSchema = getAutoSchemaForEvent(ev);
+                  setBaseSchema(autoSchema);
+                  setSelectedRelations([]);
+                  setVariablesRaw(''); // Reset variables when system event changes
+                }}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white bg-white dark:bg-navy-900 cursor-pointer"
+              >
+                <option value="">— No event linked —</option>
+                {events.map((ev: string) => (
+                  <option key={ev} value={ev}>
+                    {ev}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Base Database Schema */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Base Database Schema
+              </label>
+              <SchemaCombobox
+                value={baseSchema}
+                disabled={!!linkedEvent}
+                onChange={(val) => {
+                  setBaseSchema(val);
+                  setSelectedRelations([]); // reset relations on schema change
+                }}
+                schemas={schemaDiscovery}
+              />
+            </div>
+
+            {/* Include Relation Fields */}
+            {baseSchema && relationFields.length > 0 && (
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Include Relation Fields
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {relationFields.map((f) => {
+                    const isAdded = selectedRelations.includes(f.path);
+                    return (
+                      <button
+                        key={f.path}
+                        type="button"
+                        onClick={() => {
+                          if (isAdded) {
+                            setSelectedRelations((prev) =>
+                              prev.filter((r) => r !== f.path && !r.startsWith(`${f.path}.`)),
+                            );
+                          } else {
+                            setSelectedRelations((prev) => [...prev, f.path]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          isAdded
+                            ? 'bg-brand-500 text-white border-brand-600'
+                            : 'bg-gray-50 dark:bg-navy-950 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-navy-800 hover:border-brand-300'
+                        }`}
+                      >
+                        {isAdded ? '✓ ' : '+ '} {f.path} ({f.ref})
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </form>
-        </FormWorkspace>
-      )}
+            )}
 
-      {/* Editable sample data replaces the template form while testing. */}
+            {/* Active Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-950 rounded-2xl border border-gray-100 dark:border-navy-800">
+              <div>
+                <p className="text-sm font-bold text-gray-800 dark:text-white">Active Status</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Enable using this layout in triggers.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsActive(!isActive)}
+                className={`relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 ${
+                  isActive ? 'bg-brand-500' : 'bg-gray-300 dark:bg-navy-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
+                    isActive ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* HTML Preview Modal Overlay */}
       {isPreviewOpen && (
-        <FormWorkspace
-          title="Test Template Variables"
-          description="Enter sample values and review the rendered message. Your template draft is retained when you return."
-          onClose={() => setIsPreviewOpen(false)}
-        >
-          <div className="min-w-0 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-6xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-gray-150 dark:border-navy-800 flex flex-col">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-150 dark:border-navy-800 flex items-center justify-between bg-gray-50 dark:bg-navy-950">
               <div>
@@ -1318,14 +1282,14 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
             </div>
 
             {/* Modal Content Pane */}
-            <div className="min-w-0 space-y-5">
+            <div className="flex-1 flex overflow-hidden">
               {/* Left Mock Inputs Pane */}
-              <div className="rounded-xl border border-gray-150 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/20 p-4 sm:p-5 space-y-4">
+              <div className="w-80 border-r border-gray-150 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/20 p-5 overflow-y-auto space-y-4">
                 <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Test Variables Data
                 </h4>
                 {parsedVars.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-3">
                     {parsedVars.map((v) => {
                       const meta = getVariableMetadata(v, schemaVariables);
                       return (
@@ -1366,13 +1330,13 @@ export const TemplateForm: React.FC<TemplateFormProps> = ({ templateId, defaultC
                 <iframe
                   ref={iframeRef}
                   title="HTML Output Live Preview"
-                  className="w-full min-h-[60vh] border border-gray-150 rounded-2xl bg-white shadow-inner"
+                  className="w-full h-full border border-gray-150 rounded-2xl bg-white shadow-inner"
                 />
               </div>
             </div>
           </div>
-        </FormWorkspace>
+        </div>
       )}
-    </>
+    </form>
   );
 };

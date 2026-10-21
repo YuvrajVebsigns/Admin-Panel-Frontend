@@ -32,9 +32,6 @@ export interface ExportButtonProps {
   statusOptions?: Array<{ value: string; label: string }>;
   customFilters?: ExportCustomFilterOption[];
   initialFilters?: ExportFilterParams;
-  /** Control the export popup from an owned caller when needed. */
-  isOpen?: boolean;
-  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export const ExportButton: React.FC<ExportButtonProps> = ({
@@ -58,17 +55,10 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   statusOptions = [],
   customFilters = [],
   initialFilters = {},
-  isOpen,
-  onOpenChange,
 }) => {
   const isAllowed = useHasPermission(permission || '');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirectExporting, setIsDirectExporting] = useState(false);
-  const workspaceOpen = isOpen ?? isModalOpen;
-  const setWorkspaceOpen = (open: boolean) => {
-    setIsModalOpen(open);
-    onOpenChange?.(open);
-  };
 
   if (permission && !isAllowed) {
     return null;
@@ -89,7 +79,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         setIsDirectExporting(false);
       }
     } else {
-      setWorkspaceOpen(true);
+      setIsModalOpen(true);
     }
   };
 
@@ -98,7 +88,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
       case 'primary':
         return 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm border border-transparent dark:bg-brand-500 dark:hover:bg-brand-600';
       case 'secondary':
-        return 'bg-navy-900 text-white hover:bg-navy-800 shadow-sm border border-transparent dark:bg-navy-700 dark:hover:bg-navy-600';
+        return 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm border border-transparent dark:bg-emerald-500 dark:hover:bg-emerald-600';
       case 'ghost':
         return 'text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-brand-400 dark:hover:bg-navy-800 border border-transparent';
       case 'outline':
@@ -117,27 +107,6 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
     }
   };
 
-  if (!disableModal && workspaceOpen) {
-    return (
-      <ExportFilterModal
-        isOpen
-        onClose={() => setWorkspaceOpen(false)}
-        title={exportTitle}
-        description={exportDescription}
-        onExport={async (filters) => {
-          await onExport(filters);
-        }}
-        sheetsInfo={sheetsInfo}
-        showDateRange={showDateRange}
-        showWebsiteFilter={showWebsiteFilter}
-        showStatusFilter={showStatusFilter}
-        statusOptions={statusOptions}
-        customFilters={customFilters}
-        initialFilters={initialFilters}
-      />
-    );
-  }
-
   return (
     <>
       <button
@@ -145,16 +114,37 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         onClick={handleClick}
         disabled={disabled || isDirectExporting}
         title={tooltip}
-        aria-label={showIconOnly ? label : undefined}
         className={`inline-flex items-center justify-center font-bold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${getVariantStyles()} ${getSizeStyles()} ${className}`}
       >
         {isDirectExporting ? (
           <Loader2 size={size === 'sm' ? 14 : 16} className="animate-spin text-brand-500" />
         ) : (
-          <FileSpreadsheet size={size === 'sm' ? 14 : 16} className="shrink-0" />
+          <FileSpreadsheet
+            size={size === 'sm' ? 14 : 16}
+            className="text-emerald-600 dark:text-emerald-400 shrink-0"
+          />
         )}
         {!showIconOnly && <span>{isDirectExporting ? 'Exporting...' : label}</span>}
       </button>
+
+      {!disableModal && (
+        <ExportFilterModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={exportTitle}
+          description={exportDescription}
+          onExport={async (filters) => {
+            await onExport(filters);
+          }}
+          sheetsInfo={sheetsInfo}
+          showDateRange={showDateRange}
+          showWebsiteFilter={showWebsiteFilter}
+          showStatusFilter={showStatusFilter}
+          statusOptions={statusOptions}
+          customFilters={customFilters}
+          initialFilters={initialFilters}
+        />
+      )}
     </>
   );
 };

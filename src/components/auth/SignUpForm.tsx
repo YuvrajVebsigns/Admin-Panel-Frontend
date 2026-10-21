@@ -7,13 +7,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
-import {
-  AuthWorkspace,
-  AuthError,
-  authInputClassName,
-  authButtonClassName,
-  authLinkClassName,
-} from './AuthWorkspace';
+import { AuthLayout } from '@/modules/auth/components/AuthLayout';
 
 export default function SignUpForm() {
   const { signup, isSigningUp } = useAuth();
@@ -82,16 +76,10 @@ export default function SignUpForm() {
 
   if (isSuccess) {
     return (
-      <AuthWorkspace>
-        <div className="w-full space-y-6" role="status">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400">
-            <svg
-              className="h-7 w-7"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
+      <AuthLayout>
+        <div className="flex flex-col justify-center w-full mx-auto text-center space-y-6 pt-2 pb-6">
+          <div className="h-24 w-24 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mx-auto shadow-[0_0_40px_rgba(34,197,94,0.15)] mb-2">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -101,30 +89,35 @@ export default function SignUpForm() {
             </svg>
           </div>
           <div className="space-y-3">
-            <h1 className="font-roboto text-2xl font-semibold text-gray-900 dark:text-white">
-              Account created
-            </h1>
-            <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              Account Created!
+            </h2>
+            <p className="text-base font-medium text-gray-500 dark:text-gray-400 max-w-[300px] mx-auto leading-relaxed">
               Your account has been successfully created. You can now sign in to your dashboard.
             </p>
           </div>
           <div className="pt-4">
-            <Link href="/login" className={authButtonClassName}>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-white transition rounded-xl bg-brand-500 hover:bg-brand-600 shadow-lg shadow-brand-500/20 w-full active:scale-[0.98]"
+            >
               Go to Sign In
             </Link>
           </div>
         </div>
-      </AuthWorkspace>
+      </AuthLayout>
     );
   }
 
   return (
-    <AuthWorkspace
-      title="Create your account"
-      subtitle="Enter your details to join the Core Media workspace."
-    >
-      <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isSigningUp}>
-        {errors.general && <AuthError>{errors.general}</AuthError>}
+    <AuthLayout title="Sign Up" subtitle="Enter your details to create an account">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {errors.general && (
+          <div className="p-4 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            {errors.general}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="sm:col-span-1 space-y-2">
@@ -140,9 +133,7 @@ export default function SignUpForm() {
               onChange={(e) => setFname(e.target.value)}
               error={!!errors.fname}
               hint={errors.fname}
-              autoComplete="given-name"
-              aria-invalid={!!errors.fname}
-              className={authInputClassName}
+              className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl"
             />
           </div>
           <div className="sm:col-span-1 space-y-2">
@@ -158,9 +149,7 @@ export default function SignUpForm() {
               onChange={(e) => setLname(e.target.value)}
               error={!!errors.lname}
               hint={errors.lname}
-              autoComplete="family-name"
-              aria-invalid={!!errors.lname}
-              className={authInputClassName}
+              className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl"
             />
           </div>
         </div>
@@ -179,8 +168,7 @@ export default function SignUpForm() {
             error={!!errors.email}
             hint={errors.email}
             autoComplete="email"
-            aria-invalid={!!errors.email}
-            className={authInputClassName}
+            className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl"
           />
         </div>
 
@@ -198,15 +186,12 @@ export default function SignUpForm() {
               error={!!errors.password}
               hint={errors.password}
               autoComplete="new-password"
-              aria-invalid={!!errors.password}
-              className={`${authInputClassName} pr-12`}
+              className="bg-gray-50 dark:bg-navy-900/50 border-gray-100 dark:border-navy-700 focus:bg-white transition-all rounded-xl pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              aria-pressed={showPassword}
-              className="absolute right-1 top-0 flex h-12 w-11 items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-gray-400 dark:hover:text-white"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors z-10"
             >
               {showPassword ? (
                 <EyeIcon className="w-5 h-5 fill-current" />
@@ -219,39 +204,38 @@ export default function SignUpForm() {
 
         <div className="flex items-start gap-3">
           <div className="mt-1">
-            <Checkbox
-              id="accept-terms"
-              checked={isChecked}
-              onChange={setIsChecked}
-              className="focus-visible:ring-2 focus-visible:ring-brand-500"
-            />
+            <Checkbox checked={isChecked} onChange={setIsChecked} />
           </div>
-          <label
-            htmlFor="accept-terms"
-            className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 leading-relaxed"
-          >
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
             By creating an account, you agree to the{' '}
             <span className="text-gray-900 dark:text-white font-semibold">
               Terms and Conditions
             </span>{' '}
             and our{' '}
             <span className="text-gray-900 dark:text-white font-semibold">Privacy Policy</span>.
-          </label>
+          </p>
         </div>
 
-        <button type="submit" disabled={isSigningUp} className={authButtonClassName}>
-          {isSigningUp ? 'Creating account…' : 'Create account'}
+        <button
+          type="submit"
+          disabled={isSigningUp}
+          className="w-full py-4 text-base font-bold text-white transition-all rounded-xl bg-brand-500 shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 hover:bg-brand-600 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSigningUp ? 'Creating account...' : 'Create Account'}
         </button>
       </form>
 
-      <div className="mt-6 border-t border-gray-100 pt-4 dark:border-navy-700">
+      <div className="mt-8 pt-8 border-t border-gray-50 dark:border-navy-700/50 text-center">
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
           Already have an account?{' '}
-          <Link href="/login" className={authLinkClassName}>
+          <Link
+            href="/login"
+            className="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-bold transition-colors ml-1"
+          >
             Sign In
           </Link>
         </p>
       </div>
-    </AuthWorkspace>
+    </AuthLayout>
   );
 }

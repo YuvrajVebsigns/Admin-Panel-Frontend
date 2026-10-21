@@ -242,35 +242,6 @@ export const EventDetailsView: React.FC = () => {
     );
   }
 
-  if (isMeetingModalOpen) {
-    return (
-      <EventMeetingModal
-        isOpen
-        onClose={() => {
-          setIsMeetingModalOpen(false);
-          setMeetingToEdit(null);
-        }}
-        event={event}
-        meetingToEdit={meetingToEdit}
-      />
-    );
-  }
-  if (isScheduledEmailModalOpen) {
-    return (
-      <EventScheduledEmailModal
-        isOpen
-        onClose={() => setIsScheduledEmailModalOpen(false)}
-        event={event}
-        onSave={handleSaveScheduledEmails}
-      />
-    );
-  }
-  if (isQrPosterModalOpen) {
-    return (
-      <EventQrPosterModal isOpen onClose={() => setIsQrPosterModalOpen(false)} event={event} />
-    );
-  }
-
   // Calculate attendee check-in counts and offline vs online
   const totalAttendees = attendees?.length || 0;
   const checkedInAttendees =
@@ -1063,6 +1034,26 @@ export const EventDetailsView: React.FC = () => {
           </div>
         </div>
       </div>
+      <EventMeetingModal
+        isOpen={isMeetingModalOpen}
+        onClose={() => {
+          setIsMeetingModalOpen(false);
+          setMeetingToEdit(null);
+        }}
+        event={event}
+        meetingToEdit={meetingToEdit}
+      />
+      <EventScheduledEmailModal
+        isOpen={isScheduledEmailModalOpen}
+        onClose={() => setIsScheduledEmailModalOpen(false)}
+        event={event}
+        onSave={handleSaveScheduledEmails}
+      />
+      <EventQrPosterModal
+        isOpen={isQrPosterModalOpen}
+        onClose={() => setIsQrPosterModalOpen(false)}
+        event={event}
+      />
     </div>
   );
 };

@@ -67,68 +67,67 @@ export default function NominatorsPage() {
   ];
 
   return (
-    <>
-      <div className="space-y-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Nomination Submissions
-            </h1>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
-              Track and review submitted CIO nominations from public websites.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {canExportNominators && (
-              <Button
-                onClick={() => setIsExportModalOpen(true)}
-                className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white"
-                startIcon={<FileSpreadsheet size={16} />}
-              >
-                Export Data
-              </Button>
-            )}
-            <Link href="/nomination-categories">
-              <Button variant="outline" startIcon={<Settings size={16} />}>
-                Categories
-              </Button>
-            </Link>
-            <Link href="/nominators/create">
-              <Button
-                variant="primary"
-                startIcon={<Plus size={16} />}
-                className="shadow-md shadow-brand-500/20"
-              >
-                Create Nomination
-              </Button>
-            </Link>
-          </div>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Nomination Submissions
+          </h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
+            Track and review submitted CIO nominations from public websites.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <SummaryCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              bgIllustration={stat.bgIllustration}
-              iconBgColor={stat.iconBgColor}
-              iconTextColor={stat.iconTextColor}
-              isActive={false}
-            />
-          ))}
-        </div>
-
-        <div className="min-w-0 bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-5 border border-gray-200 dark:border-navy-800">
-          <NominatorTable />
+        <div className="flex items-center gap-3">
+          {canExportNominators && (
+            <Button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
+              startIcon={<FileSpreadsheet size={16} />}
+            >
+              Export Data
+            </Button>
+          )}
+          <Link href="/nomination-categories">
+            <Button variant="outline" startIcon={<Settings size={16} />}>
+              Categories
+            </Button>
+          </Link>
+          <Link href="/nominators/create">
+            <Button
+              variant="primary"
+              startIcon={<Plus size={16} />}
+              className="shadow-md shadow-brand-500/20"
+            >
+              Create Nomination
+            </Button>
+          </Link>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <SummaryCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            bgIllustration={stat.bgIllustration}
+            iconBgColor={stat.iconBgColor}
+            iconTextColor={stat.iconTextColor}
+            isActive={false}
+          />
+        ))}
+      </div>
+
+      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
+        <NominatorTable />
+      </div>
+
       <ExportDataModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         type="nominator"
       />
-    </>
+    </div>
   );
 }

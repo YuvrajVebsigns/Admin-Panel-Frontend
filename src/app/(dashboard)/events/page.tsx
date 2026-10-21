@@ -2,11 +2,10 @@
 import React from 'react';
 import { EventTable } from '@/modules/events/components/EventTable';
 
-function EventsPage() {
+export default function EventsPage() {
   return (
-    <div className="min-w-0">
+    <div className="p-6">
       <EventTable />
     </div>
   );
 }
-export default EventsPage;

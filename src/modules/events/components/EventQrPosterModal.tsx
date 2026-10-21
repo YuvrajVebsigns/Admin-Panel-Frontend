@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import { EventManagement } from '../types/event.types';
 import { useWebsites } from '@/modules/websites/hooks/useWebsites';
@@ -274,15 +274,14 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
 
   const bannerImageUrl = getImageUrl(event.bannerImage);
 
-  if (!isOpen) return null;
-
   return (
-    <FormWorkspace
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
-      title="Event registration poster"
-      description="Configure the registration link and download your event QR poster."
+      size="3xl"
+      className="max-w-[1120px] w-full overflow-hidden p-0"
     >
-      <div className="flex flex-col bg-white dark:bg-navy-900">
+      <div className="flex flex-col h-[88vh] max-h-[850px] bg-white dark:bg-navy-900">
         {/* Modal Header: Fixed top bar with brand accent and safe spacing away from close button */}
         <div className="relative px-6 py-4 border-b border-gray-100 dark:border-navy-800 shrink-0 bg-white dark:bg-navy-900 pr-16">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400" />
@@ -565,7 +564,8 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
                 <div
                   id="event-qr-poster-card"
                   ref={posterRef}
-                  className={`w-[400px] max-w-full rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 border ${
+                  style={{ width: '400px', maxWidth: '100%' }}
+                  className={`rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 border ${
                     posterTheme === 'luxury-dark'
                       ? 'bg-gradient-to-b from-[#0d1322] via-[#0b0f19] to-[#070a12] text-white border-navy-700/60'
                       : 'bg-white text-gray-900 border-gray-200'
@@ -791,6 +791,6 @@ export const EventQrPosterModal: React.FC<EventQrPosterModalProps> = ({
           </div>
         </div>
       </div>
-    </FormWorkspace>
+    </Modal>
   );
 };
