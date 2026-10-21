@@ -1,304 +1,246 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useSidebar } from '../context/SidebarContext';
-import { ChevronDownIcon, HorizontaLDots } from '../icons/index';
-import SidebarUserProfile from './SidebarUserProfile';
-import SidebarSkeleton from './SidebarSkeleton';
+import { ChevronDown, MoreHorizontal, X } from 'lucide-react';
+import { useSidebar } from '@/context/SidebarContext';
 import { useNavigation, NavItem } from '@/hooks/useNavigation';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import SidebarUserProfile from './SidebarUserProfile';
+import SidebarSkeleton from './SidebarSkeleton';
 
-const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+export default function AppSidebar() {
+  const { isExpanded, isMobile, isMobileOpen, isHovered, setIsHovered, closeMobileSidebar } =
+    useSidebar();
   const pathname = usePathname();
   const { navGroups, isLoading } = useNavigation();
-  const [mounted, setMounted] = useState(false);
-
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
+  const sidebarRef = useRef<HTMLElement>(null);
+  const showText = isExpanded || isHovered || isMobileOpen;
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!isMobileOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const wasLocked = document.body.classList.contains('overflow-hidden');
+    document.body.classList.add('overflow-hidden');
+    sidebarRef.current?.querySelector<HTMLButtonElement>('[data-close-navigation]')?.focus();
 
-  const isActive = useCallback(
-    (path: string) => {
-      if (!path) return false;
-      if (path === '/') return pathname === '/';
-      return pathname === path || pathname.startsWith(`${path}/`);
-    },
-    [pathname],
-  );
-
-  const isAnyChildActive = useCallback(
-    (item: NavItem): boolean => {
-      if (item.path && isActive(item.path)) return true;
-      if (item.subItems) {
-        return item.subItems.some((subItem) => isAnyChildActive(subItem));
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMobileSidebar();
       }
-      return false;
-    },
-    [isActive],
-  );
-
-  useEffect(() => {
-    const newOpenState: Record<string, boolean> = { ...openSubmenus };
-
-    const checkAndOpen = (item: NavItem, parentPath: string) => {
-      const itemKey = `${parentPath}-${item.name}`;
-      if (item.subItems) {
-        if (isAnyChildActive(item)) {
-          newOpenState[itemKey] = true;
-        }
-        item.subItems.forEach((child) => checkAndOpen(child, itemKey));
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(
+        sidebarRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+        ) ?? [],
+      ).filter((element) => !element.closest('[inert]') && element.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
       }
     };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (!wasLocked) document.body.classList.remove('overflow-hidden');
+      requestAnimationFrame(() => {
+        if (previouslyFocused?.isConnected) previouslyFocused.focus();
+        else document.getElementById('sidebar-toggle')?.focus();
+      });
+    };
+  }, [isMobileOpen, closeMobileSidebar]);
 
-    navGroups.forEach((group) => {
-      group.items.forEach((item) => checkAndOpen(item, group.groupName));
-    });
+  const isActive = (path?: string): boolean =>
+    !!path &&
+    (path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`));
+  const hasActiveChild = (item: NavItem): boolean =>
+    isActive(item.path) || !!item.subItems?.some(hasActiveChild);
 
-    // Only update if there are actual changes to prevent infinite loops
-    setOpenSubmenus((prev) => {
-      const changed = Object.keys(newOpenState).some((k) => newOpenState[k] !== prev[k]);
-      return changed ? newOpenState : prev;
-    });
-  }, [pathname, navGroups, isAnyChildActive]);
-
-  const toggleSubmenu = (key: string) => {
-    setOpenSubmenus((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const renderIcon = (iconName: string | undefined, active: boolean, depth: number) => {
-    const iconSize = depth === 0 ? 20 : 16;
-    const containerSize = depth === 0 ? 'w-9 h-9' : 'w-7 h-7';
-
+  const renderItem = (item: NavItem, parentKey: string, depth = 0): React.ReactNode => {
+    const key = `${parentKey}-${item.name}`;
+    const children = item.subItems?.length ? item.subItems : undefined;
+    const active = children ? hasActiveChild(item) : isActive(item.path);
+    const open = openSubmenus[key] ?? active;
+    const submenuId = `nav-${encodeURIComponent(key)}`;
+    const classes = `${depth === 0 ? 'sidebar-menu-item' : 'sidebar-menu-dropdown-item'} group min-h-11 ${active ? (depth === 0 ? 'sidebar-menu-item-active' : 'sidebar-menu-dropdown-item-active') : 'sidebar-menu-item-inactive'} ${!showText ? 'justify-center' : ''}`;
+    const content = (
+      <>
+        <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
+          <DynamicIcon name={item.icon || 'LayoutGrid'} size={depth === 0 ? 20 : 16} />
+        </span>
+        {showText && <span className="min-w-0 flex-1 text-left leading-5">{item.name}</span>}
+        {showText && children && (
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className={`shrink-0 motion-safe:transition-transform motion-safe:duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        )}
+        {showText && (item.new || item.pro) && (
+          <span className="rounded bg-navy-100 px-1.5 text-[10px] font-semibold uppercase tracking-wider text-navy-600 dark:bg-navy-700 dark:text-navy-200">
+            {item.new ? 'New' : 'Pro'}
+          </span>
+        )}
+      </>
+    );
     return (
-      <div
-        className={`flex items-center justify-center shrink-0 ${containerSize} rounded-lg transition-all duration-200 
-        ${
-          active
-            ? 'bg-white/20 text-white shadow-sm'
-            : 'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-navy-300 group-hover:bg-gray-100 dark:group-hover:bg-white/10 dark:group-hover:text-brand-400'
-        }`}
-      >
-        <DynamicIcon name={iconName || 'LayoutGrid'} size={iconSize} />
-      </div>
+      <li key={key}>
+        {children ? (
+          <button
+            type="button"
+            aria-label={item.name}
+            title={!showText ? item.name : undefined}
+            aria-expanded={showText && open}
+            aria-controls={submenuId}
+            className={classes}
+            onClick={() => setOpenSubmenus((previous) => ({ ...previous, [key]: !open }))}
+          >
+            {content}
+          </button>
+        ) : item.path ? (
+          <Link
+            href={item.path}
+            aria-label={item.name}
+            title={!showText ? item.name : undefined}
+            aria-current={active ? 'page' : undefined}
+            className={classes}
+            onClick={closeMobileSidebar}
+          >
+            {content}
+          </Link>
+        ) : null}
+        {children && (
+          <div
+            id={submenuId}
+            inert={!showText || !open}
+            aria-hidden={!showText || !open}
+            data-open={showText && open}
+            className="admin-nav-submenu"
+          >
+            <div className="min-h-0 overflow-hidden">
+              <ul
+                className={`my-1 ml-5 space-y-1 border-l pl-3 ${active ? 'border-brand-200 dark:border-brand-500/30' : 'border-navy-100 dark:border-navy-700'}`}
+              >
+                {children.map((child) => renderItem(child, key, depth + 1))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </li>
     );
   };
 
-  const renderItem = (nav: NavItem, parentPath: string, depth = 0) => {
-    const itemKey = `${parentPath}-${nav.name}`;
-    const isOpen = openSubmenus[itemKey];
-    const hasChildren = nav.subItems && nav.subItems.length > 0;
-    const active = hasChildren ? isAnyChildActive(nav) : nav.path ? isActive(nav.path) : false;
-
-    if (depth === 0) {
-      return (
-        <li key={itemKey}>
-          {hasChildren ? (
-            <button
-              onClick={() => toggleSubmenu(itemKey)}
-              className={`sidebar-menu-item group cursor-pointer w-full
-                ${active ? 'sidebar-menu-item-active' : 'sidebar-menu-item-inactive'}
-                ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}
-                px-3 py-2.5
-              `}
-            >
-              {renderIcon(nav.icon, active, depth)}
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <>
-                  <span className="sidebar-menu-item-text text-left">{nav.name}</span>
-                  <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${active ? 'text-white' : isOpen ? 'text-brand-500' : ''}`}
-                  />
-                </>
-              )}
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                href={nav.path}
-                className={`sidebar-menu-item group ${active ? 'sidebar-menu-item-active' : 'sidebar-menu-item-inactive'} ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'} px-3 py-2.5`}
-              >
-                {renderIcon(nav.icon, active, depth)}
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="sidebar-menu-item-text">{nav.name}</span>
-                )}
-              </Link>
-            )
-          )}
-
-          {hasChildren && (isExpanded || isHovered || isMobileOpen) && (
-            <div
-              className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0'}`}
-            >
-              <div className="overflow-hidden">
-                <ul className="flex flex-col gap-1 ml-9 border-l border-gray-100 dark:border-gray-800">
-                  {nav.subItems!.map((subItem) => renderItem(subItem, itemKey, depth + 1))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </li>
-      );
-    } else {
-      return (
-        <li key={itemKey} className="relative">
-          {hasChildren ? (
-            <button
-              onClick={() => toggleSubmenu(itemKey)}
-              className={`sidebar-menu-dropdown-item w-full flex items-center justify-between group py-2
-                ${active ? 'sidebar-menu-dropdown-item-active' : 'sidebar-menu-dropdown-item-inactive'}
-              `}
-            >
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <span className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-3 border-t border-gray-200 dark:border-gray-700"></span>
-                <div className="pl-3.5 flex items-center gap-2.5 truncate">
-                  {renderIcon(nav.icon, active, depth)}
-                  <span className="truncate">{nav.name}</span>
-                </div>
-              </div>
-              <ChevronDownIcon
-                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${active ? 'text-white/70' : isOpen ? 'text-brand-500' : ''}`}
-              />
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                href={nav.path}
-                className={`sidebar-menu-dropdown-item flex items-center justify-between group relative py-2
-                ${active ? 'sidebar-menu-dropdown-item-active' : 'sidebar-menu-dropdown-item-inactive'}
-              `}
-              >
-                <div className="flex items-center gap-2.5 overflow-hidden">
-                  <span className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-3 border-t border-gray-200 dark:border-gray-700"></span>
-                  <div className="pl-3.5 flex items-center gap-2.5 truncate">
-                    {renderIcon(nav.icon, active, depth)}
-                    <span className="truncate">{nav.name}</span>
-                  </div>
-                </div>
-                <span className="flex items-center gap-1 shrink-0 ml-2">
-                  {nav.new && (
-                    <span
-                      className={`sidebar-menu-dropdown-badge ${active ? 'sidebar-menu-dropdown-badge-active' : 'sidebar-menu-dropdown-badge-inactive'}`}
-                    >
-                      new
-                    </span>
-                  )}
-                  {nav.pro && (
-                    <span
-                      className={`sidebar-menu-dropdown-badge ${active ? 'sidebar-menu-dropdown-badge-active' : 'sidebar-menu-dropdown-badge-inactive'}`}
-                    >
-                      pro
-                    </span>
-                  )}
-                </span>
-              </Link>
-            )
-          )}
-
-          {hasChildren && (
-            <div
-              className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-            >
-              <div className="overflow-hidden">
-                <ul className="flex flex-col gap-1 border-l border-gray-100 dark:border-gray-800 ml-[23px] mt-1 mb-1 relative">
-                  {/* Vertical line extension to connect deep children */}
-                  <div className="absolute -top-1 -left-[1px] h-3 border-l border-gray-200 dark:border-gray-700"></div>
-                  {nav.subItems!.map((subItem) => renderItem(subItem, itemKey, depth + 1))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </li>
-      );
-    }
-  };
-
-  const renderMenuItems = (items: NavItem[], menuType: string) => (
-    <ul className="flex flex-col gap-4">{items.map((nav) => renderItem(nav, menuType, 0))}</ul>
-  );
-
-  if (!mounted) return null;
-
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-navy-900 dark:border-navy-800 text-gray-900 dark:text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0`}
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      ref={sidebarRef}
+      id="app-sidebar"
+      role={isMobileOpen ? 'dialog' : undefined}
+      aria-modal={isMobileOpen ? true : undefined}
+      aria-label="Main navigation"
+      inert={isMobile && !isMobileOpen}
+      className={`fixed inset-y-0 left-0 z-[60] flex h-dvh flex-col border-r border-navy-100 bg-white text-navy-800 motion-safe:transition-[width,transform] motion-safe:duration-200 dark:border-navy-800 dark:bg-navy-900 dark:text-navy-100 ${showText ? 'w-[290px]' : 'w-[90px]'} max-w-[calc(100vw-2rem)] ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+      onMouseEnter={() => !isExpanded && !isMobile && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => !isExpanded && !isMobile && setIsHovered(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsHovered(false);
+      }}
     >
-      <div className={`py-2 flex items-center justify-center`}>
-        <Link href="/" className="flex items-center justify-center w-full">
-          {isExpanded || isHovered || isMobileOpen ? (
+      <div className="flex h-20 shrink-0 items-center justify-between gap-2 border-b border-navy-100 px-5 dark:border-navy-800">
+        <Link
+          href="/"
+          aria-label="Core Media home"
+          onClick={closeMobileSidebar}
+          className="flex flex-1 items-center justify-center"
+        >
+          {showText ? (
             <>
               <Image
-                className="dark:hidden object-contain object-center scale-90"
+                className="h-auto w-[180px] object-contain dark:hidden"
                 src="/images/logo/logo.webp"
-                alt="Logo"
+                alt="Core Media"
                 width={250}
                 height={100}
-                style={{ width: '180px', height: 'auto' }}
                 priority
               />
               <Image
-                className="hidden dark:block object-contain object-center scale-90"
+                className="hidden h-auto w-[180px] object-contain dark:block"
                 src="/images/logo/logo-dark.webp"
-                alt="Logo"
+                alt="Core Media"
                 width={250}
                 height={100}
-                style={{ width: '180px', height: 'auto' }}
                 priority
               />
             </>
           ) : (
             <Image
-              className="object-contain object-center"
+              className="size-10 object-contain"
               src="/images/logo/logo-icon.png"
-              alt="Logo"
+              alt="Core Media"
               width={40}
               height={40}
-              style={{ width: 'auto', height: 'auto', maxHeight: '40px', maxWidth: '100%' }}
             />
           )}
         </Link>
+        <button
+          data-close-navigation
+          type="button"
+          onClick={closeMobileSidebar}
+          aria-label="Close navigation"
+          className="admin-action flex size-11 shrink-0 items-center justify-center rounded-lg text-navy-500 hover:bg-navy-50 dark:text-navy-300 dark:hover:bg-navy-800 lg:hidden"
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
       </div>
-      <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear no-scrollbar">
-        <nav className="mb-6">
-          <div className="flex flex-col gap-4">
-            {isLoading ? (
-              <SidebarSkeleton />
-            ) : (
-              navGroups.map((group) => (
-                <div key={group.groupName}>
-                  <h2
-                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-navy-300 ${
-                      !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
-                    }`}
-                  >
-                    {isExpanded || isHovered || isMobileOpen ? group.groupName : <HorizontaLDots />}
-                  </h2>
-                  {renderMenuItems(group.items, group.groupName)}
-                </div>
-              ))
-            )}
+      <nav
+        aria-label="Workspace"
+        aria-busy={isLoading}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 custom-scrollbar"
+      >
+        {isLoading ? (
+          <SidebarSkeleton />
+        ) : navGroups.length ? (
+          <div className="space-y-7">
+            {navGroups.map((group) => (
+              <div key={group.groupName}>
+                <h2 className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400 dark:text-navy-300">
+                  {showText ? (
+                    group.groupName
+                  ) : (
+                    <>
+                      <MoreHorizontal size={18} aria-hidden="true" />
+                      <span className="sr-only">{group.groupName}</span>
+                    </>
+                  )}
+                </h2>
+                <ul className="space-y-1">
+                  {group.items.map((item) => renderItem(item, group.groupName))}
+                </ul>
+              </div>
+            ))}
           </div>
-        </nav>
-      </div>
-
-      {/* User Profile Menu at the bottom */}
-      <div className="mt-auto shrink-0">
+        ) : (
+          <p className="px-3 text-sm text-navy-500 dark:text-navy-300">
+            {showText ? (
+              'No navigation available for this account.'
+            ) : (
+              <span className="sr-only">No navigation available for this account.</span>
+            )}
+          </p>
+        )}
+      </nav>
+      <div className="shrink-0">
         <SidebarUserProfile />
       </div>
     </aside>
   );
-};
-
-export default AppSidebar;
+}

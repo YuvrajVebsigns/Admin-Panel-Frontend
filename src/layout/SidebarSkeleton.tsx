@@ -6,7 +6,8 @@ const SidebarSkeleton: React.FC = () => {
   const showText = isExpanded || isHovered || isMobileOpen;
 
   return (
-    <div className="flex flex-col gap-6 animate-pulse">
+    <div role="status" className="flex flex-col gap-6 animate-pulse">
+      <span className="sr-only">Loading navigation…</span>
       {[1, 2].map((group) => (
         <div key={group} className="flex flex-col gap-4">
           {/* Group Header */}

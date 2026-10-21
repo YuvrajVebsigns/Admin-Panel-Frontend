@@ -9,7 +9,7 @@ import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { useContacts } from '@/modules/contacts/hooks/useContacts';
 import { useGlobalModal } from '@/hooks/useGlobalModal';
 
-export default function ContactsPage() {
+function ContactsPage() {
   const { deleteContact } = useContacts();
   const { confirm } = useGlobalModal();
 
@@ -65,6 +65,16 @@ export default function ContactsPage() {
     });
   };
 
+  if (isModalOpen) {
+    return (
+      <ContactReplyModal
+        isOpen
+        onClose={() => setIsModalOpen(false)}
+        contactData={selectedContact}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -93,15 +103,10 @@ export default function ContactsPage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
+      <div className="min-w-0 bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-5 border border-gray-200 dark:border-navy-800">
         <ContactTable onViewDetails={handleViewDetails} onDelete={handleDelete} />
       </div>
-
-      <ContactReplyModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        contactData={selectedContact}
-      />
     </div>
   );
 }
+export default ContactsPage;

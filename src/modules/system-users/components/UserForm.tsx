@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
@@ -13,6 +13,8 @@ import { useRoles } from '@/modules/roles/hooks/useRoles';
 import { useEvents } from '@/modules/events/hooks/useEvents';
 import Button from '@/components/ui/button/Button';
 import { useSystemUsers } from '../hooks/useSystemUsers';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { FormActions, FormFeedback, FormSectionLinks } from '@/components/common/FormPresentation';
 
 const baseSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -116,16 +118,20 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
   }));
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <button
-        type="button"
-        onClick={() => router.push('/system-user')}
-        className="flex items-center gap-2 text-gray-500 hover:text-brand-500 mb-6 transition-colors font-medium group text-sm"
-      >
-        <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-        Back to System Users List
-      </button>
-
+    <FormWorkspace
+      title={isEdit ? `Edit system user: ${initialData.fullName}` : 'Create system user'}
+      description="Configure account details, access role, event scope, and active status."
+      eyebrow="Access / System users"
+      context={isEdit ? 'Editing existing user' : 'New user draft'}
+      onClose={() => router.push('/system-user')}
+    >
+      <FormSectionLinks
+        sections={[
+          { id: 'user-identity', label: 'Identity & access' },
+          { id: 'user-events', label: 'Event scope' },
+        ]}
+      />
+      <FormFeedback errorCount={Object.keys(errors).length} isSaving={isCreating || isUpdating} />
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 overflow-hidden shadow-sm transition-colors duration-300"
@@ -139,7 +145,7 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           </p>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div id="user-identity" className="scroll-mt-24 p-4 sm:p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2">
               <Label htmlFor="fullName">
@@ -231,7 +237,7 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
             </div>
 
             {/* Event Assignment for On-Premises Attendance / Event Staff */}
-            <div className="space-y-2 md:col-span-2">
+            <div id="user-events" className="scroll-mt-24 space-y-2 md:col-span-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="assignedEvents">
                   Assigned Events (On-Premises Attendance Scoping)
@@ -303,7 +309,7 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50/50 dark:bg-navy-900/50 border-t border-gray-100 dark:border-navy-700 flex justify-end gap-3">
+        <FormActions>
           <Button
             type="button"
             variant="outline"
@@ -319,8 +325,8 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData }) => {
           >
             {isCreating || isUpdating ? 'Saving...' : isEdit ? 'Update User' : 'Create User'}
           </Button>
-        </div>
+        </FormActions>
       </form>
-    </div>
+    </FormWorkspace>
   );
 };

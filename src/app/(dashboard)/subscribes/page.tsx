@@ -6,7 +6,7 @@ import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { SubscribeTable } from '@/modules/subscribes/components/SubscribeTable';
 import { useSubscribes } from '@/modules/subscribes/hooks/useSubscribes';
 
-export default function SubscribesPage() {
+function SubscribesPage() {
   const { meta } = useSubscribes({ limit: 1 });
 
   const stats = [
@@ -54,9 +54,10 @@ export default function SubscribesPage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-100 dark:border-navy-800 shadow-sm">
+      <div className="min-w-0 bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-5 border border-gray-200 dark:border-navy-800">
         <SubscribeTable />
       </div>
     </div>
   );
 }
+export default SubscribesPage;

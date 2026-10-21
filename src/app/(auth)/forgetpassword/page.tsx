@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { ForgotPasswordForm } from '@/modules/auth/components/ForgotPasswordForm';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 
 export const metadata: Metadata = {
   title: 'Forgot Password | Core Media Admin',

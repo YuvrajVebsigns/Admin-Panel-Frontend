@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/modal';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import Button from '@/components/ui/button/Button';
 import {
   CommunicationProvider,
@@ -130,17 +130,18 @@ export const ProviderFormModal: React.FC<ProviderFormModalProps> = ({
 
   const isBusy = isCreating || isUpdating;
 
+  if (!isOpen) return null;
+
   return (
-    <Modal
-      isOpen={isOpen}
+    <FormWorkspace
       onClose={onClose}
       title={
         isEdit ? `Configure Provider: ${editData?.displayName}` : 'Register Communication Provider'
       }
-      size="md"
+      description="Configure credentials, channel priority, and delivery settings."
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Code Name */}
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -191,7 +192,7 @@ export const ProviderFormModal: React.FC<ProviderFormModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Channel */}
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -262,7 +263,7 @@ export const ProviderFormModal: React.FC<ProviderFormModalProps> = ({
             Sender & Admin Customization Settings
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1">
                 Sender Email
@@ -299,7 +300,7 @@ export const ProviderFormModal: React.FC<ProviderFormModalProps> = ({
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1">
                 System Admin Email(s)
               </label>
@@ -366,6 +367,6 @@ export const ProviderFormModal: React.FC<ProviderFormModalProps> = ({
           </Button>
         </div>
       </form>
-    </Modal>
+    </FormWorkspace>
   );
 };

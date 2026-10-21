@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavbar } from '../hooks/useNavbar';
 import { NavbarItem, NavbarPosition, MenuType } from '../types/cms.types';
-import { NavbarFormModal } from './NavbarFormModal';
+import { NavbarFormWorkspace } from './NavbarFormModal';
 import Button from '@/components/ui/button/Button';
 import {
   Plus,
@@ -19,11 +19,12 @@ import {
 
 interface NavbarManagerProps {
   siteId: string;
+  onWorkspaceChange?: (isOpen: boolean) => void;
 }
 
-export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
+export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId, onWorkspaceChange }) => {
   const [position, setPosition] = useState<NavbarPosition>(NavbarPosition.HEADER);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<NavbarItem | null>(null);
 
   // Fetch hierarchical items
@@ -35,12 +36,14 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
 
   const handleEdit = (item: NavbarItem) => {
     setSelectedItem(item);
-    setIsModalOpen(true);
+    setIsWorkspaceOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleCreate = () => {
     setSelectedItem(null);
-    setIsModalOpen(true);
+    setIsWorkspaceOpen(true);
+    onWorkspaceChange?.(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -244,6 +247,21 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
     return list;
   };
 
+  if (isWorkspaceOpen) {
+    return (
+      <NavbarFormWorkspace
+        onClose={() => {
+          setIsWorkspaceOpen(false);
+          onWorkspaceChange?.(false);
+        }}
+        siteId={siteId}
+        position={position}
+        itemData={selectedItem}
+        siblingItems={flattenItems(items)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Position Toggle and Action Bar */}
@@ -295,16 +313,6 @@ export const NavbarManager: React.FC<NavbarManagerProps> = ({ siteId }) => {
       ) : (
         <div className="space-y-3.5 max-w-4xl">{renderMenuTree(items)}</div>
       )}
-
-      {/* Navbar Form Modal */}
-      <NavbarFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        siteId={siteId}
-        position={position}
-        itemData={selectedItem}
-        siblingItems={flattenItems(items)}
-      />
     </div>
   );
 };

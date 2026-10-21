@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowLeft,
   Save,
   ChevronRight,
   ChevronLeft,
@@ -35,6 +34,7 @@ import Switch from '@/components/form/switch/Switch';
 import DateTimePicker from '@/components/form/date-picker';
 import TagInput from '@/components/form/input/TagInput';
 import { UniversalImagePicker } from '@/components/form/UniversalImagePicker';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import dynamicImport from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
 
@@ -180,7 +180,6 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams ? searchParams.get('from') || '/events' : '/events';
-  const backLabel = redirectUrl.includes('dashboard') ? 'Back to Dashboard' : 'Back to Events';
   const websiteIdParam = defaultWebsiteId || searchParams.get('websiteId');
   const isEdit = !!initialData;
   const { createEvent, updateEvent, isCreating, isUpdating } = useEvents();
@@ -1136,156 +1135,125 @@ export const EventForm: React.FC<EventFormProps> = ({ initialData, defaultWebsit
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-20">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push(redirectUrl)}
-            className="p-2.5 rounded-xl bg-white dark:bg-navy-800 border border-gray-100 dark:border-navy-700 text-gray-500 hover:text-brand-500 transition-all shadow-theme-xs hover:shadow-theme-sm"
-            title={backLabel}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEdit ? 'Edit Event' : 'Create Event'}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {isEdit ? 'Modify existing event details' : 'Setup a new event experience'}
-            </p>
+    <FormWorkspace
+      title={isEdit ? 'Edit event' : 'Create event'}
+      description={
+        isEdit
+          ? 'Review event details, schedule, audience, and publishing settings before saving.'
+          : 'Set up the event experience, then review each section before publishing.'
+      }
+      context={isEdit ? 'Editing existing event' : 'New event draft'}
+      onClose={() => router.push(redirectUrl)}
+    >
+      <div className="max-w-5xl mx-auto pb-20">
+        {/* Stepper */}
+        <div className="mb-10 flex items-center justify-between gap-4 overflow-x-auto px-1 py-1 sm:px-4 relative">
+          <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 dark:bg-navy-800 -translate-y-1/2 -z-10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-brand-500 transition-all duration-500 ease-in-out"
+              style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
+            />
+          </div>
+          {STEPS.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = currentStep === index;
+            const isCompleted = currentStep > index;
+            const hasError = isStepInvalid(index);
+
+            return (
+              <div key={step.id} className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(index)}
+                  className={cn(
+                    'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg relative',
+                    isActive
+                      ? 'bg-brand-500 text-white scale-110 shadow-brand-500/30'
+                      : hasError
+                        ? 'bg-error-500 text-white shadow-error-500/30 ring-2 ring-error-500'
+                        : isCompleted
+                          ? 'bg-success-500 text-white shadow-success-500/30'
+                          : 'bg-white dark:bg-navy-800 text-gray-400 border border-gray-100 dark:border-navy-700',
+                  )}
+                >
+                  {isCompleted && !hasError ? <CheckCircle size={24} /> : <Icon size={24} />}
+                  {hasError && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-error-500 border-2 border-white dark:border-navy-900 rounded-full" />
+                  )}
+                </button>
+                <span
+                  className={cn(
+                    'text-[10px] font-bold uppercase tracking-widest hidden sm:block',
+                    isActive
+                      ? 'text-brand-500'
+                      : hasError
+                        ? 'text-error-500'
+                        : isCompleted
+                          ? 'text-success-500'
+                          : 'text-gray-400',
+                  )}
+                >
+                  {step.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Form Content */}
+        <div className="bg-white dark:bg-navy-800/50 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-theme-sm min-h-[400px]">
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center text-sm">
+                {currentStep + 1}
+              </span>
+              {STEPS[currentStep]?.title}
+            </h2>
+            <div className="h-1 w-20 bg-brand-500 rounded-full mt-2" />
+          </div>
+
+          {renderStep()}
+
+          <div className="sticky bottom-0 z-10 -mx-4 mt-12 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-gray-50 bg-white/95 pt-5 backdrop-blur sm:-mx-8 sm:flex-row sm:items-center sm:gap-4 dark:border-navy-800 dark:bg-navy-900/95">
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className="group"
+            >
+              <ChevronLeft
+                size={18}
+                className="mr-2 transition-transform group-hover:-translate-x-1"
+              />
+              Previous Step
+            </Button>
+
+            {currentStep < STEPS.length - 1 ? (
+              <Button onClick={handleNext} className="group">
+                Continue to {STEPS[currentStep + 1]?.title}
+                <ChevronRight
+                  size={18}
+                  className="ml-2 transition-transform group-hover:translate-x-1"
+                />
+              </Button>
+            ) : (
+              <Button
+                // @ts-ignore
+                onClick={handleSubmit(onSubmit, handleFormError)}
+                disabled={isCreating || isUpdating}
+                className="px-10 shadow-lg shadow-brand-500/20"
+              >
+                <Save size={18} className="mr-2" />
+                {isCreating || isUpdating
+                  ? 'Saving...'
+                  : isEdit
+                    ? 'Update & Exit'
+                    : 'Finish & Publish'}
+              </Button>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => router.push(redirectUrl)}
-            className="bg-white dark:bg-navy-800"
-          >
-            Cancel
-          </Button>
-          {currentStep === STEPS.length - 1 && (
-            <Button
-              // @ts-ignore
-              onClick={handleSubmit(onSubmit, handleFormError)}
-              disabled={isCreating || isUpdating}
-              className="px-8 shadow-lg shadow-brand-500/20"
-            >
-              <Save size={18} className="mr-2" />
-              {isCreating || isUpdating ? 'Saving...' : isEdit ? 'Update Event' : 'Publish Event'}
-            </Button>
-          )}
-        </div>
       </div>
-
-      {/* Stepper */}
-      <div className="flex items-center justify-between mb-10 px-4 relative">
-        <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 dark:bg-navy-800 -translate-y-1/2 -z-10 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-brand-500 transition-all duration-500 ease-in-out"
-            style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
-          />
-        </div>
-        {STEPS.map((step, index) => {
-          const Icon = step.icon;
-          const isActive = currentStep === index;
-          const isCompleted = currentStep > index;
-          const hasError = isStepInvalid(index);
-
-          return (
-            <div key={step.id} className="flex flex-col items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setCurrentStep(index)}
-                className={cn(
-                  'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg relative',
-                  isActive
-                    ? 'bg-brand-500 text-white scale-110 shadow-brand-500/30'
-                    : hasError
-                      ? 'bg-error-500 text-white shadow-error-500/30 ring-2 ring-error-500'
-                      : isCompleted
-                        ? 'bg-success-500 text-white shadow-success-500/30'
-                        : 'bg-white dark:bg-navy-800 text-gray-400 border border-gray-100 dark:border-navy-700',
-                )}
-              >
-                {isCompleted && !hasError ? <CheckCircle size={24} /> : <Icon size={24} />}
-                {hasError && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-error-500 border-2 border-white dark:border-navy-900 rounded-full" />
-                )}
-              </button>
-              <span
-                className={cn(
-                  'text-[10px] font-bold uppercase tracking-widest hidden sm:block',
-                  isActive
-                    ? 'text-brand-500'
-                    : hasError
-                      ? 'text-error-500'
-                      : isCompleted
-                        ? 'text-success-500'
-                        : 'text-gray-400',
-                )}
-              >
-                {step.title}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Form Content */}
-      <div className="bg-white dark:bg-navy-800/50 rounded-3xl border border-gray-100 dark:border-navy-700 p-8 shadow-theme-sm min-h-[400px]">
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center text-sm">
-              {currentStep + 1}
-            </span>
-            {STEPS[currentStep]?.title}
-          </h2>
-          <div className="h-1 w-20 bg-brand-500 rounded-full mt-2" />
-        </div>
-
-        {renderStep()}
-
-        <div className="flex items-center justify-between mt-12 pt-8 border-t border-gray-50 dark:border-navy-800">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="group"
-          >
-            <ChevronLeft
-              size={18}
-              className="mr-2 transition-transform group-hover:-translate-x-1"
-            />
-            Previous Step
-          </Button>
-
-          {currentStep < STEPS.length - 1 ? (
-            <Button onClick={handleNext} className="group">
-              Continue to {STEPS[currentStep + 1]?.title}
-              <ChevronRight
-                size={18}
-                className="ml-2 transition-transform group-hover:translate-x-1"
-              />
-            </Button>
-          ) : (
-            <Button
-              // @ts-ignore
-              onClick={handleSubmit(onSubmit, handleFormError)}
-              disabled={isCreating || isUpdating}
-              className="px-10 shadow-lg shadow-brand-500/20"
-            >
-              <Save size={18} className="mr-2" />
-              {isCreating || isUpdating
-                ? 'Saving...'
-                : isEdit
-                  ? 'Update & Exit'
-                  : 'Finish & Publish'}
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+    </FormWorkspace>
   );
 };

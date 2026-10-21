@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/modal';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
 import Button from '@/components/ui/button/Button';
 import { MessageTemplate, SendTemplateMessageDto } from '../types/communication.types';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
@@ -91,8 +91,14 @@ export const TemplateSendModal: React.FC<TemplateSendModalProps> = ({
     }
   };
 
+  if (!isOpen || !template) return null;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Test Dispatch: ${template?.name}`} size="md">
+    <FormWorkspace
+      onClose={onClose}
+      title={`Test Dispatch: ${template.name}`}
+      description="Provide a recipient and sample parameters to test template delivery."
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Trigger a background task queue dispatch to send a test message using the provider
@@ -178,6 +184,6 @@ export const TemplateSendModal: React.FC<TemplateSendModalProps> = ({
           </Button>
         </div>
       </form>
-    </Modal>
+    </FormWorkspace>
   );
 };

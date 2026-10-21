@@ -192,10 +192,11 @@ export const ContactTable: React.FC<ContactTableProps> = ({ onViewDetails, onDel
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Premium Filter Controls */}
-      <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
-        <div className="flex-1 relative">
+      <div className="flex flex-col xl:flex-row gap-3 p-4 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800">
+        <div className="min-w-0 flex-1 relative">
           <input
             type="text"
+            aria-label="Search inquiries"
             placeholder="Search inquiries by sender name, email, phone, message content..."
             value={params.search}
             onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
@@ -205,6 +206,7 @@ export const ContactTable: React.FC<ContactTableProps> = ({ onViewDetails, onDel
 
         <div className="flex flex-wrap gap-3">
           <select
+            aria-label="Inquiry status"
             value={params.status || ''}
             onChange={(e) =>
               setParams((p) => ({
@@ -223,6 +225,7 @@ export const ContactTable: React.FC<ContactTableProps> = ({ onViewDetails, onDel
           </select>
 
           <select
+            aria-label="Inquiry website"
             value={params.websiteId || ''}
             onChange={(e) =>
               setParams((p) => ({ ...p, websiteId: e.target.value || undefined, page: 1 }))

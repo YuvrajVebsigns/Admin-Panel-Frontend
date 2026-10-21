@@ -471,73 +471,74 @@ export const NomineeTable: React.FC<NomineeTableProps> = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            placeholder="Search nominees by name, email..."
-            value={params.search}
-            onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
-            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
-          />
-        </div>
+    <>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-100 dark:border-navy-800 shadow-sm">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search nominees by name, email..."
+              value={params.search}
+              onChange={(e) => setParams((p) => ({ ...p, search: e.target.value, page: 1 }))}
+              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-900 dark:text-white"
+            />
+          </div>
 
-        <div className="flex flex-wrap gap-3">
-          <select
-            value={params.status || ''}
-            onChange={(e) =>
-              setParams((p) => ({
-                ...p,
-                status: (e.target.value as NominationStatus) || undefined,
-                page: 1,
-              }))
-            }
-            className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
-          {canExportNominees && (
-            <Button
-              type="button"
-              onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+          <div className="flex flex-wrap gap-3">
+            <select
+              value={params.status || ''}
+              onChange={(e) =>
+                setParams((p) => ({
+                  ...p,
+                  status: (e.target.value as NominationStatus) || undefined,
+                  page: 1,
+                }))
+              }
+              className="px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all cursor-pointer"
             >
-              <FileSpreadsheet size={16} />
-              Export Data
-            </Button>
-          )}
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            {canExportNominees && (
+              <Button
+                type="button"
+                onClick={() => setIsExportModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all text-sm font-medium shrink-0"
+              >
+                <FileSpreadsheet size={16} />
+                Export Data
+              </Button>
+            )}
+          </div>
         </div>
+
+        {subCategoryError && (
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            Failed to load sub categories. Please refresh the page.
+          </div>
+        )}
+        <DataTable
+          data={nominees}
+          columns={columns}
+          isLoading={localIsLoading}
+          serverSide={true}
+          totalItems={meta?.total}
+          page={params.page}
+          limit={params.limit}
+          onPageChange={(page) => setParams((p) => ({ ...p, page }))}
+          onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
+        />
       </div>
-
-      {subCategoryError && (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Failed to load sub categories. Please refresh the page.
-        </div>
-      )}
-      <DataTable
-        data={nominees}
-        columns={columns}
-        isLoading={localIsLoading}
-        serverSide={true}
-        totalItems={meta?.total}
-        page={params.page}
-        limit={params.limit}
-        onPageChange={(page) => setParams((p) => ({ ...p, page }))}
-        onPageSizeChange={(limit) => setParams((p) => ({ ...p, limit, page: 1 }))}
-      />
-
       <ExportDataModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         type="nominee"
         initialSearch={params.search}
       />
-    </div>
+    </>
   );
 };

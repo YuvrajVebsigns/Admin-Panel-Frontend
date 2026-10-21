@@ -17,18 +17,20 @@ import { useGlobalModal } from '@/hooks/useGlobalModal';
 import { toast } from 'react-hot-toast';
 import Badge from '@/components/ui/badge/Badge';
 import { useState } from 'react';
-import { AssetMetadataForm } from './AssetMetadataForm';
+import { FileMetadataWorkspace } from './FileMetadataWorkspace';
 
 interface FileGridProps {
   params: Record<string, unknown>;
   onParamsChange?: (params: unknown) => void;
   onSelect?: (file: FileData) => void;
+  onEdit?: (file: FileData) => void;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
-  const { files, isLoading, deleteFile, updateFile, isUpdating } = useFiles(params);
-  const { confirm, openModal, closeModal } = useGlobalModal();
+export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect, onEdit }) => {
+  const { files, isLoading, deleteFile } = useFiles(params);
+  const { confirm } = useGlobalModal();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<FileData | null>(null);
 
   const handleCopyUrl = (e: React.MouseEvent, file: FileData) => {
     e.stopPropagation();
@@ -42,59 +44,8 @@ export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
 
   const handleEdit = (e: React.MouseEvent, file: FileData) => {
     e.stopPropagation();
-
-    const FileEditContent = () => {
-      const [alt, setAlt] = useState(file.metadata?.alt || '');
-      const [keywords, setKeywords] = useState<string[]>(file.keywords || []);
-      const [module, setModule] = useState(file.module);
-      const [visibility, setVisibility] = useState(file.visibility);
-
-      const handleSubmit = async () => {
-        try {
-          await updateFile({
-            id: file.id,
-            data: {
-              alt,
-              keywords,
-              module,
-              visibility,
-            },
-          });
-          closeModal();
-        } catch (error) {
-          // Error is handled by hook
-        }
-      };
-
-      return (
-        <div className="py-6">
-          <AssetMetadataForm
-            step="edit"
-            existingFile={file}
-            alt={alt}
-            setAlt={setAlt}
-            keywords={keywords}
-            setKeywords={setKeywords}
-            module={module}
-            setModule={setModule}
-            visibility={visibility}
-            setVisibility={setVisibility as unknown as (val: string) => void}
-            onBack={closeModal}
-            onSubmit={handleSubmit}
-            isProcessing={isUpdating}
-            submitLabel="Update Metadata"
-          />
-        </div>
-      );
-    };
-
-    openModal({
-      title: 'Edit File Metadata',
-      description: 'Update the keywords and description for better search',
-      size: 'lg',
-      hideFooter: true,
-      content: <FileEditContent />,
-    });
+    if (onEdit) onEdit(file);
+    else setEditingFile(file);
   };
 
   const handleDelete = (e: React.MouseEvent, file: FileData) => {
@@ -109,6 +60,10 @@ export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
       },
     });
   };
+
+  if (editingFile) {
+    return <FileMetadataWorkspace file={editingFile} onClose={() => setEditingFile(null)} />;
+  }
 
   if (isLoading) {
     return (
@@ -133,7 +88,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {files.map((file) => (
         <div
           key={file.id}
@@ -176,7 +131,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ params, onSelect }) => {
 
             {/* Hover Actions Overlay */}
             {!onSelect && (
-              <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-x-0 bottom-0 bg-navy-950/70 p-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   onClick={(e) => handleEdit(e, file)}
                   className="w-9 h-9 rounded-xl bg-white text-brand-600 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"

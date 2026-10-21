@@ -14,8 +14,10 @@ import Button from '@/components/ui/button/Button';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
-import { X, Lock, Search, ArrowRight, UserCheck, UserPlus, Save } from 'lucide-react';
+import { Lock, Search, ArrowRight, UserCheck, UserPlus, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { FormFeedback } from '@/components/common/FormPresentation';
 
 const schema = z.object({
   eventId: z.string().min(1, 'Event is required'),
@@ -29,14 +31,12 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-interface AttendeeFormModalProps {
-  isOpen: boolean;
+interface AttendeeFormWorkspaceProps {
   onClose: () => void;
   attendee?: Attendee | null;
 }
 
-export const AttendeeFormModal: React.FC<AttendeeFormModalProps> = ({
-  isOpen,
+export const AttendeeFormWorkspace: React.FC<AttendeeFormWorkspaceProps> = ({
   onClose,
   attendee,
 }) => {
@@ -106,46 +106,42 @@ export const AttendeeFormModal: React.FC<AttendeeFormModalProps> = ({
   }, [selectedEventId, activeEvents]);
 
   useEffect(() => {
-    if (isOpen) {
-      // Reset wizard
-      setCurrentStep(1);
-      setMatchedRegistree(null);
-      setIsSearching(false);
+    // Reset wizard when the page workspace receives a different record.
+    setCurrentStep(1);
+    setMatchedRegistree(null);
+    setIsSearching(false);
 
-      if (attendee) {
-        const evId =
-          typeof attendee.eventId === 'object' && attendee.eventId
-            ? attendee.eventId.id
-            : attendee.eventId;
-        const webId =
-          typeof attendee.websiteId === 'object' && attendee.websiteId
-            ? attendee.websiteId.id
-            : attendee.websiteId;
+    if (attendee) {
+      const evId =
+        typeof attendee.eventId === 'object' && attendee.eventId
+          ? attendee.eventId.id
+          : attendee.eventId;
+      const webId =
+        typeof attendee.websiteId === 'object' && attendee.websiteId
+          ? attendee.websiteId.id
+          : attendee.websiteId;
 
-        reset({
-          eventId: evId || '',
-          name: attendee.name || '',
-          email: attendee.email || '',
-          phoneNumber: attendee.phoneNumber || '',
-          organization: attendee.organization || '',
-          status: attendee.status || AttendeeStatus.REGISTERED,
-          websiteId: webId || '',
-        });
-      } else {
-        reset({
-          eventId: '',
-          name: '',
-          email: '',
-          phoneNumber: '',
-          organization: '',
-          status: AttendeeStatus.REGISTERED,
-          websiteId: '',
-        });
-      }
+      reset({
+        eventId: evId || '',
+        name: attendee.name || '',
+        email: attendee.email || '',
+        phoneNumber: attendee.phoneNumber || '',
+        organization: attendee.organization || '',
+        status: attendee.status || AttendeeStatus.REGISTERED,
+        websiteId: webId || '',
+      });
+    } else {
+      reset({
+        eventId: '',
+        name: '',
+        email: '',
+        phoneNumber: '',
+        organization: '',
+        status: AttendeeStatus.REGISTERED,
+        websiteId: '',
+      });
     }
-  }, [isOpen, attendee, reset]);
-
-  if (!isOpen) return null;
+  }, [attendee, reset]);
 
   const handleSearchEmail = async () => {
     if (!enteredEmail || !/^\S+@\S+\.\S+$/.test(enteredEmail)) {
@@ -220,32 +216,16 @@ export const AttendeeFormModal: React.FC<AttendeeFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end overflow-hidden">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Drawer Panel */}
-      <div className="relative z-10 w-full max-w-lg h-full bg-white dark:bg-navy-800 shadow-2xl flex flex-col justify-between transition-transform duration-300 animate-slide-in">
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-navy-700 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              {isEdit ? 'Modify Registration' : 'Register Attendee'}
-            </h3>
-            <p className="text-xs text-gray-500 mt-1">
-              {isEdit ? 'Update attendee details and status' : 'Add a new registrant to an event'}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
+    <FormWorkspace
+      title={isEdit ? 'Modify registration' : 'Register attendee'}
+      description="Manage event registration details and status."
+      onClose={onClose}
+    >
+      <div className="space-y-6">
+        <FormFeedback
+          isSaving={isSubmitting}
+          help="Verify the event assignment and attendee details before saving this registration."
+        />
         {/* Compact Step Indicator (Only in create mode) */}
         {!isEdit && (
           <div className="px-6 py-4 bg-gray-50/50 dark:bg-navy-900/30 border-b border-gray-150 dark:border-navy-700 flex items-center justify-between">
@@ -289,10 +269,7 @@ export const AttendeeFormModal: React.FC<AttendeeFormModalProps> = ({
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex-1 overflow-y-auto px-6 py-5 space-y-5"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {isEdit ? (
             /* ================= EDIT MODE ================= */
             <div className="space-y-5">
@@ -717,6 +694,6 @@ export const AttendeeFormModal: React.FC<AttendeeFormModalProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </FormWorkspace>
   );
 };

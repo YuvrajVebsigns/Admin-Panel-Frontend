@@ -8,8 +8,6 @@ import {
   Heading,
   Image as ImageIcon,
   Minus,
-  Upload,
-  Search,
   Globe,
   List,
   CheckSquare,
@@ -17,13 +15,9 @@ import {
   Layout,
   Info,
 } from 'lucide-react';
-import { useGlobalModal } from '@/hooks/useGlobalModal';
-import { FileBrowser } from '@/modules/media/components/FileBrowser';
-import { AssetMetadataForm } from '@/modules/media/components/AssetMetadataForm';
-import { useFiles } from '@/modules/media/hooks/useFiles';
-import { FileData } from '@/modules/media/types/file.types';
-import { toast } from 'react-hot-toast';
 import EditorToolbar from './EditorToolbar';
+import { InlineImagePicker } from './InlineImagePicker';
+import { toast } from 'react-hot-toast';
 import {
   HeroBlockTool,
   FeaturesBlockTool,
@@ -52,8 +46,10 @@ export default function Editor({
   const isInitializing = useRef(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
-  const { openModal, closeModal } = useGlobalModal();
-  const { uploadFile, isUploading } = useFiles();
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [imagePickerCallback, setImagePickerCallback] = useState<((url: string) => void) | null>(
+    null,
+  );
 
   // Effect to inject delete buttons into blocks
   useEffect(() => {
@@ -443,155 +439,9 @@ export default function Editor({
     }
   };
 
-  const openGeneralImagePicker = (
-    onSelect: (url: string) => void,
-    title: string = 'Select Image',
-  ) => {
-    const openExistingBrowser = () => {
-      openModal({
-        title: 'Browse Image Library',
-        size: '3xl',
-        content: (
-          <div className="max-h-[75vh] overflow-y-auto px-1">
-            <FileBrowser
-              initialFileType="image"
-              onSelect={(file: FileData) => {
-                onSelect(file.url || '');
-                closeModal();
-              }}
-            />
-          </div>
-        ),
-      });
-    };
-
-    const PickerModalContent = () => {
-      const [step, setStep] = React.useState<'selector' | 'upload_details' | 'url_details'>(
-        'selector',
-      );
-      const [file, setFile] = React.useState<File | null>(null);
-      const [url, setUrl] = React.useState('');
-      const [alt, setAlt] = React.useState('');
-      const [keywords, setKeywords] = React.useState<string[]>([]);
-      const [modalModule, setModalModule] = React.useState('blogs');
-      const [visibility, setVisibility] = React.useState('public');
-
-      const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-          setFile(selectedFile);
-          setStep('upload_details');
-        }
-      };
-
-      const handleFinalSubmit = async () => {
-        const formData = new FormData();
-        if (step === 'upload_details' && file) {
-          formData.append('file', file);
-        } else if (step === 'url_details' && url) {
-          formData.append('url', url);
-        } else {
-          return;
-        }
-
-        formData.append('module', modalModule);
-        formData.append('visibility', visibility);
-        formData.append('alt', alt);
-        keywords.forEach((k) => formData.append('keywords[]', k));
-        formData.append('entityType', 'blog_content');
-        formData.append('entityId', 'none');
-
-        try {
-          const response = await uploadFile(formData);
-          onSelect(response.url || '');
-          closeModal();
-          toast.success('Image selected');
-        } catch (error) {
-          toast.error('Failed to upload image');
-        }
-      };
-
-      if (step === 'selector') {
-        return (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6">
-            <button
-              onClick={() => document.getElementById('editor-general-image-input')?.click()}
-              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-200 transition-all group text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
-                <Upload size={32} />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">Upload</p>
-                <p className="text-xs text-gray-500 mt-1">From computer</p>
-              </div>
-              <input
-                id="editor-general-image-input"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileSelect}
-              />
-            </button>
-
-            <button
-              onClick={openExistingBrowser}
-              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-200 transition-all group text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
-                <Search size={32} />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">Library</p>
-                <p className="text-xs text-gray-500 mt-1">Existing assets</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setStep('url_details')}
-              className="flex flex-col items-center gap-4 p-6 rounded-3xl border border-gray-100 dark:border-navy-700 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-200 transition-all group text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-navy-800 shadow-sm transition-all">
-                <Globe size={32} />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">URL</p>
-                <p className="text-xs text-gray-500 mt-1">External link</p>
-              </div>
-            </button>
-          </div>
-        );
-      }
-
-      return (
-        <div className="py-6">
-          <AssetMetadataForm
-            step={step === 'upload_details' ? 'upload' : 'url'}
-            file={file}
-            url={url}
-            setUrl={setUrl}
-            alt={alt}
-            setAlt={setAlt}
-            keywords={keywords}
-            setKeywords={setKeywords}
-            module={modalModule}
-            setModule={setModalModule}
-            visibility={visibility}
-            setVisibility={setVisibility}
-            onBack={() => setStep('selector')}
-            onSubmit={handleFinalSubmit}
-            isProcessing={isUploading}
-            submitLabel="Select Image"
-          />
-        </div>
-      );
-    };
-
-    openModal({
-      title: title,
-      size: '2xl',
-      content: <PickerModalContent />,
-    });
+  const openGeneralImagePicker = (onSelect: (url: string) => void, _title?: string) => {
+    setImagePickerCallback(() => onSelect);
+    setIsImagePickerOpen(true);
   };
 
   const openImagePicker = () => {
@@ -628,6 +478,16 @@ export default function Editor({
         id={holder}
         className="prose prose-sm sm:prose lg:prose-lg max-w-none dark:prose-invert flex-grow mb-4"
       />
+
+      {isImagePickerOpen && imagePickerCallback && (
+        <InlineImagePicker
+          onSelect={imagePickerCallback}
+          onClose={() => {
+            setIsImagePickerOpen(false);
+            setImagePickerCallback(null);
+          }}
+        />
+      )}
 
       {isMenuOpen ? (
         <div

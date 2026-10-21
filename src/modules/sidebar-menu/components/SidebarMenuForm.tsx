@@ -9,8 +9,9 @@ import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import { IconPicker } from '@/components/ui/IconPicker';
-import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { FormWorkspace } from '@/components/common/FormWorkspace';
+import { FormActions, FormFeedback, FormSectionLinks } from '@/components/common/FormPresentation';
 
 interface SidebarSidebarMenuFormProps {
   initialData?: SidebarMenu | null;
@@ -151,16 +152,20 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
   );
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <button
-        type="button"
-        onClick={() => router.push('/sidebar-menu')}
-        className="flex items-center gap-2 text-gray-500 hover:text-brand-500 mb-6 transition-colors font-medium group text-sm"
-      >
-        <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-        Back to SidebarMenu List
-      </button>
-
+    <FormWorkspace
+      title={isEditing ? `Edit navigation item: ${initialData.name}` : 'Create navigation item'}
+      description="Configure the label, route, hierarchy, icon, and permission key for this menu item."
+      eyebrow="Navigation / Sidebar"
+      context={isEditing ? 'Editing existing item' : 'New navigation item'}
+      onClose={() => router.push('/sidebar-menu')}
+    >
+      <FormSectionLinks
+        sections={[
+          { id: 'menu-identity', label: 'Identity & route' },
+          { id: 'menu-access', label: 'Visibility & access' },
+        ]}
+      />
+      <FormFeedback errorCount={Object.keys(errors).length} isSaving={isProcessing} />
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 overflow-hidden shadow-sm transition-colors duration-300"
@@ -174,7 +179,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
           </p>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div id="menu-identity" className="scroll-mt-24 p-4 sm:p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">
@@ -323,7 +328,10 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-100 dark:border-navy-700">
+          <div
+            id="menu-access"
+            className="scroll-mt-24 pt-6 border-t border-gray-100 dark:border-navy-700"
+          >
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Visibility & Status
             </h3>
@@ -360,7 +368,7 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50/50 dark:bg-navy-900/50 border-t border-gray-100 dark:border-navy-700 flex justify-end gap-3">
+        <FormActions>
           <Button
             type="button"
             variant="outline"
@@ -376,8 +384,8 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
           >
             {isProcessing ? 'Saving...' : isEditing ? 'Update SidebarMenu' : 'Create SidebarMenu'}
           </Button>
-        </div>
+        </FormActions>
       </form>
-    </div>
+    </FormWorkspace>
   );
 };

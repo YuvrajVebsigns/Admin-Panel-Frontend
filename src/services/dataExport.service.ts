@@ -136,4 +136,10 @@ export const dataExportService = {
 
   exportWebhookSubscriptions: (params?: ExportFilterParams) =>
     performExport('/admin/export/webhook-subscriptions', 'webhook-subscriptions-export', params),
+
+  exportForms: (params?: ExportFilterParams) =>
+    performExport('/admin/export/forms', 'custom-forms-export', params),
+
+  exportFormSubmissions: (formId: string, params?: ExportFilterParams) =>
+    performExport(`/admin/export/forms/${formId}/submissions`, 'form-submissions-export', params),
 };
