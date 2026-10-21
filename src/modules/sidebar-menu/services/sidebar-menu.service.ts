@@ -19,6 +19,8 @@ export const sidebarMenuService = {
     return apiFetch<PaginatedResponse<SidebarMenu>>(`/admin/sidebar-menu/all?${query.toString()}`);
   },
 
+  getSidebarMenuById: (id: string) => apiFetch<SidebarMenu>(`/admin/sidebar-menu/${id}`),
+
   createSidebarMenu: (data: CreateSidebarMenuDto) =>
     apiFetch<SidebarMenu>('/admin/sidebar-menu', {
       method: 'POST',

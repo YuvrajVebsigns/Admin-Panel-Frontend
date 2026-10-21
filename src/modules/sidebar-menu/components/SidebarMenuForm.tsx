@@ -124,7 +124,8 @@ export const SidebarMenuForm: React.FC<SidebarSidebarMenuFormProps> = ({ initial
       };
 
       if (isEditing && initialData) {
-        await updateSidebarMenu({ id: initialData.id, data: payload });
+        const targetId = initialData.id || (initialData as { _id?: string })._id || '';
+        await updateSidebarMenu({ id: targetId, data: payload });
       } else {
         const { order: _order, ...createData } = payload;
         await createSidebarMenu(createData);

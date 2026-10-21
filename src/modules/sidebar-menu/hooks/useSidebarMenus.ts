@@ -46,6 +46,8 @@ export function useSidebarMenus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
     },
   });
 
@@ -59,9 +61,12 @@ export function useSidebarMenus() {
       });
       return promise;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'detail', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
     },
   });
 
@@ -78,6 +83,8 @@ export function useSidebarMenus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
     },
   });
 
@@ -93,6 +100,9 @@ export function useSidebarMenus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
     },
   });
 
@@ -121,4 +131,23 @@ export function useSidebarMenus() {
       deleteMutation.isPending ||
       reorderMutation.isPending,
   };
+}
+
+export function useSidebarMenu(id: string | null) {
+  return useQuery({
+    queryKey: ['menus', 'detail', id],
+    queryFn: async () => {
+      if (!id) return null;
+      try {
+        const item = await sidebarMenuService.getSidebarMenuById(id);
+        if (item) return item;
+      } catch (_err) {
+        // Fallback if backend endpoint is not yet live or on older server
+      }
+      const res = await sidebarMenuService.getAllSidebarMenus({ page: 1, limit: 1000 });
+      const found = res.data.find((m) => m.id === id || (m as { _id?: string })._id === id);
+      return found ?? null;
+    },
+    enabled: !!id,
+  });
 }
