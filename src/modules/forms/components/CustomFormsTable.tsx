@@ -22,15 +22,18 @@ import {
   Layers,
   Inbox,
   Share2,
+  Upload,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
 import { PERMISSIONS } from '@/constants/permissions';
+import { FormsImportModal } from './FormsImportModal';
 import toast from 'react-hot-toast';
 
 export const CustomFormsTable: React.FC = () => {
   const router = useRouter();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [params, setParams] = useState<{
     page: number;
     limit: number;
@@ -288,11 +291,44 @@ export const CustomFormsTable: React.FC = () => {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ExportButton
-            onExport={() => dataExportService.exportForms(params)}
+            onExport={(filters) =>
+              dataExportService.exportForms({
+                search: params.search,
+                status: params.status,
+                websiteId: params.websiteId,
+                ...filters,
+              })
+            }
             permission={PERMISSIONS.FORMS_EXPORT}
+            showWebsiteFilter={true}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: FormStatus.DRAFT, label: 'Draft' },
+              { value: FormStatus.PUBLISHED, label: 'Published' },
+              { value: FormStatus.ARCHIVED, label: 'Archived' },
+            ]}
+            exportTitle="Export Custom Forms & Questions"
+            exportDescription="Export full form configurations, settings, and question definitions into an Excel workbook."
+            sheetsInfo={[
+              { sheet: 'Summary', desc: 'Overview metrics and timestamp' },
+              { sheet: 'Custom Forms', desc: 'Complete form configuration and settings' },
+              {
+                sheet: 'Questions Details',
+                desc: 'Deep breakdown of question keys, types, options, and validations',
+              },
+            ]}
           />
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl shadow-sm transition-all"
+            title="Import custom forms from Excel spreadsheet"
+          >
+            <Upload size={16} className="text-brand-600" />
+            <span>Import Forms</span>
+          </button>
           <button
             type="button"
             onClick={() => router.push('/forms/create')}
@@ -319,6 +355,18 @@ export const CustomFormsTable: React.FC = () => {
         onSearchChange={(search: string) => setParams((prev) => ({ ...prev, search, page: 1 }))}
         searchPlaceholder="Search forms by name, slug or description..."
       />
+
+      {/* Bulk Import Modal */}
+      {isImportModalOpen && (
+        <FormsImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          initialWebsiteId={params.websiteId}
+          onSuccess={() => {
+            setParams((prev) => ({ ...prev }));
+          }}
+        />
+      )}
     </div>
   );
 };

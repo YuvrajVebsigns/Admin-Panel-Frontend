@@ -158,3 +158,35 @@ export interface FormSubmissionAnalytics {
   totalLast30Days: number;
   recentActivity: Array<{ date: string; count: number }>;
 }
+
+export interface BulkImportFormsPayload {
+  websiteId?: string;
+  forms: Array<{
+    websiteId?: string;
+    websiteName?: string;
+    name: string;
+    slug?: string;
+    description?: string;
+    status?: FormStatus;
+    settings?: FormSettings;
+    questions?: FormQuestion[];
+  }>;
+}
+
+export interface BulkImportSubmissionsPayload {
+  rows: Array<{
+    submitterEmail?: string;
+    submitterPhone?: string;
+    status?: SubmissionStatus;
+    answers: Record<string, unknown>;
+  }>;
+}
+
+export interface BulkImportResult {
+  success: boolean;
+  totalProcessed: number;
+  createdCount: number;
+  failedCount: number;
+  errors: Array<{ formName?: string; row?: number; email?: string; error: string }>;
+  createdForms?: Array<{ id: string; name: string; slug: string }>;
+}

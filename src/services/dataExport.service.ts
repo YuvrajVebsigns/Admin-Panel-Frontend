@@ -25,6 +25,8 @@ export interface ExportFilterParams {
 const buildQueryString = (params: ExportFilterParams = {}): string => {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
+    // Exclude pagination parameters because exports should include the full dataset
+    if (key === 'page' || key === 'limit') return;
     if (value !== undefined && value !== null && value !== '') {
       query.append(key, String(value));
     }
