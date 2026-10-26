@@ -1,4 +1,4 @@
-import { apiFetch } from '@/services/apiFetch';
+import { apiFetch, apiFetchBlob, triggerFileDownload } from '@/services/apiFetch';
 import { PaginatedResponse } from '@/types/api.types';
 import {
   CustomForm,
@@ -11,6 +11,9 @@ import {
   FormSubmissionQueryParams,
   SubmissionStatus,
   FormSubmissionAnalytics,
+  BulkImportFormsPayload,
+  BulkImportSubmissionsPayload,
+  BulkImportResult,
 } from '@/modules/forms/types/form.types';
 
 export const formsService = {
@@ -112,5 +115,35 @@ export const formsService = {
 
   getSubmissionAnalytics: async (formId: string): Promise<FormSubmissionAnalytics> => {
     return apiFetch<FormSubmissionAnalytics>(`/admin/forms/${formId}/submissions/stats/summary`);
+  },
+
+  // Bulk Import Forms
+  downloadFormsTemplate: async (websiteId?: string): Promise<void> => {
+    const qs = websiteId ? `?websiteId=${websiteId}` : '';
+    const blob = await apiFetchBlob(`/admin/forms/bulk-import/template${qs}`);
+    triggerFileDownload(blob, `custom-forms-import-template-${Date.now()}.xlsx`);
+  },
+
+  bulkImportForms: async (data: BulkImportFormsPayload): Promise<BulkImportResult> => {
+    return apiFetch<BulkImportResult>('/admin/forms/bulk-import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Bulk Import Submissions
+  downloadSubmissionsTemplate: async (formId: string): Promise<void> => {
+    const blob = await apiFetchBlob(`/admin/forms/${formId}/submissions/bulk-import/template`);
+    triggerFileDownload(blob, `form-submissions-template-${formId.slice(-6)}-${Date.now()}.xlsx`);
+  },
+
+  bulkImportSubmissions: async (
+    formId: string,
+    data: BulkImportSubmissionsPayload,
+  ): Promise<BulkImportResult> => {
+    return apiFetch<BulkImportResult>(`/admin/forms/${formId}/submissions/bulk-import`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };

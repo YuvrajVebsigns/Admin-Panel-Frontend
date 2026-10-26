@@ -21,11 +21,13 @@ import {
   Layers,
   Inbox,
   TrendingUp,
+  Upload,
 } from 'lucide-react';
 import Badge from '@/components/ui/badge/Badge';
 import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
 import { PERMISSIONS } from '@/constants/permissions';
+import { SubmissionsImportModal } from './SubmissionsImportModal';
 
 interface FormSubmissionsTableProps {
   formId: string;
@@ -34,7 +36,8 @@ interface FormSubmissionsTableProps {
 export const FormSubmissionsTable: React.FC<FormSubmissionsTableProps> = ({ formId }) => {
   const router = useRouter();
   const { form } = useCustomForm(formId);
-  const { data: analytics } = useFormAnalytics(formId);
+  const { data: analytics, refetch: refetchAnalytics } = useFormAnalytics(formId);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const [params, setParams] = useState<{
     page: number;
@@ -247,7 +250,7 @@ export const FormSubmissionsTable: React.FC<FormSubmissionsTableProps> = ({ form
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/forms/${formId}/builder`}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -256,9 +259,42 @@ export const FormSubmissionsTable: React.FC<FormSubmissionsTableProps> = ({ form
             <span>Edit Questions</span>
           </Link>
           <ExportButton
-            onExport={() => dataExportService.exportFormSubmissions(formId, params)}
+            onExport={(filters) =>
+              dataExportService.exportFormSubmissions(formId, {
+                search: params.search,
+                status: params.status,
+                startDate: params.startDate,
+                endDate: params.endDate,
+                ...filters,
+              })
+            }
             permission={PERMISSIONS.FORM_SUBMISSIONS_EXPORT}
+            showStatusFilter={true}
+            statusOptions={[
+              { value: SubmissionStatus.NEW, label: 'New' },
+              { value: SubmissionStatus.REVIEWED, label: 'Reviewed' },
+              { value: SubmissionStatus.SPAM, label: 'Spam' },
+              { value: SubmissionStatus.ARCHIVED, label: 'Archived' },
+            ]}
+            exportTitle={`${form?.name || 'Form'} Submissions Export`}
+            exportDescription="Export all submitted responses with submitter metadata and question answers into an Excel workbook."
+            sheetsInfo={[
+              { sheet: 'Summary', desc: 'Response metrics and date range filter' },
+              {
+                sheet: 'Responses',
+                desc: 'Individual submission rows mapped dynamically to questions',
+              },
+            ]}
           />
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 shadow-sm transition-colors"
+            title="Import responses from Excel spreadsheet"
+          >
+            <Upload size={14} className="text-indigo-600" />
+            <span>Import Responses</span>
+          </button>
         </div>
       </div>
 
@@ -381,6 +417,22 @@ export const FormSubmissionsTable: React.FC<FormSubmissionsTableProps> = ({ form
             setSelectedSubmission((prev) =>
               prev ? { ...prev, status: newStatus, adminNotes: notes } : null,
             );
+          }}
+        />
+      )}
+
+      {/* Bulk Import Submissions Modal */}
+      {isImportModalOpen && (
+        <SubmissionsImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          formId={formId}
+          formName={form?.name}
+          formSlug={form?.slug}
+          questions={form?.questions}
+          onSuccess={() => {
+            setParams((prev) => ({ ...prev }));
+            refetchAnalytics();
           }}
         />
       )}
