@@ -10,6 +10,7 @@ import { getImageUrl } from '@/lib/utils';
 import { ExportButton } from '@/components/common/ExportButton';
 import { dataExportService } from '@/services/dataExport.service';
 import { PERMISSIONS } from '@/constants/permissions';
+import { useHasPermission } from '@/lib/permissions';
 
 interface BlogTableProps {
   websiteId?: string;
@@ -20,6 +21,8 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const canUpdateBlog = useHasPermission(PERMISSIONS.BLOGS_UPDATE);
 
   const { websites: allWebsites } = useWebsites({ limit: 100 });
   const { blogs, isLoading } = useBlogs({
@@ -228,19 +231,21 @@ export const BlogTable: React.FC<BlogTableProps> = ({ websiteId, isActiveFilter 
           >
             <Eye size={18} />
           </button>
-          <button
-            onClick={() =>
-              router.push(
-                `/blogs/update/${blog.id}${
-                  websiteId ? `?from=/websites/dashboard/${websiteId}` : ''
-                }`,
-              )
-            }
-            className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
-            title="Edit Blog"
-          >
-            <Edit size={18} />
-          </button>
+          {canUpdateBlog && (
+            <button
+              onClick={() =>
+                router.push(
+                  `/blogs/update/${blog.id}${
+                    websiteId ? `?from=/websites/dashboard/${websiteId}` : ''
+                  }`,
+                )
+              }
+              className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+              title="Edit Blog"
+            >
+              <Edit size={18} />
+            </button>
+          )}
         </div>
       ),
     },

@@ -36,7 +36,9 @@ export const useAuthStore = create<AuthState>()(
           refresh_token,
           isAuthenticated: true,
           roleKey: user.role?.roleKey || null,
-          permissions: user.role?.permissions || [],
+          permissions: (user.role?.permissions || []).map((p: string) =>
+            typeof p === 'string' ? p.replace(/['"]/g, '').trim() : p,
+          ),
         });
       },
       clearAuth: () => {
@@ -55,9 +57,17 @@ export const useAuthStore = create<AuthState>()(
         set({
           user,
           roleKey: user.role?.roleKey || null,
-          permissions: user.role?.permissions || [],
+          permissions: (user.role?.permissions || []).map((p: string) =>
+            typeof p === 'string' ? p.replace(/['"]/g, '').trim() : p,
+          ),
         }),
-      setPermissions: (permissions, roleKey) => set({ permissions, roleKey }),
+      setPermissions: (permissions, roleKey) =>
+        set({
+          permissions: (permissions || []).map((p: string) =>
+            typeof p === 'string' ? p.replace(/['"]/g, '').trim() : p,
+          ),
+          roleKey,
+        }),
     }),
     {
       name: 'auth-storage',

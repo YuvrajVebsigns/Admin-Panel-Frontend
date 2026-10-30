@@ -14,12 +14,15 @@ import { getImageUrl } from '@/lib/utils';
 import { ExportButton } from '@/components/common/ExportButton';
 import { PERMISSIONS } from '@/constants/permissions';
 import { dataExportService } from '@/services/dataExport.service';
+import { useHasPermission } from '@/lib/permissions';
 
 export const WebsiteTable: React.FC = () => {
   const router = useRouter();
   const { user } = useAuthStore();
   const { confirm } = useGlobalModal();
   const isSuperAdmin = user?.role?.roleKey === 'super_admin';
+  const canUpdateWebsite = useHasPermission(PERMISSIONS.WEBSITES_UPDATE);
+  const canDeleteWebsite = useHasPermission(PERMISSIONS.WEBSITES_DELETE);
 
   const [params, setParams] = useState({
     page: 1,
@@ -171,14 +174,16 @@ export const WebsiteTable: React.FC = () => {
       header: 'ACTIONS',
       accessor: (website) => (
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => router.push(`/websites/update/${website.id}`)}
-            className="p-2 text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-md transition-colors"
-            title="Edit Website"
-          >
-            <Edit size={16} />
-          </button>
-          {isSuperAdmin && (
+          {(isSuperAdmin || canUpdateWebsite) && (
+            <button
+              onClick={() => router.push(`/websites/update/${website.id}`)}
+              className="p-2 text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 rounded-md transition-colors"
+              title="Edit Website"
+            >
+              <Edit size={16} />
+            </button>
+          )}
+          {(isSuperAdmin || canDeleteWebsite) && (
             <button
               onClick={() => handleDelete(website)}
               className="p-2 text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 rounded-md transition-colors"

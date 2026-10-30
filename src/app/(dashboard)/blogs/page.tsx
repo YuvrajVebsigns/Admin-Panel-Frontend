@@ -7,13 +7,30 @@ import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { useRouter } from 'next/navigation';
 import { useBlogs } from '@/modules/blogs/hooks/useBlogs';
 
+import { useHasPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/constants/permissions';
+
 export default function BlogsPage() {
   const router = useRouter();
-  const { meta: allBlogs } = useBlogs({ limit: 1 });
-  const { meta: activeBlogs } = useBlogs({ limit: 1, isActive: true });
-  const { meta: draftedBlogs } = useBlogs({ limit: 1, isActive: false });
+  const canViewBlogs = useHasPermission(PERMISSIONS.BLOGS_VIEW);
+  const canCreateBlog = useHasPermission(PERMISSIONS.BLOGS_CREATE);
+
+  const { meta: allBlogs } = useBlogs({ limit: 1 }, { enabled: canViewBlogs });
+  const { meta: activeBlogs } = useBlogs({ limit: 1, isActive: true }, { enabled: canViewBlogs });
+  const { meta: draftedBlogs } = useBlogs({ limit: 1, isActive: false }, { enabled: canViewBlogs });
 
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
+
+  if (!canViewBlogs) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-navy-800">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+        <p className="text-gray-500 dark:text-gray-400 max-w-md">
+          You do not have permission to view blogs. Please contact your system administrator.
+        </p>
+      </div>
+    );
+  }
 
   const stats = [
     {
@@ -54,14 +71,16 @@ export default function BlogsPage() {
             Manage and review all {allBlogs?.total || 0} blogs across all CORE Media platforms.
           </p>
         </div>
-        <Button
-          variant="primary"
-          className="shadow-lg shadow-brand-500/20 px-6"
-          onClick={() => router.push('/blogs/create')}
-        >
-          <Plus size={18} className="mr-2" />
-          Add New Blog
-        </Button>
+        {canCreateBlog && (
+          <Button
+            variant="primary"
+            className="shadow-lg shadow-brand-500/20 px-6"
+            onClick={() => router.push('/blogs/create')}
+          >
+            <Plus size={18} className="mr-2" />
+            Add New Blog
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
