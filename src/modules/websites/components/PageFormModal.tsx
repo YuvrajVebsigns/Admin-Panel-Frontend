@@ -124,6 +124,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   const isSubmittingRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentSavePromiseRef = useRef<Promise<unknown> | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   const {
     register,
@@ -170,6 +171,7 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
     isSavingRef.current = false;
     isSubmittingRef.current = false;
     currentSavePromiseRef.current = null;
+    isInitialLoadRef.current = true;
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -362,6 +364,11 @@ export const PageFormModal: React.FC<PageFormModalProps> = ({
   // Debounced auto-save on field changes
   useEffect(() => {
     if (!isOpen || activeTab !== 'info') return;
+
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      return;
+    }
 
     // Clear any existing timer
     if (debounceTimerRef.current) {
