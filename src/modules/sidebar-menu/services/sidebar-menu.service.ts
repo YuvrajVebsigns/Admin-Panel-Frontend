@@ -10,6 +10,8 @@ import { PaginatedResponse } from '@/types/api.types';
 export const sidebarMenuService = {
   getSidebarMenus: () => apiFetch<SidebarMenu[]>('/admin/sidebar-menu'),
 
+  getMenuTree: () => apiFetch<SidebarMenu[]>('/admin/sidebar-menu/tree'),
+
   getAllSidebarMenus: (params?: { page?: number; limit?: number; search?: string }) => {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());

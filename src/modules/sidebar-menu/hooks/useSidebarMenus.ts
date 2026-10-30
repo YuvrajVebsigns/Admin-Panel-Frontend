@@ -22,6 +22,17 @@ export function useSidebarMenus() {
     queryFn: sidebarMenuService.getSidebarMenus,
   });
 
+  const menuTreeQuery = useQuery({
+    queryKey: ['menus', 'tree'],
+    queryFn: async () => {
+      try {
+        return await sidebarMenuService.getMenuTree();
+      } catch {
+        return await sidebarMenuService.getSidebarMenus();
+      }
+    },
+  });
+
   const allSidebarMenusQuery = useQuery({
     queryKey: ['menus', 'all', page, limit, debouncedSearch],
     queryFn: () => sidebarMenuService.getAllSidebarMenus({ page, limit, search: debouncedSearch }),
@@ -45,6 +56,7 @@ export function useSidebarMenus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'tree'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
       queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
@@ -63,6 +75,7 @@ export function useSidebarMenus() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'tree'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'detail', variables.id] });
@@ -82,6 +95,7 @@ export function useSidebarMenus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'tree'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
       queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
@@ -100,6 +114,7 @@ export function useSidebarMenus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menus'] });
+      queryClient.invalidateQueries({ queryKey: ['menus', 'tree'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['menus', 'dropdown'] });
       queryClient.invalidateQueries({ queryKey: ['admin-sidebarMenus'] });
@@ -108,6 +123,8 @@ export function useSidebarMenus() {
 
   return {
     menus: menusQuery.data ?? [],
+    menuTree: menuTreeQuery.data ?? menusQuery.data ?? [],
+    isTreeLoading: menuTreeQuery.isLoading,
     allSidebarMenus: allSidebarMenusQuery.data?.data ?? [],
     pagination: allSidebarMenusQuery.data?.meta,
     dropdownSidebarMenus: dropdownSidebarMenusQuery.data?.data ?? [],
